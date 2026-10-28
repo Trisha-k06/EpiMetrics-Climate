@@ -124,7 +124,8 @@ function startWatch() {
     if (session.expiresAt && now >= session.expiresAt) { logout("expired"); return; }
     const ttl = session.expiresAt ? session.expiresAt - lastServerContact : keepaliveMs();
     const due = now - lastServerContact >= Math.min(keepaliveMs(), ttl / 2);
-    const active = now - session.lastActive < keepaliveMs();
+    // Active = the user did something since the last server contact. An idle tab lets the token expire.
+    const active = session.lastActive > lastServerContact;
     if (due && active) keepalive();
     emit("tick");
   }, 5000);

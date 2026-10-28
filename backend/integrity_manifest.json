@@ -1,0 +1,573 @@
+{
+ "synthetic": true,
+ "algorithm": "SHA-256",
+ "dataset_version": "0.1.1",
+ "generated_at": "2026-10-28T07:14:06Z",
+ "files": [
+  {
+   "kind": "frontend",
+   "path": "frontend/API_CONTRACT.md",
+   "bytes": 14018,
+   "sha256": "e79ee6c96769a93549afeb9c76ebbe1d4e14bb1eb879bac279a88ed5d16dad7e",
+   "url": "API_CONTRACT.md"
+  },
+  {
+   "kind": "frontend",
+   "path": "frontend/README.md",
+   "bytes": 6432,
+   "sha256": "d2bf68dec44f22804d9f51047ca3bda2d920362fe57e98305c8d003fe64fba70",
+   "url": "README.md"
+  },
+  {
+   "kind": "frontend",
+   "path": "frontend/css/app.css",
+   "bytes": 52227,
+   "sha256": "8179bbfa2755a56d12f12aa9b515f8728145cba6129418f268c023d2a716bb83",
+   "url": "css/app.css"
+  },
+  {
+   "kind": "frontend",
+   "path": "frontend/data/geo/tamil_nadu.json",
+   "bytes": 77874,
+   "sha256": "0e0fcf29c6dcae3caf85507d6c02985711aba2d86ff28e59613e6c1ad2e56d47",
+   "url": "data/geo/tamil_nadu.json"
+  },
+  {
+   "kind": "frontend",
+   "path": "frontend/index.html",
+   "bytes": 4771,
+   "sha256": "12bb96fa60eea0b926985f101e782f80c18cd3488fc7b4c812fdf8600e0efc0a",
+   "url": "index.html"
+  },
+  {
+   "kind": "frontend",
+   "path": "frontend/js/api.js",
+   "bytes": 6139,
+   "sha256": "8e025c82a28d3703c9b00c99738ee46763300f85719a576b90e59f0f54db25e6",
+   "url": "js/api.js"
+  },
+  {
+   "kind": "frontend",
+   "path": "frontend/js/app.js",
+   "bytes": 7963,
+   "sha256": "1d18d7d79e8aab67c6777017ca9b0deeb4d2609846dbe0cc451daed207f3c011",
+   "url": "js/app.js"
+  },
+  {
+   "kind": "frontend",
+   "path": "frontend/js/assistant.js",
+   "bytes": 18053,
+   "sha256": "ca15a9b1129621d4867fcb63e7bfde88c5c17d90785c8d511064a95d9279b006",
+   "url": "js/assistant.js"
+  },
+  {
+   "kind": "frontend",
+   "path": "frontend/js/auth.js",
+   "bytes": 5939,
+   "sha256": "f0894e30a7a8fe2ae58cbb5c85107fad0aa445f846b403f49351d85033e29d3f",
+   "url": "js/auth.js"
+  },
+  {
+   "kind": "frontend",
+   "path": "frontend/js/charts.js",
+   "bytes": 21939,
+   "sha256": "22e8b813c90012aaf38497e61293474e1145e2636cf81ee84f12d5b521e6349b",
+   "url": "js/charts.js"
+  },
+  {
+   "kind": "frontend",
+   "path": "frontend/js/config.js",
+   "bytes": 1093,
+   "sha256": "7b42f0b1976b466e15ab0ecb3913ddffe64e82b9ff12ab26235220a729187202",
+   "url": "js/config.js"
+  },
+  {
+   "kind": "frontend",
+   "path": "frontend/js/format.js",
+   "bytes": 4997,
+   "sha256": "93dee5a0945d33f31a626b266bcfb37f7f8a4db4c4769c5192834cc2d3789e3e",
+   "url": "js/format.js"
+  },
+  {
+   "kind": "frontend",
+   "path": "frontend/js/map3d.js",
+   "bytes": 32297,
+   "sha256": "a7dcb67ad3997ac4cd80b484c4e121343afc3a531d820e8ed20839923b360af2",
+   "url": "js/map3d.js"
+  },
+  {
+   "kind": "frontend",
+   "path": "frontend/js/pdf.js",
+   "bytes": 33122,
+   "sha256": "5ae0e4f11d261a111dfb86e826269114c7304b539e14c53349989b2020973dc0",
+   "url": "js/pdf.js"
+  },
+  {
+   "kind": "frontend",
+   "path": "frontend/js/platform-data.js",
+   "bytes": 6407,
+   "sha256": "2d39a1f700b10d73ebcc389bec48f37850bb324ba2f1f34f7b98354497a0e26d",
+   "url": "js/platform-data.js"
+  },
+  {
+   "kind": "frontend",
+   "path": "frontend/js/screens/episodes.js",
+   "bytes": 14374,
+   "sha256": "38fde861338bd0922aebf3b210c50489a037242e1881816529f51cb782f7ed0c",
+   "url": "js/screens/episodes.js"
+  },
+  {
+   "kind": "frontend",
+   "path": "frontend/js/screens/explorer.js",
+   "bytes": 12764,
+   "sha256": "0978bb06553b726f11cf59d3f401326cba8526116fc7578932fa28f23a7fad58",
+   "url": "js/screens/explorer.js"
+  },
+  {
+   "kind": "frontend",
+   "path": "frontend/js/screens/login.js",
+   "bytes": 4197,
+   "sha256": "1f94b837cdb87150140f7a55eb02b9cd5751901f7b021569cf92c3e9c205a13b",
+   "url": "js/screens/login.js"
+  },
+  {
+   "kind": "frontend",
+   "path": "frontend/js/screens/models.js",
+   "bytes": 11705,
+   "sha256": "0159e5eef65b2d4e0ed0390f66b5b7c124c06faf3db46022d0e171858f0c5f0d",
+   "url": "js/screens/models.js"
+  },
+  {
+   "kind": "frontend",
+   "path": "frontend/js/screens/overview.js",
+   "bytes": 10336,
+   "sha256": "27b55f34106ee3bc3d0b420ec33517ad3323d43cd4337fc009900cf3df499142",
+   "url": "js/screens/overview.js"
+  },
+  {
+   "kind": "frontend",
+   "path": "frontend/js/screens/platform.js",
+   "bytes": 13155,
+   "sha256": "bdcb02ce0435f36129304afaa11c5840b65eee28aed70efc66a77f876e7edd83",
+   "url": "js/screens/platform.js"
+  },
+  {
+   "kind": "frontend",
+   "path": "frontend/js/screens/recovery.js",
+   "bytes": 14380,
+   "sha256": "2ab6b37160ffcf422df491bebf6fb785685be296e22fe95b1d91642c1798d021",
+   "url": "js/screens/recovery.js"
+  },
+  {
+   "kind": "frontend",
+   "path": "frontend/js/screens/report.js",
+   "bytes": 12971,
+   "sha256": "6a4680f41834acd86a845a17ce43f0583d9156457c8ccb5991be44d8f0c48053",
+   "url": "js/screens/report.js"
+  },
+  {
+   "kind": "frontend",
+   "path": "frontend/js/screens/simulator.js",
+   "bytes": 7746,
+   "sha256": "f11608ba20d5c83dec0072ff1fba067c2eb2d2561c6d20bd31d92546db1eeb77",
+   "url": "js/screens/simulator.js"
+  },
+  {
+   "kind": "frontend",
+   "path": "frontend/js/screens/technology.js",
+   "bytes": 5610,
+   "sha256": "51cb0b769ff113084cf1f80ab34179c18e05b1345334eef8b201f4a5948f5d87",
+   "url": "js/screens/technology.js"
+  },
+  {
+   "kind": "frontend",
+   "path": "frontend/js/screens/validation.js",
+   "bytes": 10254,
+   "sha256": "f3950e1fd2c7704a0ab8ec52d4948c99d1d53de747c61c77a72208439516ed6b",
+   "url": "js/screens/validation.js"
+  },
+  {
+   "kind": "frontend",
+   "path": "frontend/js/state.js",
+   "bytes": 1457,
+   "sha256": "8ccbf282c161eede789fbfcf8f64d1a6e29896dcb19dd3bcc941391959269e4c",
+   "url": "js/state.js"
+  },
+  {
+   "kind": "frontend",
+   "path": "frontend/js/tech.js",
+   "bytes": 8976,
+   "sha256": "21d844f8d4463d6284885235f89087c96304971a6b74ffae037963512194e53b",
+   "url": "js/tech.js"
+  },
+  {
+   "kind": "frontend",
+   "path": "frontend/js/theme.js",
+   "bytes": 1471,
+   "sha256": "20fb75ea02c1be49bd8675d083c45d24b751584f5b37a615c64b894bb0b14c47",
+   "url": "js/theme.js"
+  },
+  {
+   "kind": "frontend",
+   "path": "frontend/js/ui.js",
+   "bytes": 19598,
+   "sha256": "2ef54dc2d2d67104daa0c4fc0904638750b2cbead5bff1133379023feb41d245",
+   "url": "js/ui.js"
+  },
+  {
+   "kind": "frontend",
+   "path": "frontend/tools/build_geo.py",
+   "bytes": 3924,
+   "sha256": "e9411aee7eb35b3f3e0d14c34a366f6c9d33e883b24ee453ee662cb392e05e73",
+   "url": "tools/build_geo.py"
+  },
+  {
+   "kind": "frontend",
+   "path": "frontend/vendor/LICENSE-jspdf-autotable.txt",
+   "bytes": 1133,
+   "sha256": "99a374e0385cf714d2faae5f6e02ec79217c6bcecec39bdb9e102091471b960a",
+   "url": "vendor/LICENSE-jspdf-autotable.txt"
+  },
+  {
+   "kind": "frontend",
+   "path": "frontend/vendor/LICENSE-jspdf.txt",
+   "bytes": 1142,
+   "sha256": "2d26bfab8a36d2250602c7a7597237e180c5cd3517acc108126e3cb399f483c8",
+   "url": "vendor/LICENSE-jspdf.txt"
+  },
+  {
+   "kind": "frontend",
+   "path": "frontend/vendor/LICENSE-three.txt",
+   "bytes": 1081,
+   "sha256": "852e0e8699169bf9f6fdc6bda3e682d078dcbc738b5d33e74df594721bff271d",
+   "url": "vendor/LICENSE-three.txt"
+  },
+  {
+   "kind": "frontend",
+   "path": "frontend/vendor/jspdf.plugin.autotable.min.js",
+   "bytes": 38976,
+   "sha256": "27a9c3b61843c6312b87f142d40fe77c0f0f054c9f3cdeccc4bfd5f3322859c8",
+   "url": "vendor/jspdf.plugin.autotable.min.js"
+  },
+  {
+   "kind": "frontend",
+   "path": "frontend/vendor/jspdf.umd.min.js",
+   "bytes": 364463,
+   "sha256": "98ccf17aa10c20bb1301762618fcc9b6ab3a4e7f26b6071d64d0b41154df3875",
+   "url": "vendor/jspdf.umd.min.js"
+  },
+  {
+   "kind": "frontend",
+   "path": "frontend/vendor/three.min.js",
+   "bytes": 608081,
+   "sha256": "8a5f7249903b54d30f79f708699d2fed2d6a1d0741a4cd41377d1f01bb5a2271",
+   "url": "vendor/three.min.js"
+  },
+  {
+   "kind": "backend",
+   "path": "backend/__init__.py",
+   "bytes": 110,
+   "sha256": "8c398536906e14f1dbae54731cc144e1dc28bed088728f002288b5681f5c72a9"
+  },
+  {
+   "kind": "backend",
+   "path": "backend/__main__.py",
+   "bytes": 338,
+   "sha256": "2008def107846b3066b0918abaa9d906e7cefb6dc6c3840c8419fa01ca5f8b42"
+  },
+  {
+   "kind": "backend",
+   "path": "backend/analytics.py",
+   "bytes": 36482,
+   "sha256": "a9d972697979284d5298d98d5236672a31749989aba66b4c050b60a868e214da"
+  },
+  {
+   "kind": "backend",
+   "path": "backend/app.py",
+   "bytes": 14736,
+   "sha256": "8808a54fc86e5739b94f05426f1640896a2c8c67c492d29ca2ca5689a1a88ab5"
+  },
+  {
+   "kind": "backend",
+   "path": "backend/data.py",
+   "bytes": 27196,
+   "sha256": "8a307d94175c4ff6cdaa2ab9e21f389fb8e18f80b6297ff4822d9a39e64f1112"
+  },
+  {
+   "kind": "backend",
+   "path": "backend/integrity.py",
+   "bytes": 3469,
+   "sha256": "670d538c70c47e931db670a349fe48d200999d645555bba57d989b5f7433a3e1"
+  },
+  {
+   "kind": "backend",
+   "path": "backend/jsonutil.py",
+   "bytes": 1534,
+   "sha256": "afa97614726758ba26f565a88fc7f34e66c9818210b56a7e851d6b8977b25085"
+  },
+  {
+   "kind": "backend",
+   "path": "backend/manage.py",
+   "bytes": 3258,
+   "sha256": "c4edf237d000362b01136bd3989c363d409d5ab186ef7a6cc95cf4240638be70"
+  },
+  {
+   "kind": "backend",
+   "path": "backend/security.py",
+   "bytes": 8469,
+   "sha256": "e1fde0a193ed38cd450ef919d4c78330fdea87fb3709833775f8fa82ba007dc6"
+  },
+  {
+   "kind": "backend",
+   "path": "backend/tests/__init__.py",
+   "bytes": 0,
+   "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+   "kind": "backend",
+   "path": "backend/tests/conftest.py",
+   "bytes": 1435,
+   "sha256": "b379d2ac317c1c8fb7895118341949744d2b7d6c42f3b12b19fdb5ceb03277e9"
+  },
+  {
+   "kind": "backend",
+   "path": "backend/tests/test_api.py",
+   "bytes": 14298,
+   "sha256": "cc2863d575de9bec1e2ce2e148c6582118cac5771d60b0a45dac091027838fb3"
+  },
+  {
+   "kind": "science",
+   "path": "src/build_derived.py",
+   "bytes": 9213,
+   "sha256": "395611b4643b875be64e77b1fc989d87367673f20d70dfbd5d73645d2bb5239c"
+  },
+  {
+   "kind": "science",
+   "path": "src/generate_data.py",
+   "bytes": 19779,
+   "sha256": "b6d5e27a4c66dde7dc94b4685c7f30b31f381cf97758ac3eaac426ceda66ea59"
+  },
+  {
+   "kind": "science",
+   "path": "src/recovery_engine.py",
+   "bytes": 4374,
+   "sha256": "e3980c8340c8dbfbe0804cfb1a0644b1951938068e8b1deff5c334a68f3bcbf1"
+  },
+  {
+   "kind": "science",
+   "path": "src/validate_data.py",
+   "bytes": 31205,
+   "sha256": "f3c15f15cdef32910117ffa3201c5da088ace1bb71c50706676199247ce82c5d"
+  },
+  {
+   "kind": "science",
+   "path": "src/verify_semantics.py",
+   "bytes": 10928,
+   "sha256": "c9ff49e77074929f0d725596f5f2498c488f4e5c2444428e9c4c948e4c9312f6"
+  },
+  {
+   "kind": "science",
+   "path": "configs/diseases.json",
+   "bytes": 2663,
+   "sha256": "2123ead55e3dbfe30473f52252a5042bf50a4e25919b48539c61e4c51e4dcc3b"
+  },
+  {
+   "kind": "science",
+   "path": "configs/districts.json",
+   "bytes": 2248,
+   "sha256": "9d54b1223d5d15e7e5f0de73cea37bc56c976d5f640df18b2f1e780e0665c477"
+  },
+  {
+   "kind": "science",
+   "path": "configs/simulation_defaults.json",
+   "bytes": 5959,
+   "sha256": "405236b045c4c449ab6234f6fe9ca2483a37c2351a5b67ad4fa174feb45eb802"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/derived/model_ready_dataset.csv",
+   "bytes": 451317,
+   "sha256": "ee3fc0aecc3771fce7a5036579d5aa5ebbd4387aa341715fe6bbe0bf0c42b8b0"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/derived/recovery_analysis/climate_recovery_comparison.csv",
+   "bytes": 6175,
+   "sha256": "153d3fb6e5a6b186522c93da903827c8e5c734f9b2dcb7d0b6121c02276fd28a"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/derived/recovery_analysis/delta_tsr_summary.csv",
+   "bytes": 908,
+   "sha256": "71aff9958c65b053258e938b23c224fe7199a015c59200fbffa40acb26f0f3b9"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/derived/recovery_analysis/matched_recovery_results.csv",
+   "bytes": 49016,
+   "sha256": "c034b6aaa885c26a9b9cf64c404cb13bfb4ae8462ce08b746270a12ef860201b"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/derived/recovery_analysis/recovery_episode_results.csv",
+   "bytes": 38784,
+   "sha256": "8b895f2b3fd337046cde2bd5db0023aef379eb424cfbc5a96cf59c0856665e60"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/derived/recovery_analysis/recovery_interruption_summary.csv",
+   "bytes": 1000,
+   "sha256": "f656a04e11d31477aa600cfcabc7060b770f074710d553f5387f89fc2badde03"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/derived/recovery_analysis/recovery_validation_summary.csv",
+   "bytes": 257,
+   "sha256": "e545a77f0410a4bcd5837b46d5df0578e893736f490af5622aa49baeeaedb763"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/derived/recovery_analysis/scenario_recovery_summary.csv",
+   "bytes": 3515,
+   "sha256": "bea0f26e3678574b64bd59aaac45ee8fd2a76b38d26506ae9999d64de48de9fd"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/derived/seasonal_baseline_thresholds.csv",
+   "bytes": 6015,
+   "sha256": "9c77eb172663561468cae0bc55368a2518b3396064c20a8a9683a984fb493b24"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/ground_truth/ground_truth_trajectories.csv",
+   "bytes": 653433,
+   "sha256": "6a2ca2a887c289b0e93c87c9737be5cb4b76c7a072b5cecd7ac10aef0fa4895d"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/ground_truth/outbreak_events.csv",
+   "bytes": 14986,
+   "sha256": "9df47ab2c9e1e2019b6eddbb80022e16f2f5378414253e7038f2484e82e9420d"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/ground_truth/recovery_truth.csv",
+   "bytes": 6412,
+   "sha256": "2ec9ad411e05afe1de055e8a123324de7965bab883f31290c15ea5728a8fc28a"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/outputs/sensitivity_grid.csv",
+   "bytes": 61606,
+   "sha256": "e070d88f91101c7f38f7c0ce63562bb46221aad1d047fc833495d572ac655128"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/outputs/simulation_results_template.csv",
+   "bytes": 388,
+   "sha256": "81edbf519bc20db5127f282711d3c575e376b984c201cc1f383d05ba0e9cc158"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/outputs/simulation_runs.csv",
+   "bytes": 49549,
+   "sha256": "a8157037fcb4e5fdbfa646f4d871dcdff89faa5a9f997a1c103cd53c0676b960"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/processed/recovery_thresholds.csv",
+   "bytes": 3389,
+   "sha256": "868febe8f224d8d9b484c563bd14718ecc5d4897c7765f654f24cd56fa58181c"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/processed/seasonal_naive_metrics.csv",
+   "bytes": 178,
+   "sha256": "8d961ffa4cf925b5a8ad5ce6e826a77072495c50c57cde84ad2eed1c45ee4363"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/processed/seasonal_naive_predictions.csv",
+   "bytes": 24325,
+   "sha256": "31746249e42ba4abcf5f13fb2f509685a9d27ba1f53ba66562aa050cd3476699"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/synthetic/climate_anomalies.csv",
+   "bytes": 525,
+   "sha256": "1ea6b5c1554d0a9b58f01bd941ff0c973066e86606c570c7d2ba5768044fbd49"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/synthetic/climate_history.csv",
+   "bytes": 211871,
+   "sha256": "e9c8d0204fac520f630dcdfe68c5acd390089a9cd80dfadec2d6d3c560cd2efc"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/synthetic/climate_normals.csv",
+   "bytes": 2516,
+   "sha256": "44b2eb7057c3855a436210945645a118fe7f79821168e31248aa5cb0c064c2cb"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/synthetic/disease_cases.csv",
+   "bytes": 432348,
+   "sha256": "b74ecb326c895237516eef1258578ae9485b561d20b0f13cadd4fd788fd787a3"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/synthetic/disease_profiles.csv",
+   "bytes": 1017,
+   "sha256": "53c4e673f0cc900e294df28534e4405ebf74179cbf4ad72a556c1e4ffcdc4c0e"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/synthetic/district_metadata.csv",
+   "bytes": 280,
+   "sha256": "709bbc98dac971cec0ecd7f38ffec8fa03504f463a1cc9b4f5cae2fb8f6f0dbd"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/synthetic/environmental_vulnerability.csv",
+   "bytes": 156,
+   "sha256": "df49309fd1395a579dc739e60f102d84cb528805aa38bc456060deeff8fcbc19"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/synthetic/intervention_profiles.csv",
+   "bytes": 267,
+   "sha256": "53022e86b18dfe0bb9222365f3dfed19de09a3ba1faed4c385297254bc380f83"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/synthetic/missing_data_masks.csv",
+   "bytes": 21366,
+   "sha256": "5b1d13b358ef603747de4858680f986e6b0cb7e2bf20a6fd2de03b7af2dacc8e"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/synthetic/recovery_rules.csv",
+   "bytes": 190,
+   "sha256": "39ffd3f7ca95866f0a733f32cf4e9f0fc385d53648e798a3aa12f106fbbaeceb"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/synthetic/scenarios.csv",
+   "bytes": 551,
+   "sha256": "fcee4bfbe592b7f27434845b8b458d951558a23da7dfafa4c059f75ae368f83b"
+  },
+  {
+   "kind": "dataset",
+   "path": "data_dictionary.csv",
+   "bytes": 20197,
+   "sha256": "314acda624082000a0f004ee5bb2781cb6e020a0056aae7951b4370eb07e2b4e"
+  },
+  {
+   "kind": "dataset",
+   "path": "dataset_catalog.csv",
+   "bytes": 2594,
+   "sha256": "398b2b3984e380cb021b28a3bdb60a07bb922be2ba7f4d4df84d99cd71432d8a"
+  }
+ ]
+}
