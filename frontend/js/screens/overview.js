@@ -4,8 +4,9 @@ import { api } from "../api.js";
 import { esc, monthLabel, byId, tsrText, deltaText, plural, disclaimerBody } from "../format.js";
 import { recoveryTrack } from "../charts.js";
 import { trackLegendHTML, COLORS, errorHTML } from "../ui.js";
-import { createDistrictMap, mapValuesFromCells } from "../map3d.js";
+import { createDistrictMap, mapValuesFromCells, districtTip } from "../map3d.js";
 import { setSelection } from "../state.js";
+import { END_USERS } from "../platform-data.js";
 
 export async function render(view, { meta }) {
   const ex = CONFIG.DEFAULT_SELECTION;
@@ -26,7 +27,7 @@ export async function render(view, { meta }) {
       <div class="panel stack" style="gap:10px">
         <div class="panel-head" style="margin:0"><h2>Recovery delay by district</h2><span class="small">${esc(exDis?.name)} · ${esc(exScen?.label)} vs baseline</span></div>
         <div id="ov-map"></div>
-        <p class="small">Pillar height is the extra months to recover (ΔTSR) from the API. Select a district to open it in the simulator.</p>
+        <p class="small">Each study district is coloured, and its pole raised, by the extra months to recover (ΔTSR) from the API. Hover a district for its profile; select it to open it in the simulator. More map layers are on the Recovery screen.</p>
       </div>
     </section>
 
@@ -102,14 +103,9 @@ export async function render(view, { meta }) {
       <div class="panel"><div class="panel-head"><h2>Assumed climate drivers</h2><span class="small">Marked "to be sourced"</span></div>
         ${meta.diseases.map((d) => `<p style="margin-top:6px"><b>${esc(d.name)}</b></p><ul class="plain small">${d.drivers.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>`).join("")}
       </div>
-      <div class="panel"><div class="panel-head"><h2>Intended users</h2></div>
-        <ul class="plain small">
-          <li><b>Public health authorities:</b> explore possible recovery delays and plan for recurring waves.</li>
-          <li><b>Healthcare capacity planners:</b> see how long surge periods could last after extreme climate events.</li>
-          <li><b>Disaster management agencies:</b> weigh epidemic risk alongside flood and heatwave response.</li>
-          <li><b>Epidemiological researchers:</b> test disease parameters and perturbation models.</li>
-        </ul>
-        <p class="small" style="margin-top:10px">For exploring scenarios only, not for operational decisions.</p>
+      <div class="panel"><div class="panel-head"><h2>Who will use it</h2><a class="small" href="#platform">Users &amp; security →</a></div>
+        <ul class="plain small">${END_USERS.map((u) => `<li><b>${esc(u.name)}:</b> ${esc(u.task)} <a href="#${esc(u.start)}">${esc(u.startLabel)}</a></li>`).join("")}</ul>
+        <p class="small" style="margin-top:10px">For planning and research only, not for operational decisions or medical advice.</p>
       </div>
     </section>`;
 
@@ -117,12 +113,17 @@ export async function render(view, { meta }) {
   const mapReady = (async () => {
     try {
       const host = view.querySelector("#ov-map");
-      const [m, matrix] = await Promise.all([
-        createDistrictMap(host, meta.districts, { compact: true, onSelect: (id) => { setSelection({ ...ex, district: id }); location.hash = "simulator"; } }),
+      let profiles = [];
+      const tipFor = (id) => districtTip(profiles.find((d) => d.id === id));
+      const [m, matrix, prof] = await Promise.all([
+        createDistrictMap(host, meta.districts, { compact: true, tipFor, onSelect: (id) => { setSelection({ ...ex, district: id }); location.hash = "simulator"; } }),
         api.recoveryMatrix({ disease: ex.disease }),
+        api.districts(),
       ]);
+      profiles = prof.districts;
       map = m;
-      m.update(mapValuesFromCells(matrix.cells, ex.scenario, "delta"), ex.district);
+      const mv = mapValuesFromCells(matrix.cells, ex.scenario, "delta");
+      m.update(mv.values, ex.district, mv.legend);
       return m;
     } catch (err) {
       const host = view.querySelector("#ov-map");

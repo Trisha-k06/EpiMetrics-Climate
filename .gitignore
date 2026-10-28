@@ -6,3 +6,12 @@ __pycache__/
 .venv/
 venv/
 .DS_Store
+
+# Backend runtime files (rebuilt automatically; never commit password hashes or logs)
+backend/logs/
+backend/cache/
+backend/users.json
+backend/users.tmp
+# End-to-end test output
+tests/screenshots/
+tests/downloads/

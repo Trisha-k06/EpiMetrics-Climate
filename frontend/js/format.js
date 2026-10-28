@@ -92,3 +92,6 @@ export function rangeIdx(months, start, end) {
 export function disclaimerBody(meta) {
   return String(meta?.disclaimer || "").replace(/^Synthetic data\s*[—-]\s*research demonstration only\.\s*/i, "");
 }
+
+export function fmtNum(v, nd = 2) { return v == null || !Number.isFinite(Number(v)) ? "—" : Number(v).toFixed(nd); }
+export function fmtSigned(v, nd = 2) { return v == null ? "—" : `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(Number(v)).toFixed(nd)}`; }

@@ -2,85 +2,95 @@
 
 HTML5 / CSS / JavaScript interface for the EpiMetrics-Climate recovery and recurrence simulator.
 There is no framework and no build step: ES modules, hand-drawn SVG charts, one stylesheet.
+It is served by the FastAPI backend in `../backend/` on the same address as the API.
 
 > Synthetic data only. The interface never presents results as Tamil Nadu forecasts or clinical advice,
 > and it refuses any API response that is not flagged `"synthetic": true`.
 
 ## Run it
 
+From the repository root:
+
 ```bash
-cd epimetrics-ui
-python -m http.server 8000
-# open http://localhost:8000
+pip3 install -r requirements.txt
+python -m backend          # open http://127.0.0.1:8000
 ```
 
-It must be served over HTTP. Opening `index.html` directly from disk blocks the module and JSON loads.
+The page and `/api/v1` share one origin, so there is no CORS. The Content-Security-Policy only allows
+scripts from this site, so every script lives under `frontend/` (Three.js and jsPDF are in `vendor/`).
 
-## Six screens
+## Ten screens
 
-| Hash | Screen | Main endpoint |
+| Hash | Screen | Endpoints |
 |---|---|---|
-| `#overview` | Project overview, objective (TSR / ΔTSR), definitions, scope, scenarios | `/meta`, `/simulations` (example) |
-| `#simulator` | District, disease and 7-scenario selectors, guided demo, KPI cards, baseline-vs-scenario cases, threshold, t0, recovery months, secondary-wave markers, recovery timeline, rainfall and temperature | `/simulations` |
-| `#recovery` | ΔTSR / interruptions / months-above-threshold matrix for all scenarios × districts; click a cell for its timeline and wave table | `/recovery-matrix`, `/simulations` |
-| `#validation` | Estimated vs true TSR, missing-data tests, p10–p90 spread, recovery-rule sensitivity, limitations | `/validation` |
-| `#report` | One-page scenario report: print or save as PDF, download JSON and CSV, copy summary | `/simulations` |
-| `#technology` | Technologies used and what each is for; **Export PDF** builds a plain-language summary of the whole project | all four |
+| `#overview` | Objective (TSR / ΔTSR), example timeline, ΔTSR map, definitions, scenarios | `/meta`, `/simulations`, `/recovery-matrix`, `/districts` |
+| `#simulator` | District, disease, scenario and reporting-completeness (mask) selectors, guided demo, KPI cards, cases vs threshold with gaps for masked months, recovery timeline, rainfall and temperature | `/simulations` |
+| `#recovery` | 3D map with layers (recovery result, outbreak peak per 100k, flood exposure, population density) and district-profile hover cards; ΔTSR / interruptions / months-above-threshold matrix; selected series timeline and waves | `/recovery-matrix`, `/districts`, `/simulations` |
+| `#episodes` | Outbreak episodes 2015–2024: totals, bar charts by scenario, matched ΔTSR, district table, episode timeline, sensitivity, live unit tests | `/analytics/episodes` |
+| `#explorer` | Data audit and catalog, trajectories, seasonality, climate seasonality, lag-correlation table, all-scenario cases and climate with change tables | `/analytics/data-audit`, `/analytics/eda` |
+| `#models` | Forecast benchmarks: KPIs, actual vs model chart with toggles and outbreak shading, outbreak vs other MAE, random-forest importance, comparison table, every-district summary | `/analytics/forecasts`, `/analytics/forecast-summary` |
+| `#validation` | Estimated vs true TSR, missing-data tests, p10–p90 spread, recovery-rule sensitivity (analyst, admin) | `/validation` |
+| `#report` | Scenario report: Export report (PDF), print, JSON, CSV, copy summary | `/simulations`, `POST /exports` |
+| `#technology` | Technologies used; Export PDF of the whole project | all, `POST /exports` |
+| `#platform` | End users, SaaS model, security, roles, session; admin: verify files on the server, run validation scripts, re-check website files in the browser, audit log | `/integrity`, `/integrity/verify`, `/integrity/validate`, `/audit-log` |
 
-## Connecting the backend
+## Sign-in
 
-1. Implement the endpoints in `API_CONTRACT.md` (same JSON shapes as the files in `mock/api/v1/`).
-2. In `js/config.js` set `API_MODE: "live"` and `API_BASE` to your server (default `/api/v1`).
-   If the API is on another origin, enable CORS for it.
-3. The badge in the top bar changes from **Mock API** to **Live API**.
+The app opens on the sign-in screen; `/meta` and everything else are loaded only after sign-in.
+`js/auth.js` posts to `/auth/login`, keeps the JWT in `sessionStorage` (this tab only), picks up the
+renewed token from the `X-Session-Token` response header, refreshes through `/auth/me` while you are
+active but not calling the API, and signs out after 15 idle minutes or when the token expires.
+A 401 from any endpoint clears the cache and returns to sign-in. Sign-out calls `/auth/logout`.
+Demo accounts: see the repository README.
 
-The frontend does not compute recovery. TSR, ΔTSR (including censored lower bounds), recovery months,
-wave onsets and validation metrics all come from the API. If a field is missing, the UI shows
-"Not provided by the API" instead of working it out.
+## Exports
 
-## Mock data
+Every export (scenario PDF, project PDF, JSON, CSV, print) first calls `POST /exports`. The server checks the
+role and logs the request; if it answers 403 the export does not start. PDFs are built in the browser with jsPDF.
 
-`mock/api/v1/` is generated from dataset v0.1.1 by running the project's own `src/recovery_engine.py`:
+## The frontend computes nothing
 
-```bash
-python tools/build_mock_api.py ../epimetrics_ukm
-```
-
-The script checks every series against `outputs/simulation_runs.csv` and fails if any recovery result
-differs (currently 0 mismatches across 70 series).
+TSR, ΔTSR (including censored lower bounds), recovery months, wave onsets, validation metrics, episode
+statistics, correlations and model errors all come from the API. Masked months arrive as `null` and are
+drawn as gaps. If a field is missing the UI shows "Not provided by the API" instead of working it out.
 
 ## Files
 
 ```
-index.html              app shell (top bar, synthetic-data strip, screen nav, footer)
-css/app.css             design tokens (light and dark), layout, components, print styles
-js/config.js            mock/live switch, API base, default selection, demo sequence
-js/api.js               the only module that fetches; contract and synthetic-flag checks
-js/state.js             shared district/disease/scenario selection
-js/format.js            display formatting (no recovery logic)
-js/charts.js            SVG time chart, recovery timeline, validation scatter
-js/ui.js                selectors, KPI cards, composed simulation view, tables
-js/screens/*.js         the six screens
-js/tech.js              technology list shared by screen 6 and the PDF
-js/pdf.js               whole-project PDF export (jsPDF)
-js/map3d.js, js/geo.js  3D district map (Three.js) with 2D fallback; schematic outline
-js/theme.js             Day / Night mode
-vendor/                 Three.js r149, jsPDF 2.5.1, jsPDF-AutoTable 3.8.2 (MIT licences included)
-mock/api/v1/            mock responses (75 files)
-tools/build_mock_api.py builds the mock responses from the dataset
-API_CONTRACT.md         the agreed API schema
+index.html               app shell (top bar, synthetic-data strip, ten-screen nav, footer)
+css/app.css              design tokens (light and dark, categorical --c1..--c7), layout, components, print styles
+js/config.js             API base, timeout, default selection (incl. mask), demo sequence
+js/api.js                the only data client; contract and synthetic-flag checks, export pre-check
+js/auth.js               sign-in, token handling, keep-alive, idle timeout
+js/app.js                boot (sign-in first, then /meta), routing
+js/state.js              shared district/disease/scenario/mask selection
+js/format.js             display formatting (no recovery logic)
+js/charts.js             SVG time chart (month or Jan–Dec axes), grouped bar chart, recovery timeline, scatter
+js/ui.js                 selectors, KPI cards, composed simulation view, tables
+js/screens/*.js          the ten screens plus sign-in
+js/map3d.js              3D map of Tamil Nadu's real districts (Three.js) with 2D fallback, map layers, profile cards
+js/pdf.js                project summary and scenario report PDFs (jsPDF)
+js/tech.js               technology list shared by screen 9 and the PDF
+js/assistant.js          rule-based assistant (no AI service)
+js/platform-data.js      end users, roles, permissions, security measures, SaaS model
+js/theme.js              Day / Night mode
+data/geo/tamil_nadu.json Census 2011 district boundaries, DataMeet (CC BY 4.0), simplified
+vendor/                  Three.js r149, jsPDF 2.5.1, jsPDF-AutoTable 3.8.2 (MIT licences included)
+tools/build_geo.py       builds data/geo/tamil_nadu.json from DataMeet GeoJSON (only if boundaries change)
+API_CONTRACT.md          the API schema
 ```
 
-## Look and feel
-
-- Futuristic glass interface with a Day / Night switch in the top bar (follows the device until you choose).
-- 3D district map on the Overview and Recovery screens: drag to rotate, select a pillar or a name. It is a schematic, labelled as such.
-- Motion (screen entrance, line drawing, count-up, card tilt, map rotation) stops when the device asks for reduced motion.
+After changing any file here, rebuild the checksum manifest last: `python -m backend.manage manifest`.
+Otherwise the admin integrity checks report the file as changed.
 
 ## Accessibility and responsiveness
 
 - Works from 360 px phones to wide desktops; the screen nav becomes tabs on small screens.
-- Light and dark themes follow the system setting.
-- Baseline is blue and scenario orange everywhere (colour-blind-safe pair); every chart also has a legend,
-  hover tooltips and a "Show the data" table.
-- Keyboard navigable with visible focus; scenario choice uses real radio buttons.
+- Day and Night themes; categorical colours are validated for colour-vision deficiency in both, and every
+  chart has a legend, hover tooltips and a table view.
+- Keyboard navigable with visible focus; motion stops when the device asks for reduced motion.
+
+## Credits
+
+District and state boundaries: Census 2011, [DataMeet India community](https://github.com/datameet/maps), CC BY 4.0, simplified.
+Three.js, jsPDF and jsPDF-AutoTable under the MIT licence (see `vendor/`).

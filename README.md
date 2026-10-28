@@ -4,6 +4,84 @@
 
 The primary outcome is **time to sustained recovery**: how many months a district takes to return to, and stay at or below, its endemic threshold for 3 consecutive months after an outbreak peak. Case counts are an intermediate step toward that outcome.
 
+## Run the simulator website
+
+One command starts the FastAPI backend and serves the website from `frontend/` on the same address
+(no CORS, one origin). Python 3.11+; tested with Python 3.13.
+
+```bash
+python3 -m venv .venv && source .venv/bin/activate     # macOS: use python3 / pip3
+pip3 install -r requirements.txt
+python -m backend                                       # http://127.0.0.1:8000
+```
+
+On first start the server creates `backend/users.json` with three demo accounts and fits the
+ARIMA-family forecast models in the background (cached in `backend/cache/`; `/api/v1/health` reports
+`models_ready`). Set `EPIMETRICS_SECRET` to keep sessions valid across restarts; otherwise a random
+signing key is used per process. Other settings: `EPIMETRICS_PORT`, `EPIMETRICS_HOST`,
+`EPIMETRICS_SESSION_MINUTES` (default 15).
+
+### Demo accounts
+
+| Role | Username | Password | Can |
+|---|---|---|---|
+| Viewer | `viewer` | `viewer-demo-2026` | Read every result and analysis; no Validation screen, no exports |
+| Analyst | `analyst` | `analyst-demo-2026` | Also Validation and all exports (PDF, JSON, CSV, print) |
+| Admin | `admin` | `admin-demo-2026` | Also verify files, run the validation scripts, read the audit log |
+
+Five wrong passwords pause sign-in for that account for 30 seconds (20 per network address).
+
+### Screens
+
+| # | Screen | Source of the numbers |
+|---|---|---|
+| 1 | Overview | `/meta`, `/simulations`, `/recovery-matrix`, `/districts` |
+| 2 | Scenario simulator (with reporting-completeness masks) | `/simulations` → `src/recovery_engine.py` |
+| 3 | Recovery & recurrence (3D map with layers, matrix, timeline) | `/recovery-matrix`, `/districts`, `/simulations` |
+| 4 | Outbreak episodes | `/analytics/episodes` (notebooks 06–07) |
+| 5 | Data explorer | `/analytics/data-audit`, `/analytics/eda` (notebooks 01–02) |
+| 6 | Forecast models | `/analytics/forecasts`, `/analytics/forecast-summary` (notebooks 03–05) |
+| 7 | Validation & limits (analyst, admin) | `/validation` (ground truth, evaluation only) |
+| 8 | Scenario report (PDF, JSON, CSV, print) | `/simulations`, `POST /exports` |
+| 9 | Technology & project PDF | all of the above |
+| 10 | Users & security | `/integrity`, `POST /integrity/verify`, `POST /integrity/validate`, `/audit-log` |
+
+The website never computes recovery, thresholds, ΔTSR or model errors; it shows API results and refuses
+any response that is not marked `"synthetic": true`. The JSON shapes are in `frontend/API_CONTRACT.md`.
+
+### API (base `/api/v1`)
+
+Every endpoint except `GET /health` and `POST /auth/login` needs `Authorization: Bearer <JWT>`.
+Errors are `{"error": {"code", "message"}}`: 400 bad id format, 401 not signed in or expired,
+403 role not allowed, 404 unknown id, 429 sign-in locked.
+
+`POST /auth/login` · `POST /auth/logout` · `GET /auth/me` · `GET /health` · `GET /meta` · `GET /districts` ·
+`GET /simulations?district&disease&scenario[&mask]` · `GET /recovery-matrix?disease[&mask]` ·
+`GET /validation?disease` · `GET /analytics/data-audit` · `GET /analytics/eda?district&disease` ·
+`GET /analytics/forecasts?district&disease` · `GET /analytics/forecast-summary?disease` ·
+`GET /analytics/episodes?disease` · `POST /exports` · `GET /integrity` · `POST /integrity/verify` ·
+`POST /integrity/validate` · `GET /audit-log`
+
+### Tests and maintenance
+
+```bash
+pytest -q                                   # API vs the notebooks' printed numbers + security rules
+python -m playwright install chromium
+python tests/e2e.py                         # browser test: 3 roles × 10 screens × 2 sizes × Day/Night, exports, masks, map, assistant, expiry
+python -m backend.manage validate           # verify_semantics.py (34 checks) + engine check + unit tests
+python -m backend.manage manifest           # rebuild the SHA-256 manifest — ALWAYS last, after any change
+python -m backend.manage set-user NAME ROLE # add or replace an account (password prompted)
+```
+
+`src/validate_data.py` rewrites `data_dictionary.csv` and `dataset_catalog.csv`, so the server never runs it;
+`src/verify_semantics.py` is read-only and is what the admin "Run validation scripts" button uses.
+
+### Credits
+
+District and state boundaries: Census 2011, [DataMeet India community](https://github.com/datameet/maps),
+CC BY 4.0, simplified. Three.js, jsPDF and jsPDF-AutoTable under the MIT licence (see `frontend/vendor/`).
+FastAPI, Uvicorn, pandas, NumPy, SciPy, statsmodels, scikit-learn and PyJWT under their open-source licences.
+
 ## Scale
 
 - 2 diseases (dengue, malaria) × 5 illustrative districts (Chennai, Coimbatore, Madurai, Tiruchirappalli, Thanjavur)
@@ -104,7 +182,7 @@ Values come from `recovery_truth.csv`. "censored" means no sustained recovery be
 
 These numbers show how the generator behaves under its own assumptions. They are not findings about real dengue or malaria. Warming *shortens* recovery here because several districts are already above the assumed temperature optimum. That result comes directly from the assumed response curve and needs a literature check.
 
-## Reproduce
+## Reproduce the dataset
 
 ```bash
 pip install -r requirements.txt

@@ -3,9 +3,9 @@ import { api } from "../api.js";
 import { getSelection, setSelection, onSelection } from "../state.js";
 import { esc, monthLabel, byId, fmtInt, statusPill, tsrText, plural } from "../format.js";
 import { recoveryTrack } from "../charts.js";
-import { trackLegendHTML, wavesTableHTML, loadingHTML, errorHTML, COLORS } from "../ui.js";
+import { trackLegendHTML, wavesTableHTML, loadingHTML, errorHTML, COLORS, maskSelectHTML } from "../ui.js";
 import { CONFIG } from "../config.js";
-import { createDistrictMap, mapValuesFromCells } from "../map3d.js";
+import { createDistrictMap, mapValuesFromCells, mapValuesFromProfiles, districtTip, MAP_LAYERS } from "../map3d.js";
 
 const METRICS = {
   delta: { label: "Recovery delay (ΔTSR)", unit: "months vs baseline" },
@@ -36,6 +36,7 @@ function cellView(c, metric) {
 
 export async function render(view, { meta }) {
   let metric = "delta";
+  let layer = "result";
   let seq = 0;
   view.innerHTML = `
     <div class="page-head">
@@ -47,12 +48,17 @@ export async function render(view, { meta }) {
     </div>
     <section class="panel">
       <div class="panel-head"><h2 id="rec-map-title">District map</h2><span class="small" id="rec-map-sub"></span></div>
+      <div class="field" style="margin-bottom:10px"><span class="label" id="rec-layer-label">Map layer</span>
+        <div class="seg seg-wrap" role="group" aria-labelledby="rec-layer-label">${MAP_LAYERS.map((l) => `<button type="button" data-layer="${l.id}" aria-pressed="${l.id === layer}">${esc(l.label)}</button>`).join("")}</div></div>
       <div id="rec-map"></div>
-      <p class="small" style="margin-top:8px">Pillar height and colour show the measure chosen below for the selected scenario: red is slower than baseline, teal is faster, grey is no change. A pulsing amber tip marks a series that never recovered. Select a pillar or a name to choose a district.</p>
+      <p class="small" style="margin-top:8px" id="rec-map-note"></p>
     </section>
     <section class="panel stack">
       <div class="row" style="justify-content:space-between;align-items:flex-end">
-        <div class="field"><label for="rec-disease">Disease</label><select id="rec-disease">${meta.diseases.map((d) => `<option value="${esc(d.id)}">${esc(d.name)}</option>`).join("")}</select></div>
+        <div class="row" style="align-items:flex-end">
+          <div class="field"><label for="rec-disease">Disease</label><select id="rec-disease">${meta.diseases.map((d) => `<option value="${esc(d.id)}">${esc(d.name)}</option>`).join("")}</select></div>
+          ${maskSelectHTML(meta, getSelection(), "rec")}
+        </div>
         <div class="field"><span class="label" id="rec-metric-label">Show</span>
           <div class="seg" role="group" aria-labelledby="rec-metric-label">${Object.entries(METRICS).map(([k, m]) => `<button type="button" data-metric="${k}" aria-pressed="${k === metric}">${esc(m.label)}</button>`).join("")}</div></div>
       </div>
@@ -66,6 +72,15 @@ export async function render(view, { meta }) {
   const diseaseSel = view.querySelector("#rec-disease");
   diseaseSel.value = getSelection().disease;
   diseaseSel.addEventListener("change", () => setSelection({ disease: diseaseSel.value }));
+  const maskSel = view.querySelector("#rec-mask");
+  maskSel.addEventListener("change", () => setSelection({ mask: maskSel.value }));
+  view.querySelectorAll("[data-layer]").forEach((b) => b.addEventListener("click", () => {
+    layer = b.dataset.layer;
+    view.querySelectorAll("[data-layer]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    updateMap();
+  }));
+  let profiles = null;
+  const profilesReady = api.districts().then((d) => { profiles = d.districts; updateMap(); }).catch(() => { profiles = []; });
   view.querySelectorAll("[data-metric]").forEach((b) => b.addEventListener("click", () => {
     metric = b.dataset.metric;
     view.querySelectorAll("[data-metric]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
@@ -77,7 +92,7 @@ export async function render(view, { meta }) {
     const s = getSelection();
     const host = view.querySelector("#rec-matrix");
     try {
-      matrix = await api.recoveryMatrix({ disease: s.disease });
+      matrix = await api.recoveryMatrix({ disease: s.disease, mask: s.mask });
     } catch (err) { host.innerHTML = errorHTML(err); return; }
     const cells = new Map(matrix.cells.map((c) => [`${c.scenario}|${c.district}`, c]));
     const cols = meta.districts.length;
@@ -105,7 +120,8 @@ export async function render(view, { meta }) {
           <span class="hl d-n3">≤ −4</span><span class="hl d-n2">−3…−2</span><span class="hl d-n1">−1</span><span class="hl d-0">0</span><span class="hl d-p1">+1…+2</span><span class="hl d-p2">+3…+5</span><span class="hl d-p3">+6…+9</span><span class="hl d-p4">≥ +10</span>
           <span style="margin-left:6px">Slower</span><span class="hl d-p2 censored" style="margin-left:12px;min-width:64px;background-image:repeating-linear-gradient(135deg,transparent 0 6px,rgba(0,0,0,.14) 6px 8px)">hatched</span><span>= never recovered by ${monthLabel(meta.horizon.end_month)}; value is a minimum</span></div>`
       : `<div class="heat-legend" aria-hidden="true"><span>Lighter = fewer ${metric === "interruptions" ? "interruptions" : "months"}. Hatched = never recovered by ${monthLabel(meta.horizon.end_month)}.</span></div>`;
-    html += `<p class="small" style="margin-top:8px">Estimated from observed (noisy) cases with the default rule. Negative delays occur where the assumed temperature optimum is below the district's temperature; they reflect the model's assumptions.</p>`;
+    const mk = byId(meta.masks, s.mask || "none");
+    html += `<p class="small" style="margin-top:8px">Estimated from observed (noisy) cases with the default rule${mk && mk.id !== "none" ? `, with reporting completeness “${esc(mk.label)}”` : ""}. Negative delays occur where the assumed temperature optimum is below the district's temperature; they reflect the model's assumptions.</p>`;
     host.innerHTML = html;
     host.querySelectorAll(".heat-cell[data-s]").forEach((b) => b.addEventListener("click", () => setSelection({ scenario: b.dataset.s, district: b.dataset.d })));
   }
@@ -147,24 +163,44 @@ export async function render(view, { meta }) {
     if (!map || !matrix) return;
     const s = getSelection();
     const scen = byId(meta.scenarios, s.scenario), dis = byId(meta.diseases, s.disease);
-    map.update(mapValuesFromCells(matrix.cells, s.scenario, metric), s.district);
-    view.querySelector("#rec-map-title").textContent = `District map · ${scen?.label}`;
-    view.querySelector("#rec-map-sub").textContent = `${dis?.name} · ${METRICS[metric].label}${s.scenario === "baseline" && metric === "delta" ? " (baseline shows TSR)" : ""}`;
+    const note = view.querySelector("#rec-map-note");
+    if (layer === "result" || !profiles?.length) {
+      const mv = mapValuesFromCells(matrix.cells, s.scenario, metric);
+      map.update(mv.values, s.district, mv.legend);
+      view.querySelector("#rec-map-title").textContent = `District map · ${scen?.label}`;
+      view.querySelector("#rec-map-sub").textContent = `${dis?.name} · ${METRICS[metric].label}${s.scenario === "baseline" && metric === "delta" ? " (baseline shows TSR)" : ""}`;
+      note.textContent = "The five study districts are raised and coloured by the measure chosen below for the selected scenario; pole height shows the same value. Teal means faster than baseline. A pulsing amber tip marks a series that never recovered. Hover a district for its profile; select it to choose it.";
+    } else {
+      const mv = mapValuesFromProfiles(profiles, layer, s.disease);
+      map.update(mv.values, s.district, mv.legend);
+      const L = MAP_LAYERS.find((x) => x.id === layer);
+      view.querySelector("#rec-map-title").textContent = `District map · ${L.label}`;
+      view.querySelector("#rec-map-sub").textContent = layer === "peak" ? `${dis?.name} · baseline peak at t0, from /districts` : "District profile from /districts";
+      note.textContent = "District profiles are synthetic or illustrative values from the dataset, not real measurements. Pole height and colour scale with the value; the darkest district has the highest value.";
+    }
   }
-  const mapReady = createDistrictMap(view.querySelector("#rec-map"), meta.districts, { onSelect: (id) => setSelection({ district: id }) })
+  const tipFor = (id) => {
+    const d = profiles?.find((x) => x.id === id);
+    const c = matrix?.cells.find((x) => x.district === id && x.scenario === getSelection().scenario);
+    const extra = c ? `<div class="tt-row"><span>${esc(byId(meta.scenarios, c.scenario)?.label)} TSR</span><b>${c.tsr_months ?? (c.tsr_lower_bound_months != null ? `≥ ${c.tsr_lower_bound_months}` : "—")} mo</b></div>` : "";
+    return d ? districtTip(d, extra) : null;
+  };
+  const mapReady = createDistrictMap(view.querySelector("#rec-map"), meta.districts, { onSelect: (id) => setSelection({ district: id }), tipFor })
     .then((m) => { map = m; updateMap(); return m; })
     .catch((err) => { view.querySelector("#rec-map").innerHTML = errorHTML(err); });
 
-  let lastDisease = null;
+  let lastKey = null;
   const update = async () => {
     const s = getSelection();
     diseaseSel.value = s.disease;
-    if (s.disease !== lastDisease || !matrix) { lastDisease = s.disease; await drawMatrix(); }
+    maskSel.value = s.mask || "none";
+    const key = `${s.disease}|${s.mask || "none"}`;
+    if (key !== lastKey || !matrix) { lastKey = key; await drawMatrix(); }
     else view.querySelectorAll(".heat-cell[data-s]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.s === s.scenario && b.dataset.d === s.district)));
     updateMap();
     await drawDetail();
   };
   const off = onSelection(update);
   await update();
-  return () => { off(); mapReady.then((m) => m?.dispose()); };
+  return () => { off(); profilesReady.catch(() => {}); mapReady.then((m) => m?.dispose()); };
 }
