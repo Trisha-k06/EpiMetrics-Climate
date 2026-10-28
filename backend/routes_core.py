@@ -13,7 +13,7 @@ from pydantic import BaseModel
 from . import integrity
 from .common import JSON, ApiError, client_ip, guard, ids, mask_or_none
 from .data import ROOT
-from .roles import EXPORT_PERMS, allowed, describe
+from .roles import EXPORT_PERMS, allowed, describe, matrix
 from .security import session_seconds
 from .services import analytics, audit, db, limiter, store, tokens, users
 
@@ -59,7 +59,7 @@ def login(body: LoginBody, request: Request):
     db.event("login", username=user["username"], role=user["role"], session_id=claims["sid"])
     return JSON({"token": token, "expires_in": ttl,
                  "user": {"username": user["username"], "display_name": user["display_name"], "role": user["role"]},
-                 "access": describe(user["role"])})
+                 "access": describe(user["role"]), "roles": matrix()})
 
 
 @router.post("/auth/logout")
@@ -76,7 +76,7 @@ def me(request: Request, user: dict = G):
     preview = request.headers.get("x-view-as")
     effective = preview if preview and user["real_role"] == "admin" else user["real_role"]
     return JSON({"user": {"username": user["sub"], "display_name": user["name"], "role": user["real_role"]},
-                 "access": describe(effective), "preview": effective if effective != user["real_role"] else None,
+                 "access": describe(effective), "preview": effective if effective != user["real_role"] else None, "roles": matrix(),
                  "expires_in": session_seconds()})
 
 

@@ -51,7 +51,9 @@ function placeTooltip(el, t, x, y) {
  * cfg: { months, range:[i0,i1], height, unit, yFloorZero, series:[{label, values, color, width, dash}],
  *        steps:{label, values, color}, bands:[{start,end,label,fill,stroke}], vlines:[{month,label,color,dash,row}],
  *        markers:[{month, value, color, label}], ariaLabel, valueFmt,
- *        categories: optional labels used instead of months (e.g. Jan–Dec); pass the same array as months }
+ *        categories: optional labels used instead of months (e.g. Jan–Dec); pass the same array as months,
+ *        onPick(month): click/tap/Enter on a month opens its details (drill-down),
+ *        pins: [{month, label}] small flags for comments pinned to a month }
  * Null values leave a gap in the line (masked or missing months).
  */
 export function timeChart(el, cfg) {
@@ -155,10 +157,17 @@ export function timeChart(el, cfg) {
       const tx = right ? t.x - 6 : t.x + 6;
       parts.push(`<text x="${tx}" y="${ty}" text-anchor="${right ? "end" : "start"}" class="mark-label">${esc(t.label)}</text>`);
     }
+    // comment pins: a small flag above the plot
+    for (const pin of cfg.pins || []) {
+      const i = idx(pin.month);
+      if (!inRange(i)) continue;
+      const px = x(i);
+      parts.push(`<g class="chart-pin"><line x1="${px}" x2="${px}" y1="${mt - 2}" y2="${mt + 10}" style="stroke:var(--accent);stroke-width:1.5"/><path d="M${px} ${mt - 12}h9l-3 4 3 4h-9z" style="fill:var(--accent)"/><title>${esc(pin.label)}</title></g>`);
+    }
     // hover layer
     parts.push(`<line class="hover-x" x1="0" x2="0" y1="${mt}" y2="${mt + ph}" style="stroke:var(--ink-3);stroke-width:1;opacity:0"/>`);
     cfg.series.forEach((s, k) => parts.push(`<circle class="hover-dot" data-k="${k}" r="4.5" cx="-10" cy="-10" style="fill:${s.color};stroke:var(--surface);stroke-width:2;opacity:0"/>`));
-    parts.push(`<rect class="hover-zone" x="${ml}" y="${mt}" width="${pw}" height="${ph}" style="fill:transparent;cursor:crosshair"/>`);
+    parts.push(`<rect class="hover-zone" x="${ml}" y="${mt}" width="${pw}" height="${ph}" style="fill:transparent;cursor:${cfg.onPick ? "pointer" : "crosshair"}"/>`);
 
     el.querySelector("svg")?.remove();
     el.insertAdjacentHTML("afterbegin", `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="${esc(cfg.ariaLabel || "")}">${parts.join("")}</svg>`);
@@ -187,6 +196,15 @@ export function timeChart(el, cfg) {
     zone.addEventListener("pointermove", show);
     zone.addEventListener("pointerdown", show);
     zone.addEventListener("pointerleave", hide);
+    if (cfg.onPick) {
+      const monthAt = (evt) => {
+        const r = svg.getBoundingClientRect();
+        const px = (evt.clientX - r.left) * (W / r.width);
+        return months[Math.min(i1, Math.max(i0, Math.round((px - ml) / step - 0.5) + i0))];
+      };
+      zone.addEventListener("click", (evt) => cfg.onPick(monthAt(evt)));
+      svg.setAttribute("aria-describedby", `${el.id || "chart"}-pick-hint`);
+    }
   };
   onResize(el, draw);
 }

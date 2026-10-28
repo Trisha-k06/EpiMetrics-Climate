@@ -31,5 +31,7 @@ export function reconcileSelection(meta) {
     disease: ok(meta.diseases, selection.disease) ? selection.disease : d.disease,
     scenario: ok(meta.scenarios, selection.scenario) ? selection.scenario : d.scenario,
     mask: ok(meta.masks, selection.mask) ? selection.mask : d.mask,
+    compareB: ok(meta.scenarios, selection.compareB) ? selection.compareB : d.compareB,
+    compareDistrict: ok(meta.districts, selection.compareDistrict) ? selection.compareDistrict : null,
   });
 }

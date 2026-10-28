@@ -4,7 +4,7 @@ import { api } from "../api.js";
 import { getSelection, onSelection } from "../state.js";
 import { esc, byId, fmtNum, fmtSigned } from "../format.js";
 import { timeChart, barChart, seriesLegendHTML } from "../charts.js";
-import { selectorsHTML, bindSelects, loadingHTML, errorHTML, CAT, passPill } from "../ui.js";
+import { selectorsHTML, bindSelects, loadingHTML, errorHTML, CAT, passPill, screenEyebrow } from "../ui.js";
 
 export async function render(view, { meta }) {
   let seq = 0;
@@ -12,7 +12,7 @@ export async function render(view, { meta }) {
   view.innerHTML = `
     <div class="page-head">
       <div>
-        <p class="eyebrow">Screen 6 · Forecast models</p>
+        <p class="eyebrow">${screenEyebrow("models", "Forecast models")}</p>
         <h1>How well can case counts be forecast?</h1>
         <p class="lede">Six forecasting models from notebooks 03–05, trained on 2015–2021 and tested on 2022–2024 of the baseline series: seasonal naive, a climate-aware random forest, ARIMA, SARIMA, SARIMAX with climate, and lagged SARIMAX.</p>
       </div>

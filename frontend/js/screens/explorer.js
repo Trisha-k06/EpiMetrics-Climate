@@ -4,7 +4,7 @@ import { api } from "../api.js";
 import { getSelection, setSelection, onSelection } from "../state.js";
 import { esc, byId, fmtInt, fmtNum, fmtSigned } from "../format.js";
 import { timeChart, seriesLegendHTML } from "../charts.js";
-import { selectorsHTML, bindSelects, loadingHTML, errorHTML, CAT, DISEASE_COLORS, passPill } from "../ui.js";
+import { selectorsHTML, bindSelects, loadingHTML, errorHTML, CAT, DISEASE_COLORS, passPill, screenEyebrow } from "../ui.js";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const VARS = [
@@ -20,7 +20,7 @@ export async function render(view, { meta }) {
   view.innerHTML = `
     <div class="page-head">
       <div>
-        <p class="eyebrow">Screen 5 · Data explorer</p>
+        <p class="eyebrow">${screenEyebrow("explorer", "Data explorer")}</p>
         <h1>What does the synthetic dataset look like?</h1>
         <p class="lede">The checks and first look from notebooks 01 and 02: is the data complete and consistent, how do cases and climate move through the year, and what each climate scenario changes in 2022–2024.</p>
       </div>

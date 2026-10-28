@@ -2,8 +2,8 @@
 import { CONFIG } from "../config.js";
 import { esc } from "../format.js";
 import { TECH_GROUPS, PIPELINE } from "../tech.js";
-import { toast } from "../ui.js";
-import { can } from "../auth.js";
+import { toast, screenEyebrow } from "../ui.js";
+import { canExport } from "../auth.js";
 import { api } from "../api.js";
 
 const PDF_SECTIONS = [
@@ -28,11 +28,11 @@ const PDF_SECTIONS = [
 let lastPages = 0;
 
 export async function render(view, { meta }) {
-  const allow = CONFIG.ENABLE_FILE_DOWNLOADS && can("exports");
+  const allow = CONFIG.ENABLE_FILE_DOWNLOADS && canExport("project_pdf");
   view.innerHTML = `
     <div class="page-head">
       <div>
-        <p class="eyebrow">Screen 9 · Technology &amp; project summary</p>
+        <p class="eyebrow">${screenEyebrow("technology", "Technology & project summary")}</p>
         <h1>What the project is built with</h1>
         <p class="lede">Every part of EpiMetrics-Climate, from the Python recovery engine to the charts on this site, and what each one does. You can also download a summary of the whole project as a PDF.</p>
       </div>
@@ -46,7 +46,7 @@ export async function render(view, { meta }) {
           <button class="btn btn-primary" type="button" id="pdf-export" ${allow ? "" : "disabled"}>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>Export PDF
           </button>
-          <span class="small" id="pdf-status" role="status" aria-live="polite">${!can("exports") ? "Exporting needs an Analyst or Admin account." : CONFIG.ENABLE_FILE_DOWNLOADS ? (lastPages ? `A4. The last export had ${lastPages} pages. Created on your computer from API results; the server logs the export.` : "A4. Created on your computer from API results; the server logs the export.") : "PDF export is turned off in this hosted preview. Run the app locally to download the PDF."}</span>
+          <span class="small" id="pdf-status" role="status" aria-live="polite">${!canExport("project_pdf") ? "The project PDF is for analyst and admin accounts." : CONFIG.ENABLE_FILE_DOWNLOADS ? (lastPages ? `A4. The last export had ${lastPages} pages. Created on your computer from API results; the server logs the export.` : "A4. Created on your computer from API results; the server logs the export.") : "PDF export is turned off in this hosted preview. Run the app locally to download the PDF."}</span>
         </div>
       </div>
       <div class="export-list">

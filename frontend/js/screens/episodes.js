@@ -4,7 +4,7 @@ import { api } from "../api.js";
 import { getSelection, setSelection, onSelection } from "../state.js";
 import { esc, monthLabel, byId, fmtInt, fmtNum, fmtSigned } from "../format.js";
 import { barChart, seriesLegendHTML } from "../charts.js";
-import { loadingHTML, errorHTML, DISEASE_COLORS, passPill } from "../ui.js";
+import { loadingHTML, errorHTML, DISEASE_COLORS, passPill, screenEyebrow } from "../ui.js";
 
 const BARS = [
   { key: "mean_recovery_months", title: "Mean recovery time", unit: "months", fmt: (v) => fmtNum(v, 1), note: "Recovered episodes only" },
@@ -20,7 +20,7 @@ export async function render(view, { meta }) {
   view.innerHTML = `
     <div class="page-head">
       <div>
-        <p class="eyebrow">Screen 4 · Outbreak episodes</p>
+        <p class="eyebrow">${screenEyebrow("episodes", "Outbreak episodes")}</p>
         <h1>How long do outbreaks take to recover, across the whole decade?</h1>
         <p class="lede">Every month above the endemic threshold starts an outbreak episode; it recovers once cases stay at or below the threshold for 3 months in a row. This repeats the analysis of notebooks 06 and 07 for all districts, diseases and scenarios.</p>
       </div>

@@ -1,85 +1,79 @@
-// Screen 1: project overview and explanation.
+// Home for viewers and analysts: the 3D map of Tamil Nadu is the full-bleed hero, with floating glass cards
+// (question, today's highlight from /recovery-matrix, three quick starts). Long explanations sit in "Learn more".
 import { CONFIG } from "../config.js";
 import { api } from "../api.js";
+import { can, canOpen } from "../auth.js";
 import { esc, monthLabel, byId, tsrText, deltaText, plural, disclaimerBody } from "../format.js";
 import { recoveryTrack } from "../charts.js";
 import { trackLegendHTML, COLORS, errorHTML } from "../ui.js";
 import { createDistrictMap, mapValuesFromCells, districtTip } from "../map3d.js";
-import { setSelection } from "../state.js";
+import { setSelection, getSelection } from "../state.js";
 import { END_USERS } from "../platform-data.js";
+import { infoTip } from "../components/tooltip.js";
+import { mountSavedPanel } from "../components/saved.js";
+import { mountInsights } from "../components/insights.js";
 
-export async function render(view, { meta }) {
+export async function render(view, { meta, access }) {
   const ex = CONFIG.DEFAULT_SELECTION;
   const exScen = byId(meta.scenarios, ex.scenario);
-  const exDist = byId(meta.districts, ex.district);
-  const exDis = byId(meta.diseases, ex.disease);
+  const advanced = can("advanced");
+  const mapScreen = canOpen("recovery") ? "recovery" : "map";
   const nMonths = (() => { const [a, b] = [meta.horizon.start_month, meta.horizon.end_month].map((m) => m.split("-").map(Number)); return (b[0] - a[0]) * 12 + (b[1] - a[1]) + 1; })();
   view.innerHTML = `
-    <section class="hero">
-      <div class="panel stack" style="gap:14px">
-        <p class="eyebrow">Screen 1 · Overview · UKM project</p>
-        <h1>EpiMetrics-Climate</h1>
-        <p class="question">When the climate shifts, how much longer does a district take to recover from a seasonal outbreak?</p>
-        <p style="max-width:62ch">The simulator measures <b>Time to Sustained Recovery (TSR)</b> after an outbreak peak, and the <b>recovery delay (ΔTSR)</b> a climate scenario causes compared with the baseline climate. It looks closely at secondary waves that interrupt recovery. Case counts are the route to that answer, not the answer itself.</p>
-        <div class="formula" aria-label="Recovery delay equals T S R under the scenario minus T S R under the baseline">ΔTSR = TSR(scenario) − TSR(baseline)</div>
-        <div class="row"><a class="btn btn-primary" href="#simulator">Open the scenario simulator</a><a class="btn" href="#validation">See validation and limits</a></div>
-      </div>
-      <div class="panel stack" style="gap:10px">
-        <div class="panel-head" style="margin:0"><h2>Recovery delay by district</h2><span class="small">${esc(exDis?.name)} · ${esc(exScen?.label)} vs baseline</span></div>
-        <div id="ov-map"></div>
-        <p class="small">Each study district is coloured, and its pole raised, by the extra months to recover (ΔTSR) from the API. Hover a district for its profile; select it to open it in the simulator. More map layers are on the Recovery screen.</p>
+    <section class="hero-map" aria-label="Tamil Nadu: recovery delay by study district">
+      <div class="hero-map-canvas" id="ov-map"></div>
+      <div class="hero-cards">
+        <article class="glass hero-card hero-main">
+          <p class="eyebrow">EpiMetrics-Climate · ${esc(access.label)}</p>
+          <h1>When the climate shifts, how much longer does recovery take?</h1>
+          <p>We measure <b>time to sustained recovery</b> ${infoTip("tsr", { label: "time to sustained recovery" })} after an outbreak peak, and the <b>extra months</b> ${infoTip("delta_tsr")} a climate change adds.</p>
+          <span class="badge badge-synthetic hero-badge" title="All data in this application is synthetic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 21h20L12 3z"/><path d="M12 10v5M12 18h.01"/></svg>Synthetic data · not a forecast</span>
+        </article>
+        <article class="glass hero-card hero-highlight" id="ov-highlight" aria-live="polite"><p class="eyebrow">Today's highlight</p><div class="skeleton" style="height:44px"></div></article>
+        <nav class="glass hero-card hero-actions" aria-label="Quick start">
+          <a class="btn btn-primary" href="#simulator">Explore a scenario</a>
+          <a class="btn" href="#compare">Compare two climates</a>
+          <a class="btn" href="#${mapScreen}">See the district map</a>
+        </nav>
       </div>
     </section>
 
+    <section class="grid cols-2 home-row">
+      ${can("saved") ? '<div class="panel"><div class="panel-head"><h2>My saved</h2><span class="small">Views and pinned districts</span></div><div id="ov-saved"></div></div>' : ""}
+      <div class="panel" id="ov-insights" hidden></div>
+    </section>
+
     <section class="panel stack">
-      <div class="panel-head" style="margin:0"><h2>Example recovery timeline</h2><span class="small">${esc(exDis?.name)} · ${esc(exDist?.name)} · ${esc(exScen?.label)}</span></div>
+      <div class="panel-head" style="margin:0"><h2>Example: ${esc(byId(meta.diseases, ex.disease)?.name)} in ${esc(byId(meta.districts, ex.district)?.name)}</h2><span class="small">${esc(exScen?.label)} vs baseline</span></div>
+      <p class="answer" id="ov-example-text"></p>
       <div id="ov-example" aria-live="polite"><div class="skeleton" style="height:120px"></div></div>
       ${trackLegendHTML()}
-      <p class="small" id="ov-example-text"></p>
     </section>
 
     <section class="callout callout-warn" role="note"><b>Synthetic data, research demonstration only.</b> ${esc(disclaimerBody(meta))}</section>
 
-    <section class="panel">
-      <div class="panel-head"><h2>What this project is, and is not</h2></div>
-      <div class="is-isnt">
+    <details class="panel learn-more">
+      <summary><h2>What this project is, and is not</h2><span class="small">Learn more</span></summary>
+      <div class="is-isnt" style="margin-top:12px">
         <div><h3 style="color:var(--good)">It is</h3><ul>
-          <li>A controlled simulation with known ground truth</li>
-          <li>A measure of recovery time (TSR) and recovery delay (ΔTSR)</li>
-          <li>A detector of secondary waves that interrupt recovery</li>
-          <li>A test of whether recovery can be estimated from noisy, incomplete case data</li></ul></div>
+          <li>A controlled simulation with known ground truth</li><li>A measure of recovery time (TSR) and recovery delay (ΔTSR)</li>
+          <li>A detector of secondary waves that interrupt recovery</li><li>A test of whether recovery can be estimated from noisy, incomplete case data</li></ul></div>
         <div><h3 style="color:var(--crit)">It is not</h3><ul>
-          <li>A case-count forecasting dashboard</li>
-          <li>A prediction for real Tamil Nadu districts or real climate</li>
-          <li>Evidence of how dengue or malaria truly respond to climate</li>
-          <li>Clinical advice or a public-health alert system</li></ul></div>
+          <li>A case-count forecasting dashboard</li><li>A prediction for real Tamil Nadu districts or real climate</li>
+          <li>Evidence of how dengue or malaria truly respond to climate</li><li>Clinical advice or a public-health alert system</li></ul></div>
       </div>
-    </section>
-
-    <section class="panel">
-      <div class="panel-head"><h2>How to use the simulator</h2></div>
-      <ol class="steps">
-        <li><b>Choose a series</b><span class="small">One of ${meta.districts.length} districts and ${meta.diseases.length} diseases.</span></li>
-        <li><b>Switch the climate</b><span class="small">Move from the baseline to one of ${meta.scenarios.length - 1} climate-altered scenarios.</span></li>
-        <li><b>Read recovery</b><span class="small">TSR, ΔTSR, interruptions and status, with the case curves behind them.</span></li>
-        <li><b>Check reliability</b><span class="small">Compare estimates with ground truth, and export a report.</span></li>
-      </ol>
-    </section>
-
-    <section class="grid cols-2">
-      <div class="panel">
-        <div class="panel-head"><h2>Study design</h2></div>
+    </details>
+    ${advanced ? `<details class="panel learn-more">
+      <summary><h2>Study design and definitions</h2><span class="small">Learn more</span></summary>
+      <div class="grid cols-2" style="margin-top:12px">
         <dl class="dl">
           <dt>Districts</dt><dd>${meta.districts.map((d) => `${esc(d.name)} (${esc(d.climate_zone)})`).join(", ")}. Populations and climatologies are illustrative.</dd>
           <dt>Diseases</dt><dd>${meta.diseases.map((d) => `${esc(d.name)} (${esc(d.vector)})`).join(", ")}</dd>
           <dt>Period</dt><dd>${monthLabel(meta.horizon.start_month)} – ${monthLabel(meta.horizon.end_month)}, ${nMonths} months. Thresholds use ${monthLabel(meta.training_period.start_month)} – ${monthLabel(meta.training_period.end_month)}.</dd>
-          <dt>Reference peak</dt><dd>A seeded outbreak in every series. Its baseline peak (t0) falls in ${monthLabel(meta.peak_search_window.start_month)} – ${monthLabel(meta.peak_search_window.end_month)}.</dd>
+          <dt>Reference peak</dt><dd>A seeded outbreak in every series; its baseline peak (t0) falls in ${monthLabel(meta.peak_search_window.start_month)} – ${monthLabel(meta.peak_search_window.end_month)}.</dd>
           <dt>Fair comparison</dt><dd>All scenarios share the same random draws (seed ${esc(meta.seed)}), so differences come only from the climate.</dd>
           <dt>Uncertainty</dt><dd>Recovery is re-estimated over ${esc(meta.replicates)} observation-noise replicates.</dd>
         </dl>
-      </div>
-      <div class="panel">
-        <div class="panel-head"><h2>Definitions</h2><span class="small">Project conventions, not epidemiological standards</span></div>
         <dl class="dl">
           <dt>Endemic threshold</dt><dd>${esc(meta.recovery_rule.threshold_definition)}</dd>
           <dt>TSR</dt><dd>${esc(meta.recovery_rule.tsr_definition)}</dd>
@@ -89,54 +83,76 @@ export async function render(view, { meta }) {
           <dt>Insufficient data</dt><dd>More than ${Math.round(meta.recovery_rule.max_missing_frac * 100)}% of months after t0 are missing.</dd>
         </dl>
       </div>
-    </section>
-
-    <section class="panel">
-      <div class="panel-head"><h2>The seven climate scenarios</h2><span class="small">Hypothetical inputs, applied to all districts</span></div>
-      <div class="table-wrap"><table>
+    </details>` : ""}
+    <details class="panel learn-more">
+      <summary><h2>The seven climate scenarios</h2><span class="small">Hypothetical inputs, applied to all districts</span></summary>
+      <div class="table-wrap" style="margin-top:12px"><table>
         <thead><tr><th>Scenario</th><th>Type</th><th>What changes</th></tr></thead>
         <tbody>${meta.scenarios.map((s) => `<tr><td><b>${esc(s.label)}</b></td><td>${esc(s.category)}</td><td>${esc(s.description)}</td></tr>`).join("")}</tbody>
       </table></div>
-    </section>
+    </details>
+    <details class="panel learn-more">
+      <summary><h2>Who will use it</h2><span class="small">For planning and research only</span></summary>
+      <ul class="plain small" style="margin-top:12px">${END_USERS.map((u) => `<li><b>${esc(u.name)}:</b> ${esc(u.task)}</li>`).join("")}</ul>
+      ${advanced ? `<h3 class="h3" style="margin-top:14px">Assumed climate drivers (to be sourced)</h3>${meta.diseases.map((d) => `<p style="margin-top:6px"><b>${esc(d.name)}</b></p><ul class="plain small">${d.drivers.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>`).join("")}` : ""}
+    </details>`;
 
-    <section class="grid cols-2">
-      <div class="panel"><div class="panel-head"><h2>Assumed climate drivers</h2><span class="small">Marked "to be sourced"</span></div>
-        ${meta.diseases.map((d) => `<p style="margin-top:6px"><b>${esc(d.name)}</b></p><ul class="plain small">${d.drivers.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>`).join("")}
-      </div>
-      <div class="panel"><div class="panel-head"><h2>Who will use it</h2><a class="small" href="#platform">Users &amp; security →</a></div>
-        <ul class="plain small">${END_USERS.map((u) => `<li><b>${esc(u.name)}:</b> ${esc(u.task)} <a href="#${esc(u.start)}">${esc(u.startLabel)}</a></li>`).join("")}</ul>
-        <p class="small" style="margin-top:10px">For planning and research only, not for operational decisions or medical advice.</p>
-      </div>
-    </section>`;
-
-  let map = null;
+  let profiles = [];
   const mapReady = (async () => {
+    const host = view.querySelector("#ov-map");
     try {
-      const host = view.querySelector("#ov-map");
-      let profiles = [];
       const tipFor = (id) => districtTip(profiles.find((d) => d.id === id));
-      const [m, matrix, prof] = await Promise.all([
-        createDistrictMap(host, meta.districts, { compact: true, tipFor, onSelect: (id) => { setSelection({ ...ex, district: id }); location.hash = "simulator"; } }),
-        api.recoveryMatrix({ disease: ex.disease }),
+      const [m, matrices, prof] = await Promise.all([
+        createDistrictMap(host, meta.districts, { hero: true, shiftX: 1.35, tipFor,
+          onSelect: (id) => { setSelection({ district: id }); location.hash = mapScreen; } }),
+        Promise.all(meta.diseases.map((d) => api.recoveryMatrix({ disease: d.id }))),
         api.districts(),
       ]);
       profiles = prof.districts;
-      map = m;
-      const mv = mapValuesFromCells(matrix.cells, ex.scenario, "delta");
-      m.update(mv.values, ex.district, mv.legend);
+      const k = meta.diseases.findIndex((d) => d.id === ex.disease);
+      const mv = mapValuesFromCells(matrices[k].cells, ex.scenario, "delta");
+      m.update(mv.values, getSelection().district, mv.legend);
+      drawHighlight(matrices);
       return m;
     } catch (err) {
-      const host = view.querySelector("#ov-map");
-      if (host) host.innerHTML = errorHTML(err);
+      if (host.isConnected) host.innerHTML = errorHTML(err);
+      view.querySelector("#ov-highlight").innerHTML = errorHTML(err);
       return null;
     }
   })();
-  const cleanup = () => mapReady.then((m) => m?.dispose());
+
+  // The largest delay among the API's cells for the default scenario (display only: picking the largest API value).
+  function drawHighlight(matrices) {
+    const host = view.querySelector("#ov-highlight");
+    if (!host) return;
+    let best = null;
+    matrices.forEach((mx, k) => {
+      for (const c of mx.cells) {
+        if (c.scenario !== ex.scenario) continue;
+        const v = c.delta_status === "computed" ? c.delta_tsr_months : c.delta_status === "lower_bound" ? c.delta_tsr_lower_bound_months : null;
+        if (v != null && (!best || v > best.v)) best = { v, c, disease: meta.diseases[k] };
+      }
+    });
+    if (!best) { host.innerHTML = '<p class="eyebrow">Today\'s highlight</p><p>No delay is available for this scenario.</p>'; return; }
+    const dist = byId(meta.districts, best.c.district);
+    const value = best.c.delta_status === "lower_bound" ? `at least +${best.v}` : `+${best.v}`;
+    host.innerHTML = `<p class="eyebrow">Today's highlight</p>
+      <p class="highlight-value"><b>${esc(dist.name)} ${esc(best.disease.name.toLowerCase())}: ${esc(value)} months</b></p>
+      <p class="small">The largest recovery delay under a ${esc(exScen.label.toLowerCase())}, across the five districts and two diseases (from the API).</p>
+      <button type="button" class="btn btn-sm" id="ov-hl-open">Open this result</button>`;
+    host.querySelector("#ov-hl-open").addEventListener("click", () => {
+      setSelection({ district: best.c.district, disease: best.disease.id, scenario: ex.scenario });
+      location.hash = "simulator";
+    });
+  }
+
+  if (can("saved")) mountSavedPanel(view.querySelector("#ov-saved"), meta);
+  mountInsights(view.querySelector("#ov-insights"), getSelection());
 
   try {
     const sim = await api.simulation(ex);
     const host = view.querySelector("#ov-example");
-    if (!host) return cleanup;
+    if (!host) return () => mapReady.then((m) => m?.dispose());
     host.innerHTML = "";
     recoveryTrack(host, {
       months: sim.months, range: [sim.months.indexOf(CONFIG.FOCUS_RANGE.start), sim.months.length - 1], t0: sim.reference.t0_month, horizonEnd: meta.horizon.end_month,
@@ -145,10 +161,10 @@ export async function render(view, { meta }) {
       ariaLabel: "Example recovery timeline, baseline versus scenario",
     });
     const b = tsrText(sim.recovery.baseline, meta.horizon.end_month), s = tsrText(sim.recovery.scenario, meta.horizon.end_month), d = deltaText(sim.recovery);
-    view.querySelector("#ov-example-text").innerHTML = `Baseline recovery takes ${esc(b.value)} ${esc(b.unit)}. Under the ${esc(exScen?.label.toLowerCase())} it takes ${esc(s.value)} ${esc(s.unit)}, a delay of <b>${esc(d.value)} ${esc(d.unit)}</b>, with ${plural(sim.recovery.scenario.interruption_count, "interrupting wave")}. Values come from the API.`;
+    view.querySelector("#ov-example-text").innerHTML = `Recovery takes <b>${esc(s.value)} ${esc(s.unit)}</b> under a ${esc(exScen?.label.toLowerCase())} instead of ${esc(b.value)}: <b>${esc(d.value)} ${esc(d.unit)}</b> longer, with ${plural(sim.recovery.scenario.interruption_count, "interrupting wave")}.`;
   } catch (err) {
     const host = view.querySelector("#ov-example");
     if (host) host.innerHTML = errorHTML(err);
   }
-  return cleanup;
+  return () => mapReady.then((m) => m?.dispose());
 }

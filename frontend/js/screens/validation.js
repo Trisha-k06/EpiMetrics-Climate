@@ -3,7 +3,7 @@ import { api } from "../api.js";
 import { getSelection, setSelection, onSelection } from "../state.js";
 import { esc, byId, monthLabel, fmtInt } from "../format.js";
 import { scatterChart } from "../charts.js";
-import { loadingHTML, errorHTML } from "../ui.js";
+import { loadingHTML, errorHTML, screenEyebrow } from "../ui.js";
 
 const pct = (v) => (v == null ? "—" : `${Math.round(v * 100)}%`);
 const maskKey = (m) => (m == null ? "none" : m);
@@ -14,7 +14,7 @@ export async function render(view, { meta }) {
   view.innerHTML = `
     <div class="page-head">
       <div>
-        <p class="eyebrow">Screen 7 · Validation, uncertainty &amp; limitations</p>
+        <p class="eyebrow">${screenEyebrow("validation", "Validation, uncertainty & limitations")}</p>
         <h1>Can recovery be estimated from noisy case data?</h1>
         <p class="lede">Because the data is synthetic, the true recovery time of every series is known. This screen compares the recovery engine's estimates from observed cases with that ground truth, under missing data and alternative recovery rules.</p>
       </div>

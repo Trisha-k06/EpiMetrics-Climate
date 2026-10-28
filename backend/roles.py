@@ -106,3 +106,8 @@ def describe(role: str) -> dict:
     return {"role": role, **ROLE_INFO[role], "home": screens[0],
             "screens": [{"id": s, "label": SCREEN_LABELS[s]} for s in screens],
             "permissions": sorted(PERMISSIONS[role])}
+
+
+def matrix() -> list[dict]:
+    """Every role's public description (labels, screens, permission ids) for the Users & security table."""
+    return [describe(r) for r in ROLE_IDS]

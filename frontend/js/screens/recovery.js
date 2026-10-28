@@ -3,9 +3,12 @@ import { api } from "../api.js";
 import { getSelection, setSelection, onSelection } from "../state.js";
 import { esc, monthLabel, byId, fmtInt, statusPill, tsrText, plural } from "../format.js";
 import { recoveryTrack } from "../charts.js";
-import { trackLegendHTML, wavesTableHTML, loadingHTML, errorHTML, COLORS, maskSelectHTML } from "../ui.js";
+import { trackLegendHTML, wavesTableHTML, loadingHTML, errorHTML, COLORS, maskSelectHTML, screenEyebrow } from "../ui.js";
 import { CONFIG } from "../config.js";
 import { createDistrictMap, mapValuesFromCells, mapValuesFromProfiles, districtTip, MAP_LAYERS } from "../map3d.js";
+import { mountDrill } from "../components/drill.js";
+import { mountPin } from "../components/saved.js";
+import { infoTip } from "../components/tooltip.js";
 
 const METRICS = {
   delta: { label: "Recovery delay (ΔTSR)", unit: "months vs baseline" },
@@ -41,9 +44,9 @@ export async function render(view, { meta }) {
   view.innerHTML = `
     <div class="page-head">
       <div>
-        <p class="eyebrow">Screen 3 · Recovery &amp; recurrence</p>
+        <p class="eyebrow">${screenEyebrow("recovery", "Recovery & recurrence")}</p>
         <h1>Which climates delay recovery, and where?</h1>
-        <p class="lede">Every scenario and district for one disease. Choose a cell to see its recovery timeline and the secondary waves behind it.</p>
+        <p class="lede">Every scenario and district for one disease ${infoTip("delta_tsr")}. Choose a district or a cell to drill down: district › disease › year › month.</p>
       </div>
     </div>
     <section class="panel">
@@ -63,6 +66,10 @@ export async function render(view, { meta }) {
           <div class="seg" role="group" aria-labelledby="rec-metric-label">${Object.entries(METRICS).map(([k, m]) => `<button type="button" data-metric="${k}" aria-pressed="${k === metric}">${esc(m.label)}</button>`).join("")}</div></div>
       </div>
       <div id="rec-matrix">${loadingHTML()}</div>
+    </section>
+    <section class="panel" id="rec-drill-panel" aria-live="polite">
+      <div class="panel-head"><h2>District panel</h2><div id="rec-pin"></div></div>
+      <div id="rec-drill"></div>
     </section>
     <section class="panel" id="rec-detail-panel">
       <div class="panel-head"><h2 id="rec-detail-title">Selected series</h2><a class="btn" href="#simulator">Open in simulator</a></div>
@@ -185,7 +192,9 @@ export async function render(view, { meta }) {
     const extra = c ? `<div class="tt-row"><span>${esc(byId(meta.scenarios, c.scenario)?.label)} TSR</span><b>${c.tsr_months ?? (c.tsr_lower_bound_months != null ? `≥ ${c.tsr_lower_bound_months}` : "—")} mo</b></div>` : "";
     return d ? districtTip(d, extra) : null;
   };
-  const mapReady = createDistrictMap(view.querySelector("#rec-map"), meta.districts, { onSelect: (id) => setSelection({ district: id }), tipFor })
+  const drill = mountDrill(view.querySelector("#rec-drill"), meta, { initialDistrict: getSelection().district, mask: () => getSelection().mask,
+    onTop: () => view.querySelector("#rec-map").scrollIntoView({ block: "start" }) });
+  const mapReady = createDistrictMap(view.querySelector("#rec-map"), meta.districts, { onSelect: (id) => { setSelection({ district: id }); drill.show(id); }, tipFor })
     .then((m) => { map = m; updateMap(); return m; })
     .catch((err) => { view.querySelector("#rec-map").innerHTML = errorHTML(err); });
 
@@ -198,6 +207,8 @@ export async function render(view, { meta }) {
     if (key !== lastKey || !matrix) { lastKey = key; await drawMatrix(); }
     else view.querySelectorAll(".heat-cell[data-s]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.s === s.scenario && b.dataset.d === s.district)));
     updateMap();
+    drill.refresh();
+    mountPin(view.querySelector("#rec-pin"), s.district, meta);
     await drawDetail();
   };
   const off = onSelection(update);

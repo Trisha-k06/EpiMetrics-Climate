@@ -4,8 +4,9 @@
 import { api } from "./api.js";
 import { getSelection, setSelection } from "./state.js";
 import { esc, monthLabel, byId, tsrText, deltaText, anomalyText, plural } from "./format.js";
-import { END_USERS, ROLES, SECURITY, SAAS } from "./platform-data.js";
-import { currentSession } from "./auth.js";
+import { END_USERS, SECURITY, SAAS } from "./platform-data.js";
+import { currentSession, access, can } from "./auth.js";
+import { GLOSSARY } from "./glossary.js";
 
 const SUGGESTIONS = ["What is TSR?", "Why does recovery take longer here?", "Which forecast model is best?", "How many outbreak episodes?", "Which scenario delays Chennai most?", "What does censored mean?", "Is this real data?"];
 
@@ -92,8 +93,11 @@ async function answer(meta, raw) {
   }
   const e = entities(q);
   const sel = { ...getSelection(), ...e };
-  if (/\b(forecast|forecasting|model|models|arima|sarima|sarimax|random forest|mae|rmse|predict)\b/.test(q)) return bestModel(meta, sel);
-  if (/\bepisodes?\b|how many outbreaks/.test(q)) return episodeCount(meta, sel);
+  const forecastQ = /\b(forecast|forecasting|model|models|arima|sarima|sarimax|random forest|mae|rmse|predict)\b/.test(q);
+  const episodeQ = /\bepisodes?\b|how many outbreaks/.test(q);
+  if ((forecastQ || episodeQ) && !can("analysis.read")) return "Forecast benchmarks and outbreak-episode statistics are part of the analyst screens. Your experience shows the recovery results: try \"Why does recovery take longer here?\".";
+  if (forecastQ) return bestModel(meta, sel);
+  if (episodeQ) return episodeCount(meta, sel);
   const dataQ = /\b(why|delay|longer|tsr|recover|how long|interrupt|wave|result|months?)\b|δ|\+\d+/.test(q);
   const askingDefinition = /\b(what is|what are|what does|define|meaning|mean)\b/.test(q);
   if (/\b(most|worst|longest|biggest|highest|which scenario)\b/.test(q)) return worstScenario(meta, sel);
@@ -102,7 +106,7 @@ async function answer(meta, raw) {
   }
   const r = meta.recovery_rule;
   if (/\b(delta|δ)\s*tsr\b|δtsr|recovery delay|\bdelay\b/.test(q)) return `<b>Recovery delay (ΔTSR)</b> is TSR under a climate scenario minus TSR under the baseline climate. A positive value means the changed climate makes recovery take longer. If a scenario never recovers by ${monthLabel(meta.horizon.end_month)}, the delay is shown as a minimum ("≥").`;
-  if (/\btsr\b|sustained recovery|time to (sustained )?recovery/.test(q)) return `<b>Time to Sustained Recovery (TSR)</b>: ${esc(r.tsr_definition)}. It is the project's main measure.`;
+  if (/\btsr\b|sustained recovery|time to (sustained )?recovery/.test(q)) return `<b>Time to Sustained Recovery (TSR)</b>: ${esc(GLOSSARY.tsr.plain)} It is the project's main measure.`;
   if (/threshold|endemic|normal level/.test(q)) return `<b>Endemic threshold</b>: ${esc(r.threshold_definition)}. Cases at or below it count as normal.`;
   if (/\bt0\b|reference peak|\bpeak\b/.test(q)) return "<b>t0</b> is the outbreak peak in the baseline series (between Aug 2022 and Feb 2023). Every scenario measures recovery from this same month, so the comparison is fair.";
   if (/censor|not recovered|never recover|≥|greater than/.test(q)) return `<b>Censored</b> means the series never reached sustained recovery before ${monthLabel(meta.horizon.end_month)}, the end of the data. We then show the recovery time as a minimum ("≥ N months") instead of inventing a date.`;
@@ -120,7 +124,7 @@ async function answer(meta, raw) {
   if (/saas|service|host|deploy|cloud|subscription|tier/.test(q)) return `${esc(SAAS.summary)}<br>${SAAS.tiers.map((t) => `<b>${esc(t.name)}</b> (${esc(t.price)}): ${esc(t.includes)}`).join("<br>")}`;
   if (/secur|login|sign in|password|role|session|permission|safe|hack|integrity|checksum/.test(q)) {
     const s = currentSession();
-    return `${SECURITY.filter((m) => m.status === "app").map((m) => `<b>${esc(m.area)}</b>: ${esc(m.measure)}`).join("<br>")}${s ? `<br>You are signed in as <b>${esc(ROLES[s.role].label)}</b>.` : ""}<br>${link("platform", "Open Users & security")}`;
+    return `${SECURITY.filter((m) => m.status === "app").map((m) => `<b>${esc(m.area)}</b>: ${esc(m.measure)}`).join("<br>")}${s ? `<br>You are using the <b>${esc(access().label)}</b> experience.` : ""}<br>${link("platform", "Open Users & security")}`;
   }
   if (/pdf|export|download|report|print/.test(q)) return `Analysts and admins can export: the Scenario report screen saves one scenario (PDF, JSON, CSV, print), and the Technology screen exports a summary PDF of the whole project. The server checks the role and logs every export first. ${link("report", "Open Scenario report")}`;
   if (/limit|weak|caveat|assumption/.test(q)) return meta.limitations.slice(0, 5).map((l) => `• ${esc(l)}`).join("<br>") + `<br>${link("validation", "All limitations")}`;

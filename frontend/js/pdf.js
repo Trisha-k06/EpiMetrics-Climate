@@ -4,7 +4,9 @@ import { CONFIG } from "./config.js";
 import { api } from "./api.js";
 import { byId, monthLabel, tsrText, deltaText, rangeIdx, STATUS, disclaimerBody, anomalyText, fmtNum } from "./format.js";
 import { TECH_GROUPS, PIPELINE } from "./tech.js";
-import { END_USERS, ROLES, PERMISSIONS, SECURITY, SAAS } from "./platform-data.js";
+import { END_USERS, PERM_TEXT, SECURITY, SAAS } from "./platform-data.js";
+import { roleMatrix } from "./auth.js";
+import { GLOSSARY } from "./glossary.js";
 
 const C = {
   ink: [16, 34, 43], ink2: [68, 85, 94], muted: [95, 111, 119], line: [211, 221, 218], soft: [234, 240, 238],
@@ -12,12 +14,16 @@ const C = {
   baseline: [42, 120, 214], scenario: [235, 104, 52], threshold: [85, 102, 110], anomaly: [244, 230, 198], gap: [226, 230, 234],
 };
 
-// The PDF's built-in Helvetica cannot draw some symbols; spell them out.
+// The PDF's built-in Helvetica only has Latin-1 glyphs: spell out known symbols, then replace anything it cannot
+// draw (emoji, Tamil and other scripts) with a visible marker instead of letting jsPDF print garbage.
+export const UNSUPPORTED = "[?]";
 function t(s) {
   return String(s ?? "")
     .replace(/ΔTSR/g, "Delta TSR").replace(/Δ/g, "Delta ")
-    .replace(/≥/g, ">=").replace(/≤/g, "<=").replace(/−/g, "-").replace(/→/g, "->").replace(/×/g, "x").replace(/★/g, "*")
-    .replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/[▲▽✓✗]/g, "");
+    .replace(/≥/g, ">=").replace(/≤/g, "<=").replace(/−/g, "-").replace(/[–—]/g, "-").replace(/→/g, "->").replace(/×/g, "x").replace(/★/g, "*")
+    .replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/…/g, "...").replace(/[▲▽✓✗📍📌]/gu, "")
+    .normalize("NFC")
+    .replace(/[^\t\n\x20-\x7E\xA0-\xFF]+/gu, UNSUPPORTED);
 }
 
 function loadScript(src) {
@@ -198,15 +204,9 @@ export async function exportProjectPDF(meta, onStep = () => {}) {
   para(`The dataset catalog lists ${data.audit.catalog.length} tables. Training uses ${data.audit.split.train.rows} baseline rows (${data.audit.split.train.start} to ${data.audit.split.train.end}); testing uses ${data.audit.split.test.rows} (${data.audit.split.test.start} to ${data.audit.split.test.end}).`, { size: 9.5, rgb: C.ink2 });
 
   heading("Key terms", "These are project rules, chosen by the team. They are not official epidemiological standards.");
-  table(["Term", "Meaning"], [
-    ["Endemic threshold", meta.recovery_rule.threshold_definition],
-    ["t0 (reference peak)", "The outbreak peak in the baseline series. Every scenario measures recovery from this same month."],
-    ["TSR", meta.recovery_rule.tsr_definition],
-    ["Delta TSR", "TSR under the scenario minus TSR under the baseline climate."],
-    ["Secondary wave", meta.recovery_rule.interruption_definition],
-    ["Censored", `No sustained recovery before ${monthLabel(end)}. TSR is then shown as a minimum (">= N months"), never as an invented date.`],
-    ["Insufficient data", `More than ${Math.round(meta.recovery_rule.max_missing_frac * 100)}% of months after t0 are missing, so no recovery time is given.`],
-  ], { columnStyles: { 0: { cellWidth: 40, fontStyle: "bold" } } });
+  // Same wording as the in-app "i" tooltips (js/glossary.js).
+  table(["Term", "Meaning"], ["threshold", "t0", "tsr", "delta_tsr", "secondary_wave", "interruption", "censored", "insufficient", "mask", "spread"]
+    .map((id) => [GLOSSARY[id].term, GLOSSARY[id].plain]), { columnStyles: { 0: { cellWidth: 44, fontStyle: "bold" } } });
 
   heading("Climate scenarios tested", "Hypothetical changes for a controlled experiment, applied to all districts. They are not climate projections.");
   table(["Scenario", "Type", "What changes"], meta.scenarios.map((s) => [s.label, s.category, s.description]), { columnStyles: { 0: { cellWidth: 44, fontStyle: "bold" }, 1: { cellWidth: 24 } } });
@@ -300,7 +300,8 @@ export async function exportProjectPDF(meta, onStep = () => {}) {
   heading("Security", "\"Working now\" means the FastAPI backend and website do it in this version; \"At deployment\" needs a production host.");
   table(["Area", "Measure", "Status"], SECURITY.map((m) => [m.area, m.measure, m.status === "app" ? "Working now" : "At deployment"]), { fontSize: 8.5, columnStyles: { 0: { cellWidth: 32, fontStyle: "bold" }, 2: { cellWidth: 24 } } });
   sub("What each role can do");
-  table(["Action", ...Object.values(ROLES).map((r) => r.label)], PERMISSIONS.map((p) => [p.what, ...Object.keys(ROLES).map((k) => (p[k] ? "Yes" : "No"))]), { fontSize: 8.5, columnStyles: { 0: { cellWidth: 90 } } });
+  const roles = roleMatrix();
+  table(["Action", ...roles.map((r) => r.label)], PERM_TEXT.map((p) => [p.what, ...roles.map((r) => (r.permissions.includes(p.perm) ? "Yes" : "No"))]), { fontSize: 8, columnStyles: { 0: { cellWidth: 70 } } });
 
   heading("Assistant", "A basic chat assistant answers questions inside the app.");
   bullets([
@@ -324,7 +325,7 @@ export async function exportProjectPDF(meta, onStep = () => {}) {
 }
 
 /** One-scenario report: title, disclaimer, summary, results, case chart, waves, anomaly, method, limitations, provenance. */
-export async function exportReportPDF(sim, meta, summary) {
+export async function exportReportPDF(sim, meta, summary, comments = null) {
   const jsPDF = await loadJsPDF();
   const doc = new jsPDF({ unit: "mm", format: "a4", compress: true });
   const w = writer(doc);
@@ -381,6 +382,17 @@ export async function exportReportPDF(sim, meta, summary) {
 
   heading("Limitations", null, false);
   bullets(meta.limitations, { size: 9 });
+
+  if (comments) {
+    heading("Team comments", "Team discussion about this view, not results. Comments are written by the project team and are not checked by the recovery engine.", false);
+    if (!comments.length) para("No team comments on this view.", { rgb: C.ink2 });
+    for (const c of comments) {
+      const when = new Date(c.created_at * 1000).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+      para(`${c.author_name} (${c.author_role}), ${when}${c.month ? ` - about ${monthLabel(c.month)}` : ""}${c.edited_at ? " - edited" : ""}`, { size: 8.5, style: "bold", rgb: C.ink2, gap: 0.6 });
+      para(c.text, { size: 9.5, gap: 3 });
+    }
+    if (comments.some((c) => t(c.text).includes(UNSUPPORTED))) para(`${UNSUPPORTED} marks characters the PDF font cannot show (for example emoji or Tamil script); they are kept in the app.`, { size: 8, rgb: C.muted });
+  }
 
   heading("Provenance", null, false);
   table(["Item", "Value"], [

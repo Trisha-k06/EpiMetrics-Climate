@@ -8,7 +8,8 @@ export const CONFIG = {
   ENABLE_PRINT: true,
   // First selection when the app opens: the main demo case.
   // Coimbatore dengue shows both demo effects clearly (TSR 3 → 13 months under both rain scenarios).
-  DEFAULT_SELECTION: { district: "cbe", disease: "dengue", scenario: "delayed_monsoon", mask: "none" },
+  // compareB / compareDistrict: the second climate (and optional second district) on the Compare screen.
+  DEFAULT_SELECTION: { district: "cbe", disease: "dengue", scenario: "delayed_monsoon", mask: "none", compareB: "warmer", compareDistrict: null },
   // Scenarios used by the guided demo on the simulator, in order.
   DEMO_SEQUENCE: ["baseline", "delayed_monsoon", "heavy_rain_decline"],
   // Months shown by default on time charts (the outbreak and recovery period).

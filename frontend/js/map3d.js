@@ -83,6 +83,7 @@ function insetSVG(geo) {
 export async function createDistrictMap(container, districts, opts = {}) {
   container.classList.add("map3d");
   if (opts.compact) container.classList.add("compact");
+  if (opts.hero) container.classList.add("map-hero");
   const geo = await loadGeo();
   const proj = makeProjector(geo.center);
   const byName = new Map(geo.districts.map((d) => [d.name.toLowerCase(), d]));
@@ -402,14 +403,19 @@ export async function createDistrictMap(container, districts, opts = {}) {
     if (!w || !h) return;
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
-    view.radius = (w < 520 ? 11 : 8.6) * (opts.compact ? 1.08 : 1);
+    view.radius = (w < 520 ? 11 : 8.6) * (opts.compact ? 1.08 : 1) * (opts.hero && w > 900 ? 1.08 : 1);
+    // Hero mode: move Tamil Nadu to the right so the floating cards on the left never cover the study districts.
+    target.x = 0.1 - (opts.shiftX && w > 900 ? opts.shiftX : 0);
     camera.updateProjectionMatrix();
   };
   const ro = new ResizeObserver(() => { resize(); if (!raf) { placeCamera(); renderer.render(scene, camera); placeOverlays(); } });
   ro.observe(container);
   resize();
-  const io = new IntersectionObserver((en) => { visible = en[0].isIntersecting; if (visible && !raf) raf = requestAnimationFrame(tick); });
+  const io = new IntersectionObserver((en) => { visible = en[0].isIntersecting; if (visible && !raf && !document.hidden) raf = requestAnimationFrame(tick); });
   io.observe(container);
+  // Stop rendering while the tab is hidden; resume when it is shown again.
+  const onVisibility = () => { if (!document.hidden && visible && !raf) raf = requestAnimationFrame(tick); };
+  document.addEventListener("visibilitychange", onVisibility);
 
   function stepPoles(t, instant) {
     for (const [id, p] of poles) {
@@ -431,7 +437,7 @@ export async function createDistrictMap(container, districts, opts = {}) {
   }
   function tick(now) {
     raf = 0;
-    if (!visible) return;
+    if (!visible || document.hidden) return;
     if (auto && !dragging && !holding && now - idleSince > 1500) view.az += 0.002;
     placeCamera();
     stepPoles(now / 1000, false);
@@ -462,6 +468,7 @@ export async function createDistrictMap(container, districts, opts = {}) {
     dispose() {
       cancelAnimationFrame(raf);
       ro.disconnect(); io.disconnect();
+      document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("themechange", onTheme);
       for (const d of disposables) d.dispose?.();
       renderer.dispose();
