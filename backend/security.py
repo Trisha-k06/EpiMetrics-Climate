@@ -17,9 +17,12 @@ USERS_FILE = Path(os.environ.get("EPIMETRICS_USERS_FILE", BACKEND / "users.json"
 LOG_DIR = BACKEND / "logs"
 AUDIT_FILE = Path(os.environ.get("EPIMETRICS_AUDIT_FILE", LOG_DIR / "audit.jsonl"))
 
-ROLES = ("viewer", "analyst", "admin")
+from .roles import ROLE_IDS as ROLES  # noqa: E402  (single source: backend/roles.py)
+
 PBKDF2_ITERATIONS = 200_000
+MIN_PASSWORD = 10
 DEMO_USERS = [
+    ("junior", "junior-demo-2026", "Young explorer", "junior"),
     ("viewer", "viewer-demo-2026", "Demo viewer", "viewer"),
     ("analyst", "analyst-demo-2026", "Demo analyst", "analyst"),
     ("admin", "admin-demo-2026", "Demo admin", "admin"),
@@ -54,12 +57,28 @@ def verify_password(password: str, record: dict | None) -> bool:
     return ok and record is not None
 
 
+class UserError(ValueError):
+    """Invalid user-management request (bad role, short password, unknown user, duplicate)."""
+
+
+USERNAME_RE = __import__("re").compile(r"^[a-z0-9_]{3,32}$")
+
+
+def _now_iso() -> str:
+    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+
 class UserStore:
+    """Accounts in users.json (salted PBKDF2-SHA256 hashes only). Each record carries a token version `tv`:
+    changing the role, disabling the account or resetting the password bumps it, which ends existing sessions."""
+
     def __init__(self, path: Path = USERS_FILE):
         self.path = Path(path)
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()
         if not self.path.exists():
             self.seed_demo()
+        else:
+            self._add_missing_demo()
 
     def _read(self) -> dict:
         return json.loads(self.path.read_text())
@@ -71,25 +90,87 @@ class UserStore:
         os.chmod(tmp, 0o600)
         tmp.replace(self.path)
 
+    @staticmethod
+    def _record(username, password, role, display_name):
+        return {"username": username, "display_name": display_name or username, "role": role, "disabled": False,
+                "tv": 0, "created_at": _now_iso(), "updated_at": _now_iso(), **hash_password(password)}
+
     def seed_demo(self):
         with self._lock:
             self._write({"note": "Demo accounts for the synthetic research prototype. Passwords are stored only as salted PBKDF2-SHA256 hashes.",
-                         "users": [{"username": u, "display_name": n, "role": r, **hash_password(p)} for u, p, n, r in DEMO_USERS]})
+                         "seeded": [u for u, *_ in DEMO_USERS],
+                         "users": [self._record(u, p, r, n) for u, p, n, r in DEMO_USERS]})
+
+    def _add_missing_demo(self):
+        """Add demo accounts introduced in later versions (e.g. junior), once; never re-create one an admin removed."""
+        with self._lock:
+            data = self._read()
+            seeded = set(data.get("seeded", [u["username"] for u in data["users"]]))
+            names = {u["username"] for u in data["users"]}
+            changed = False
+            for u, p, n, r in DEMO_USERS:
+                if u not in seeded and u not in names:
+                    data["users"].append(self._record(u, p, r, n))
+                    changed = True
+                seeded.add(u)
+            if changed or "seeded" not in data:
+                data["seeded"] = sorted(seeded)
+                self._write(data)
 
     def get(self, username: str) -> dict | None:
         return next((u for u in self._read()["users"] if u["username"] == username), None)
 
     def list(self) -> list[dict]:
-        return [{k: u[k] for k in ("username", "display_name", "role")} for u in self._read()["users"]]
+        return [{"username": u["username"], "display_name": u.get("display_name") or u["username"], "role": u["role"],
+                 "disabled": bool(u.get("disabled")), "created_at": u.get("created_at"), "updated_at": u.get("updated_at")}
+                for u in self._read()["users"]]
 
-    def set_user(self, username: str, password: str, role: str, display_name: str | None = None):
-        if role not in ROLES:
-            raise ValueError(f"role must be one of {ROLES}")
+    def _check(self, role=None, password=None):
+        if role is not None and role not in ROLES:
+            raise UserError(f"Role must be one of: {', '.join(ROLES)}.")
+        if password is not None and len(password) < MIN_PASSWORD:
+            raise UserError(f"Passwords need at least {MIN_PASSWORD} characters.")
+
+    def create(self, username: str, password: str, role: str, display_name: str | None = None) -> dict:
+        if not USERNAME_RE.match(username or ""):
+            raise UserError("Usernames use 3–32 lowercase letters, digits or underscores.")
+        self._check(role, password)
         with self._lock:
             data = self._read()
-            data["users"] = [u for u in data["users"] if u["username"] != username]
-            data["users"].append({"username": username, "display_name": display_name or username, "role": role, **hash_password(password)})
+            if any(u["username"] == username for u in data["users"]):
+                raise UserError(f'User "{username}" already exists.')
+            data["users"].append(self._record(username, password, role, (display_name or "").strip()[:60] or username))
             self._write(data)
+        return self.get(username)
+
+    def update(self, username: str, *, role=None, disabled=None, display_name=None, password=None) -> dict:
+        self._check(role, password)
+        with self._lock:
+            data = self._read()
+            rec = next((u for u in data["users"] if u["username"] == username), None)
+            if not rec:
+                raise UserError(f'Unknown user "{username}".')
+            bump = False
+            if role is not None and role != rec["role"]:
+                rec["role"], bump = role, True
+            if disabled is not None and bool(disabled) != bool(rec.get("disabled")):
+                rec["disabled"], bump = bool(disabled), True
+            if display_name is not None:
+                rec["display_name"] = display_name.strip()[:60] or username
+            if password is not None:
+                rec.update(hash_password(password))
+                bump = True
+            if bump:
+                rec["tv"] = int(rec.get("tv", 0)) + 1
+            rec["updated_at"] = _now_iso()
+            self._write(data)
+        return rec
+
+    def set_user(self, username: str, password: str, role: str, display_name: str | None = None):
+        """CLI helper: create or replace an account."""
+        if self.get(username):
+            return self.update(username, role=role, password=password, display_name=display_name, disabled=False)
+        return self.create(username, password, role, display_name)
 
     def authenticate(self, username: str, password: str) -> dict | None:
         rec = self.get(username)
@@ -106,7 +187,7 @@ class TokenService:
         now = int(time.time())
         ttl = session_seconds()
         claims = {"sub": user["username"], "role": user["role"], "name": user.get("display_name") or user["username"],
-                  "sid": sid or secrets.token_urlsafe(12), "iat": now, "exp": now + ttl}
+                  "tv": int(user.get("tv", 0)), "sid": sid or secrets.token_urlsafe(12), "iat": now, "exp": now + ttl}
         return jwt.encode(claims, SECRET, algorithm=ALGORITHM), ttl
 
     def decode(self, token: str) -> dict | None:
@@ -190,6 +271,37 @@ class AuditLog:
             self.path.parent.mkdir(parents=True, exist_ok=True)
             with self.path.open("a", encoding="utf-8") as f:
                 f.write(line + "\n")
+
+    def query(self, user=None, action=None, day_from=None, day_to=None, limit=1000) -> list[dict]:
+        """Newest first, filtered by exact user, exact action and UTC date range (YYYY-MM-DD, inclusive)."""
+        out = []
+        for e in self.tail(100000):
+            if user and e.get("user") != user:
+                continue
+            if action and e.get("action") != action:
+                continue
+            day = str(e.get("ts", ""))[:10]
+            if (day_from and day < day_from) or (day_to and day > day_to):
+                continue
+            out.append(e)
+            if len(out) >= limit:
+                break
+        return out
+
+    @staticmethod
+    def to_csv(entries: list[dict]) -> str:
+        import csv
+        import io
+        buf = io.StringIO()
+        w = csv.writer(buf)
+        w.writerow(["ts", "action", "user", "role", "ip", "status", "detail"])
+        for e in entries:
+            d = e.get("detail")
+            detail = " ".join(f"{k}={v}" for k, v in d.items()) if isinstance(d, dict) else (d or "")
+            # Neutralise spreadsheet formulas in any cell.
+            row = [e.get("ts"), e.get("action"), e.get("user"), e.get("role"), e.get("ip"), e.get("status"), detail]
+            w.writerow(["'" + str(c) if isinstance(c, str) and c[:1] in "=+-@" else ("" if c is None else c) for c in row])
+        return buf.getvalue()
 
     def tail(self, limit: int = 200) -> list[dict]:
         if not self.path.exists():

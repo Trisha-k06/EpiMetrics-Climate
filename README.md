@@ -15,72 +15,101 @@ pip3 install -r requirements.txt
 python -m backend                                       # http://127.0.0.1:8000
 ```
 
-On first start the server creates `backend/users.json` with three demo accounts and fits the
-ARIMA-family forecast models in the background (cached in `backend/cache/`; `/api/v1/health` reports
-`models_ready`). Set `EPIMETRICS_SECRET` to keep sessions valid across restarts; otherwise a random
-signing key is used per process. Other settings: `EPIMETRICS_PORT`, `EPIMETRICS_HOST`,
-`EPIMETRICS_SESSION_MINUTES` (default 15).
+On first start the server creates `backend/users.json` (four demo accounts) and `backend/app.db` (SQLite: saved
+views, favourite districts, team comments, usage events), and fits the ARIMA-family forecast models in the
+background (cached in `backend/cache/`; `/api/v1/health` reports `models_ready`).
 
-### Demo accounts
+| Setting | Default | What it does |
+|---|---|---|
+| `EPIMETRICS_SECRET` | random per start | Signing key for session tokens. Set it, or every restart signs everyone out |
+| `EPIMETRICS_PORT`, `EPIMETRICS_HOST` | 8000, 127.0.0.1 | Where the server listens |
+| `EPIMETRICS_SESSION_MINUTES` | 15 | Sliding session length |
+| `EPIMETRICS_BACKUP_HOURS` | off | Automatic backup every N hours (also runs the usage-event purge) |
+| `EPIMETRICS_EVENT_RETENTION_DAYS` | 180 | Usage events older than this are deleted |
 
-| Role | Username | Password | Can |
-|---|---|---|---|
-| Viewer | `viewer` | `viewer-demo-2026` | Read every result and analysis; no Validation screen, no exports |
-| Analyst | `analyst` | `analyst-demo-2026` | Also Validation and all exports (PDF, JSON, CSV, print) |
-| Admin | `admin` | `admin-demo-2026` | Also verify files, run the validation scripts, read the audit log |
+### Four experiences, one role matrix
+
+`backend/roles.py` is the only list of who may open which screen and call which endpoint. `GET /api/v1/auth/me`
+sends it to the browser, which builds the menu from it; the server checks every API call against it (401/403).
+
+| Role | Username | Password | Home | Screens |
+|---|---|---|---|---|
+| Young Minds | `junior` | `junior-demo-2026` | Explore | Explore, Climate lab, Quiz & badges, Glossary |
+| Viewer | `viewer` | `viewer-demo-2026` | Overview | Overview, Simple simulator, District map, Compare, Scenario report |
+| Public health analyst | `analyst` | `analyst-demo-2026` | Overview | Overview, Simulator, Recovery & recurrence, Compare, Outbreak episodes, Data explorer, Forecast models, Validation & limits, Scenario report, Technology & PDF, Users & security |
+| Admin | `admin` | `admin-demo-2026` | Admin console | Admin console, Users & security, Technology & PDF, plus a read-only "view as" preview of the other three |
+
+- **Young Minds**: a separate, playful shell for students. Weather sliders map to the seven predefined scenarios
+  and show the real API values as an animated recovery journey. No typing, saving, comments or exports; a
+  button-only helper refuses health questions; badges stay in the browser.
+- **Viewer**: plain-language answers first, at most one or two charts per screen; masks, spread and rule details
+  sit behind "i" tooltips. Exports: the scenario PDF and print only (no CSV, JSON or project PDF). Can read but
+  not post team comments.
+- **Analyst**: every analytical screen, Advanced options (masks, time range), compare across scenarios or
+  districts, drill-downs (district › disease › year › month), saved views and pinned districts, recommended
+  insights, team comments pinned to months and included in the report PDF, and every export.
+- **Admin**: usage dashboard, user management (create, change role, disable, reset password; any change ends that
+  user's sessions), audit log with filters and CSV, integrity checks, backups, comment moderation, view-as preview.
 
 Five wrong passwords pause sign-in for that account for 30 seconds (20 per network address).
-
-### Screens
-
-| # | Screen | Source of the numbers |
-|---|---|---|
-| 1 | Overview | `/meta`, `/simulations`, `/recovery-matrix`, `/districts` |
-| 2 | Scenario simulator (with reporting-completeness masks) | `/simulations` → `src/recovery_engine.py` |
-| 3 | Recovery & recurrence (3D map with layers, matrix, timeline) | `/recovery-matrix`, `/districts`, `/simulations` |
-| 4 | Outbreak episodes | `/analytics/episodes` (notebooks 06–07) |
-| 5 | Data explorer | `/analytics/data-audit`, `/analytics/eda` (notebooks 01–02) |
-| 6 | Forecast models | `/analytics/forecasts`, `/analytics/forecast-summary` (notebooks 03–05) |
-| 7 | Validation & limits (analyst, admin) | `/validation` (ground truth, evaluation only) |
-| 8 | Scenario report (PDF, JSON, CSV, print) | `/simulations`, `POST /exports` |
-| 9 | Technology & project PDF | all of the above |
-| 10 | Users & security | `/integrity`, `POST /integrity/verify`, `POST /integrity/validate`, `/audit-log` |
-
-The website never computes recovery, thresholds, ΔTSR or model errors; it shows API results and refuses
-any response that is not marked `"synthetic": true`. The JSON shapes are in `frontend/API_CONTRACT.md`.
 
 ### API (base `/api/v1`)
 
 Every endpoint except `GET /health` and `POST /auth/login` needs `Authorization: Bearer <JWT>`.
-Errors are `{"error": {"code", "message"}}`: 400 bad id format, 401 not signed in or expired,
-403 role not allowed, 404 unknown id, 429 sign-in locked.
+Errors are `{"error": {"code", "message"}}`: 400 bad request, 401 not signed in / expired / account changed,
+403 not allowed for the role (or a write during a preview), 404 unknown id, 429 sign-in locked or too many comments.
 
-`POST /auth/login` · `POST /auth/logout` · `GET /auth/me` · `GET /health` · `GET /meta` · `GET /districts` ·
-`GET /simulations?district&disease&scenario[&mask]` · `GET /recovery-matrix?disease[&mask]` ·
-`GET /validation?disease` · `GET /analytics/data-audit` · `GET /analytics/eda?district&disease` ·
-`GET /analytics/forecasts?district&disease` · `GET /analytics/forecast-summary?disease` ·
-`GET /analytics/episodes?disease` · `POST /exports` · `GET /integrity` · `POST /integrity/verify` ·
-`POST /integrity/validate` · `GET /audit-log`
+- **Auth**: `POST /auth/login` · `POST /auth/logout` · `GET /auth/me`
+- **Data**: `GET /health` · `GET /meta` · `GET /districts` · `GET /simulations?district&disease&scenario[&mask]` ·
+  `GET /recovery-matrix?disease[&mask]` · `GET /validation?disease`
+- **Analyses**: `GET /analytics/data-audit` · `/analytics/eda` · `/analytics/forecasts` · `/analytics/forecast-summary` · `/analytics/episodes`
+- **Personal**: `POST /events` · `GET|POST /me/saved` · `DELETE /me/saved/{id}` · `GET|POST /me/favorites` ·
+  `DELETE /me/favorites/{district}` · `GET /insights?district&disease[&scenario]`
+- **Comments**: `GET|POST /comments?view=district.disease.scenario` · `PATCH|DELETE /comments/{id}`
+- **Exports and integrity**: `POST /exports` · `GET /integrity` · `POST /integrity/verify` · `POST /integrity/validate`
+- **Admin**: `GET /admin/usage?from&to` · `GET|POST /admin/users` · `PATCH /admin/users/{u}` ·
+  `POST /admin/users/{u}/password` · `GET /admin/comments` · `PATCH|DELETE /admin/comments/{id}` ·
+  `GET|POST /admin/backups` · `POST /admin/view-as` · `GET /audit-log` · `GET /audit-log.csv`
+
+The website never computes recovery, thresholds, ΔTSR or model errors; it shows API results and refuses any
+response that is not marked `"synthetic": true`. The JSON shapes are in `frontend/API_CONTRACT.md`.
 
 ### Tests and maintenance
 
 ```bash
-pytest -q                                   # API vs the notebooks' printed numbers + security rules
+pytest -q                                   # role × endpoint matrix, notebook numbers, comments, backups, ...
 python -m playwright install chromium
-python tests/e2e.py                         # browser test: 3 roles × 10 screens × 2 sizes × Day/Night, exports, masks, map, assistant, expiry
+python tests/e2e.py                         # browser test: 4 roles × their screens × 2 sizes × Day/Night, plus the flows
 python -m backend.manage validate           # verify_semantics.py (34 checks) + engine check + unit tests
-python -m backend.manage manifest           # rebuild the SHA-256 manifest — ALWAYS last, after any change
+python -m backend.manage backup             # archive to backups/ (keeps the newest 14)
+python -m backend.manage restore FILE       # verifies the SHA-256 first; stop the server before restoring
 python -m backend.manage set-user NAME ROLE # add or replace an account (password prompted)
+python -m backend.manage manifest           # rebuild the SHA-256 manifest — ALWAYS last, after any change
 ```
 
 `src/validate_data.py` rewrites `data_dictionary.csv` and `dataset_catalog.csv`, so the server never runs it;
 `src/verify_semantics.py` is read-only and is what the admin "Run validation scripts" button uses.
 
+### Security & operations
+
+This repository is public, so treat everything in it as visible to anyone:
+
+- **Never commit runtime files.** `.gitignore` already excludes `backend/users.json`, `backend/app.db` (and its WAL
+  files), `backups/`, `backend/logs/`, `backend/cache/`, `.env` and `.DS_Store`. Check `git status` before committing.
+- **Set `EPIMETRICS_SECRET`** to a long random value in the server's environment (never in code or Git).
+- **Change the demo passwords** before anyone outside the team uses a deployment: `python -m backend.manage set-user admin admin`
+  (and the same for the other accounts), or from the Admin console. The demo passwords are published in this README.
+- **Back up regularly** (Admin console "Back up now", `python -m backend.manage backup`, or `EPIMETRICS_BACKUP_HOURS`),
+  and copy the `backups/` archives to separate storage. Restore is command-line only and checks the checksum first.
+- **Run it behind HTTPS** when deployed (a TLS proxy or the hosting platform).
+- **Rebuild the manifest last** after any change, so the admin integrity checks report real tampering only.
+
 ### Credits
 
 District and state boundaries: Census 2011, [DataMeet India community](https://github.com/datameet/maps),
 CC BY 4.0, simplified. Three.js, jsPDF and jsPDF-AutoTable under the MIT licence (see `frontend/vendor/`).
-FastAPI, Uvicorn, pandas, NumPy, SciPy, statsmodels, scikit-learn and PyJWT under their open-source licences.
+FastAPI, Uvicorn, pandas, NumPy, SciPy, statsmodels, scikit-learn, PyJWT and pypdf under their open-source licences.
+Young Minds illustrations are original SVG drawn for this project.
 
 ## Scale
 

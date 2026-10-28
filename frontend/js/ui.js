@@ -3,6 +3,7 @@ import { CONFIG } from "./config.js";
 import { esc, monthLabel, fmtInt, statusPill, tsrText, deltaText, anomalyText, byId, rangeIdx, plural } from "./format.js";
 import { timeChart, recoveryTrack } from "./charts.js";
 import { setSelection } from "./state.js";
+import { access } from "./auth.js";
 
 export const COLORS = { baseline: "var(--baseline)", scenario: "var(--scenario)", threshold: "var(--threshold)" };
 // Categorical series colours (validated palette, fixed order; never cycled). Diseases keep one colour everywhere.
@@ -13,6 +14,12 @@ export function passPill(ok, yes = "PASS", no = "FAIL") {
   return ok ? `<span class="pill pill-good">✓ ${esc(yes)}</span>` : `<span class="pill pill-crit">✗ ${esc(no)}</span>`;
 }
 
+/** "Screen N · Title", numbered by this role's own navigation (screens differ per role). */
+export function screenEyebrow(id, title) {
+  const n = (access()?.screens || []).findIndex((x) => x.id === id) + 1;
+  return `${n ? `Screen ${n} · ` : ""}${esc(title)}`;
+}
+
 export function loadingHTML(label = "Loading data…") {
   return `<div class="state" aria-busy="true"><div class="skeleton" style="width:100%;height:14px"></div><div class="skeleton" style="width:70%;height:14px"></div><span class="small">${esc(label)}</span></div>`;
 }
@@ -21,11 +28,12 @@ export function errorHTML(err, retryId) {
   return `<div class="state state-error" role="alert"><b>Data could not be shown</b><span>${esc(err?.message || String(err))}</span>${retryId ? `<button class="btn" id="${retryId}" type="button">Try again</button>` : ""}</div>`;
 }
 
-export function selectorsHTML(meta, sel, { idPrefix = "s" } = {}) {
+export function selectorsHTML(meta, sel, { idPrefix = "s", extra = "" } = {}) {
   const opt = (list, cur, label) => list.map((x) => `<option value="${esc(x.id)}" ${x.id === cur ? "selected" : ""}>${esc(label(x))}</option>`).join("");
   return `<div class="controls">
     <div class="field"><label for="${idPrefix}-district">District</label><select id="${idPrefix}-district" data-key="district">${opt(meta.districts, sel.district, (d) => `${d.name} (${d.climate_zone})`)}</select></div>
     <div class="field"><label for="${idPrefix}-disease">Disease</label><select id="${idPrefix}-disease" data-key="disease">${opt(meta.diseases, sel.disease, (d) => d.name)}</select></div>
+    ${extra}
   </div>`;
 }
 
@@ -133,7 +141,7 @@ export function trackLegendHTML() {
 }
 
 /** Compose the case chart, recovery track and climate charts for one simulation response. */
-export function renderSimulationView(root, sim, meta, { range = "focus", climate = true, idPrefix = "sv" } = {}) {
+export function renderSimulationView(root, sim, meta, { range = "focus", climate = true, idPrefix = "sv", onPick = null, pins = [], track = true } = {}) {
   const isBase = sim.request.scenario === "baseline";
   const months = sim.months;
   const R = range === "full" ? [0, months.length - 1] : rangeIdx(months, CONFIG.FOCUS_RANGE.start, CONFIG.FOCUS_RANGE.end);
@@ -151,9 +159,10 @@ export function renderSimulationView(root, sim, meta, { range = "focus", climate
     ${gaps.length ? `<p class="small" style="margin-bottom:6px">${gaps.reduce((a, g) => a + g.n, 0)} months have no reported cases under “${esc(byId(meta.masks, sim.request.mask || "none")?.label || "")}”. The lines break there; nothing is filled in.</p>` : ""}
     ${legendHTML(isBase, gaps.length > 0)}
     <div id="${idPrefix}-cases"></div>
-    <div class="small" style="margin:10px 0 2px">Recovery timeline from the reference peak (t0)</div>
+    ${onPick ? `<p class="small pick-hint" id="${idPrefix}-cases-pick-hint">Select a month on the chart to see its details${pins.length ? " · 📍 marks a team comment" : ""}.</p>` : ""}
+    ${track ? `<div class="small" style="margin:10px 0 2px">Recovery timeline from the reference peak (t0)</div>
     <div id="${idPrefix}-track"></div>
-    ${trackLegendHTML()}
+    ${trackLegendHTML()}` : ""}
     ${climate ? `<div class="grid cols-2" style="margin-top:18px">
       <div><div class="small" style="font-weight:600;color:var(--ink)">Monthly rainfall</div><div id="${idPrefix}-rain"></div></div>
       <div><div class="small" style="font-weight:600;color:var(--ink)">Mean temperature</div><div id="${idPrefix}-temp"></div></div>
@@ -181,10 +190,10 @@ export function renderSimulationView(root, sim, meta, { range = "focus", climate
 
   timeChart(root.querySelector(`#${idPrefix}-cases`), {
     months, range: R, unit: "Cases / month", series, steps: { label: "Threshold", values: sim.threshold_cases, color: COLORS.threshold },
-    bands: caseBands, vlines, markers, notesAt,
+    bands: caseBands, vlines, markers, notesAt, onPick, pins,
     ariaLabel: `Monthly ${dis?.name} cases in ${dist?.name}, baseline${isBase ? "" : ` versus ${scen?.label}`}, with the endemic threshold, t0 peak, recovery months and secondary waves.`,
   });
-  recoveryTrack(root.querySelector(`#${idPrefix}-track`), {
+  if (track) recoveryTrack(root.querySelector(`#${idPrefix}-track`), {
     months, range: R, t0: sim.reference.t0_month, horizonEnd: meta.horizon.end_month,
     rows: isBase ? [{ label: "Baseline", color: COLORS.baseline, block: rec.baseline, waves: sim.waves.baseline }]
       : [{ label: "Baseline", color: COLORS.baseline, block: rec.baseline, waves: sim.waves.baseline }, { label: scen?.label || "Scenario", color: COLORS.scenario, block: rec.scenario, waves: sim.waves.scenario }],
@@ -286,4 +295,34 @@ export function animateCounts(root) {
     };
     requestAnimationFrame(step);
   });
+}
+
+/** Drill-down details for one month of a simulation response (all values read from the API). */
+export function monthDetailHTML(sim, month, meta) {
+  const i = sim.months.indexOf(month);
+  if (i < 0) return "";
+  const isBase = sim.request.scenario === "baseline";
+  const B = sim.series.baseline, S = sim.series.scenario, thr = sim.threshold_cases[i];
+  const scen = byId(meta.scenarios, sim.request.scenario);
+  const status = (v) => (v == null ? "no report (masked)" : thr == null ? "" : v > thr ? "above the threshold" : "at or below the threshold");
+  const anomaly = sim.anomaly_windows.filter((a) => month >= a.start_month && month <= a.end_month);
+  const events = [];
+  if (month === sim.reference.t0_month) events.push("Reference outbreak peak (t0)");
+  for (const [who, rec] of [["Baseline", sim.recovery.baseline], [scen.label, sim.recovery.scenario]]) {
+    if (isBase && who !== "Baseline") continue;
+    if (rec.recovery_month === month) events.push(`${who}: sustained recovery starts`);
+    if (rec.recovery_confirmed_month === month) events.push(`${who}: recovery confirmed`);
+  }
+  for (const w of isBase ? sim.waves.baseline : sim.waves.scenario) {
+    if (w.onset_month === month) events.push(`Secondary wave starts${w.interrupts_recovery ? " and interrupts recovery" : ""}`);
+    if (w.peak_month === month) events.push(`Secondary wave peaks (${fmtInt(w.peak_cases)} cases)`);
+  }
+  return `<dl class="dl month-dl">
+    <dt>Baseline cases</dt><dd><b>${fmtInt(B.observed_cases[i])}</b> · ${esc(status(B.observed_cases[i]))}</dd>
+    ${isBase ? "" : `<dt>${esc(scen.label)} cases</dt><dd><b>${fmtInt(S.observed_cases[i])}</b> · ${esc(status(S.observed_cases[i]))}</dd>`}
+    <dt>Endemic threshold</dt><dd>${thr == null ? "—" : fmtInt(Math.round(thr))} cases</dd>
+    <dt>Rainfall</dt><dd>${B.rainfall_mm[i]} mm baseline${isBase ? "" : ` · ${S.rainfall_mm[i]} mm scenario`}</dd>
+    <dt>Climate anomaly</dt><dd>${anomaly.length ? anomaly.map((a) => esc(anomalyText(a))).join("; ") : "None active this month"}</dd>
+    <dt>Events</dt><dd>${events.length ? events.map(esc).join(" · ") : "No recovery event this month"}</dd>
+  </dl>`;
 }

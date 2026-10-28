@@ -1,7 +1,7 @@
 // API client for the FastAPI backend. It returns responses unchanged: the UI never computes recovery,
 // thresholds, ΔTSR or model errors. Every response must match the contract and be marked synthetic.
 import { CONFIG } from "./config.js";
-import { authHeader, logout, noteServerResponse } from "./auth.js";
+import { authHeader, logout, noteServerResponse, refreshAccess, isPreview } from "./auth.js";
 
 export class ApiError extends Error {
   constructor(message, code = "api_error", status = 0) {
@@ -13,6 +13,8 @@ export class ApiError extends Error {
 
 const cache = new Map();
 const ID = /^[a-z0-9_]+$/;
+const ID_PARAMS = new Set(["district", "disease", "scenario", "mask"]);
+const SAFE = /^[A-Za-z0-9_.:-]{1,64}$/; // other params: view keys (cbe.dengue.baseline), dates, usernames, event names
 
 export function clearApiCache() { cache.clear(); }
 
@@ -33,9 +35,19 @@ const REQUIRED = {
   "integrity/validate": ["synthetic", "checks"],
   "audit-log": ["synthetic", "entries"],
   exports: ["synthetic", "ok"],
+  events: ["synthetic", "ok"],
+  "me/saved": ["synthetic"],
+  "me/favorites": ["synthetic", "favorites"],
+  insights: ["synthetic", "insights"],
+  comments: ["synthetic"],
+  "admin/usage": ["synthetic", "per_day"],
+  "admin/users": ["synthetic", "users"],
+  "admin/comments": ["synthetic", "comments"],
+  "admin/backups": ["synthetic", "backups"],
 };
 
 function checkContract(endpoint, body) {
+  // Exact endpoint contracts; anything else (e.g. PATCH comments/5) must at least be marked synthetic.
   const missing = (REQUIRED[endpoint] || ["synthetic"]).filter((k) => !(k in body));
   if (missing.length) throw new ApiError(`The API response for ${endpoint} is missing: ${missing.join(", ")}.`, "contract_mismatch");
   if (body.synthetic !== true) {
@@ -49,10 +61,11 @@ function checkContract(endpoint, body) {
 }
 
 async function call(endpoint, { params = {}, method = "GET", body = null, cacheable = method === "GET" } = {}) {
+  if (isPreview() && method !== "GET") throw new ApiError("This is a read-only preview. Exit the preview to make changes.", "preview_read_only", 403);
   for (const [k, v] of Object.entries(params)) {
-    if (v != null && !ID.test(String(v))) throw new ApiError(`Invalid ${k} "${v}".`, "bad_request");
+    if (v != null && v !== "" && !(ID_PARAMS.has(k) ? ID : SAFE).test(String(v))) throw new ApiError(`Invalid ${k} "${v}".`, "bad_request");
   }
-  const qs = new URLSearchParams(Object.entries(params).filter(([, v]) => v != null)).toString();
+  const qs = new URLSearchParams(Object.entries(params).filter(([, v]) => v != null && v !== "")).toString();
   const url = `${CONFIG.API_BASE}/${endpoint}${qs ? `?${qs}` : ""}`;
   const key = `${method}:${url}`;
   if (cacheable && cache.has(key)) return cache.get(key);
@@ -76,9 +89,12 @@ async function call(endpoint, { params = {}, method = "GET", body = null, cachea
     try { json = await res.json(); } catch { json = null; }
     if (res.status === 401) {
       clearApiCache();
-      logout("expired");
-      throw new ApiError("Your session has expired. Sign in again.", "unauthorized", 401);
+      const changed = ["session_changed", "account_disabled"].includes(json?.error?.code);
+      logout(changed ? "changed" : "expired");
+      throw new ApiError(changed ? json.error.message : "Your session has expired. Sign in again.", json?.error?.code || "unauthorized", 401);
     }
+    // A 403 can mean an admin changed this account's role while it was signed in: re-read access, then report.
+    if (res.status === 403 && json?.error?.code === "forbidden") refreshAccess().catch(() => {});
     noteServerResponse(res);
     if (!res.ok) {
       const msg = json?.error?.message || (res.status === 404 ? "No data exists for this selection." : `The data service returned an error (${res.status}).`);
@@ -115,4 +131,57 @@ export const api = {
   auditLog: () => call("audit-log", { cacheable: false }),
   /** Ask the server before any export; it checks the role and logs the request. Throws ApiError (403) if not allowed. */
   logExport: (kind, ctx = {}) => call("exports", { method: "POST", body: { kind, ...ctx, mask: maskParam(ctx.mask) } }),
+  // personal state
+  saved: () => call("me/saved", { cacheable: false }),
+  saveView: (view) => call("me/saved", { method: "POST", body: { ...view, mask: maskParam(view.mask) || "none" } }),
+  deleteSaved: (id) => call(`me/saved/${Number(id)}`, { method: "DELETE" }),
+  favorites: () => call("me/favorites", { cacheable: false }),
+  addFavorite: (district) => call("me/favorites", { method: "POST", body: { district } }),
+  removeFavorite: (district) => call(`me/favorites/${district}`, { method: "DELETE" }),
+  insights: ({ district, disease, scenario }) => call("insights", { params: { district, disease, scenario }, cacheable: false }),
+  // comments (always plain text; the UI renders them as text)
+  comments: (view) => call("comments", { params: { view }, cacheable: false }),
+  postComment: (view, text, month = null) => call("comments", { method: "POST", body: { view, text, month } }),
+  editComment: (id, text) => call(`comments/${Number(id)}`, { method: "PATCH", body: { text } }),
+  deleteComment: (id) => call(`comments/${Number(id)}`, { method: "DELETE" }),
+  // admin console
+  usage: ({ from, to } = {}) => call("admin/usage", { params: { from, to }, cacheable: false }),
+  users: () => call("admin/users", { cacheable: false }),
+  createUser: (u) => call("admin/users", { method: "POST", body: u }),
+  updateUser: (username, patch) => call(`admin/users/${username}`, { method: "PATCH", body: patch }),
+  resetPassword: (username, password) => call(`admin/users/${username}/password`, { method: "POST", body: { password } }),
+  auditQuery: ({ user, event, from, to, limit } = {}) => call("audit-log", { params: { user, event, from, to, limit }, cacheable: false }),
+  adminComments: () => call("admin/comments", { cacheable: false }),
+  moderateComment: (id, hidden) => call(`admin/comments/${Number(id)}`, { method: "PATCH", body: { hidden } }),
+  adminDeleteComment: (id) => call(`admin/comments/${Number(id)}`, { method: "DELETE" }),
+  backups: () => call("admin/backups", { cacheable: false }),
+  createBackup: () => call("admin/backups", { method: "POST" }),
 };
+
+// Usage events: screen opens and major actions only (no keystrokes, no free text). Debounced; never sent in a preview.
+let lastEvent = "";
+let lastEventAt = 0;
+export function track(event, fields = {}) {
+  if (isPreview()) return;
+  const key = JSON.stringify([event, fields]);
+  const now = Date.now();
+  if (key === lastEvent && now - lastEventAt < 3000) return;
+  lastEvent = key;
+  lastEventAt = now;
+  const clean = Object.fromEntries(Object.entries(fields).filter(([k, v]) => v != null && ["screen", "district", "disease", "scenario"].includes(k)));
+  call("events", { method: "POST", body: { event, ...clean } }).catch((err) => console.warn("usage event not recorded:", err.message));
+}
+
+/** Authenticated download of a non-JSON endpoint (e.g. the audit log CSV). Returns { blob, filename }. */
+export async function downloadRaw(endpoint, params = {}) {
+  const qs = new URLSearchParams(Object.entries(params).filter(([, v]) => v != null && v !== "")).toString();
+  const res = await fetch(`${CONFIG.API_BASE}/${endpoint}${qs ? `?${qs}` : ""}`, { headers: { ...authHeader() } });
+  if (res.status === 401) { clearApiCache(); logout("expired"); throw new ApiError("Your session has expired. Sign in again.", "unauthorized", 401); }
+  noteServerResponse(res);
+  if (!res.ok) {
+    const j = await res.json().catch(() => null);
+    throw new ApiError(j?.error?.message || `Download failed (${res.status}).`, j?.error?.code || `http_${res.status}`, res.status);
+  }
+  const name = /filename="([^"]+)"/.exec(res.headers.get("Content-Disposition") || "")?.[1] || "download";
+  return { blob: await res.blob(), filename: name };
+}

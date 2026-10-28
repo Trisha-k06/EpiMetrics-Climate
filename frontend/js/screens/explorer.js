@@ -4,7 +4,8 @@ import { api } from "../api.js";
 import { getSelection, setSelection, onSelection } from "../state.js";
 import { esc, byId, fmtInt, fmtNum, fmtSigned } from "../format.js";
 import { timeChart, seriesLegendHTML } from "../charts.js";
-import { selectorsHTML, bindSelects, loadingHTML, errorHTML, CAT, DISEASE_COLORS, passPill } from "../ui.js";
+import { selectorsHTML, bindSelects, loadingHTML, errorHTML, CAT, DISEASE_COLORS, passPill, screenEyebrow } from "../ui.js";
+import { infoTip } from "../components/tooltip.js";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const VARS = [
@@ -20,7 +21,7 @@ export async function render(view, { meta }) {
   view.innerHTML = `
     <div class="page-head">
       <div>
-        <p class="eyebrow">Screen 5 · Data explorer</p>
+        <p class="eyebrow">${screenEyebrow("explorer", "Data explorer")}</p>
         <h1>What does the synthetic dataset look like?</h1>
         <p class="lede">The checks and first look from notebooks 01 and 02: is the data complete and consistent, how do cases and climate move through the year, and what each climate scenario changes in 2022–2024.</p>
       </div>
@@ -39,7 +40,7 @@ export async function render(view, { meta }) {
       <div class="panel"><div class="panel-head"><h2 id="ex-clim-title">Climate seasonality</h2><span class="small">Monthly means, 2015–2021</span></div><div id="ex-clim"></div></div>
     </section>
     <section class="panel">
-      <div class="panel-head"><h2>Climate–case correlations by lag</h2><span class="small">Pooled over all five districts, baseline, 2015–2021 · Pearson r between cases per 100,000 and climate 0–3 months earlier</span></div>
+      <div class="panel-head"><h2>Climate–case correlations by lag ${infoTip("correlation")}</h2><span class="small">Pooled over all five districts, baseline, 2015–2021 · Pearson r between cases per 100,000 and climate 0–3 months earlier</span></div>
       <div id="ex-corr"></div>
     </section>
     <section class="panel stack">

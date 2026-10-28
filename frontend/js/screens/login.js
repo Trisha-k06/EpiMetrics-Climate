@@ -1,13 +1,14 @@
 // Sign-in screen. Shown before any other screen when sign-in is required.
 import { CONFIG } from "../config.js";
 import { login, AuthError } from "../auth.js";
-import { ROLES } from "../platform-data.js";
 import { esc } from "../format.js";
 
+// Demo accounts the server creates on first start (sign-in help only; access itself comes from the server).
 const DEMO = [
-  { username: "viewer", password: "viewer-demo-2026" },
-  { username: "analyst", password: "analyst-demo-2026" },
-  { username: "admin", password: "admin-demo-2026" },
+  { username: "junior", password: "junior-demo-2026", label: "Young Minds", summary: "Playful climate lab for school students" },
+  { username: "viewer", password: "viewer-demo-2026", label: "Viewer", summary: "Headline answers in plain language" },
+  { username: "analyst", password: "analyst-demo-2026", label: "Public health analyst", summary: "Full analysis, exports and comments" },
+  { username: "admin", password: "admin-demo-2026", label: "Admin", summary: "Runs the platform: users, usage, backups" },
 ];
 
 export async function render(view, { reason } = {}) {
@@ -18,6 +19,7 @@ export async function render(view, { reason } = {}) {
         <h1 class="login-title">Sign in</h1>
         ${reason === "timeout" ? '<p class="callout callout-warn" role="alert">You were signed out after 15 minutes without activity. Sign in again to continue.</p>' : ""}
         ${reason === "expired" ? '<p class="callout callout-warn" role="alert">Your session expired. Sign in again to continue.</p>' : ""}
+        ${reason === "changed" ? '<p class="callout callout-warn" role="alert">An admin changed your account (for example its role). Sign in again to continue.</p>' : ""}
         <form id="login-form" class="stack" novalidate>
           <div class="field"><label for="login-user">Username</label><input id="login-user" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required></div>
           <div class="field"><label for="login-pass">Password</label>
@@ -29,10 +31,10 @@ export async function render(view, { reason } = {}) {
       </div>
       <div class="panel login-demo">
         <h2>Demo accounts</h2>
-        <p class="small">The server creates these three accounts for the project demo. Select one to fill the form, then sign in.</p>
+        <p class="small">The server creates these four accounts for the project demo. Select one to fill the form, then sign in.</p>
         <div class="table-wrap"><table>
           <thead><tr><th>Role</th><th>Can</th><th>Username</th><th>Password</th><th><span class="visually-hidden">Fill</span></th></tr></thead>
-          <tbody>${DEMO.map((d) => { const r = ROLES[d.username]; return `<tr><td><b>${esc(r.label)}</b></td><td>${esc(r.summary)}</td><td class="mono">${esc(d.username)}</td><td class="mono">${esc(d.password)}</td><td><button type="button" class="btn btn-sm" data-fill="${esc(d.username)}">Use</button></td></tr>`; }).join("")}</tbody>
+          <tbody>${DEMO.map((d) => { const r = d; return `<tr><td><b>${esc(r.label)}</b></td><td>${esc(r.summary)}</td><td class="mono">${esc(d.username)}</td><td class="mono">${esc(d.password)}</td><td><button type="button" class="btn btn-sm" data-fill="${esc(d.username)}">Use</button></td></tr>`; }).join("")}</tbody>
         </table></div>
         <p class="small" style="margin-top:10px">The server stores passwords only as salted PBKDF2-SHA256 hashes, checks them, and issues a signed token (JWT). The browser never sees a hash. Five wrong passwords pause sign-in for 30 seconds.</p>
       </div>

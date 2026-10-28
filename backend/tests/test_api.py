@@ -184,12 +184,13 @@ def test_health_and_login_are_public(client):
 
 
 def test_403_for_viewer(client, get, tokens):
-    assert get("/validation", disease="dengue").status_code == 403
-    assert get("/validation", disease="dengue").json()["error"]["code"] == "forbidden"
+    assert get("/validation", role="viewer", disease="dengue").status_code == 403
+    assert get("/validation", role="viewer", disease="dengue").json()["error"]["code"] == "forbidden"
     h = {"Authorization": f"Bearer {tokens['viewer']}"}
-    assert client.post("/api/v1/exports", json={"kind": "report_pdf"}, headers=h).status_code == 403
+    assert client.post("/api/v1/exports", json={"kind": "json"}, headers=h).status_code == 403
+    assert client.post("/api/v1/exports", json={"kind": "report_pdf"}, headers=h).status_code == 200  # viewers: PDF summary only
     assert client.post("/api/v1/integrity/verify", headers=h).status_code == 403
-    assert get("/audit-log").status_code == 403
+    assert get("/audit-log", role="viewer").status_code == 403
     ha = {"Authorization": f"Bearer {tokens['analyst']}"}
     assert client.post("/api/v1/exports", json={"kind": "report_pdf", "district": "cbe"}, headers=ha).status_code == 200
     assert client.post("/api/v1/integrity/verify", headers=ha).status_code == 403

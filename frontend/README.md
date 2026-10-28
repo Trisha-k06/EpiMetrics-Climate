@@ -19,34 +19,42 @@ python -m backend          # open http://127.0.0.1:8000
 The page and `/api/v1` share one origin, so there is no CORS. The Content-Security-Policy only allows
 scripts from this site, so every script lives under `frontend/` (Three.js and jsPDF are in `vendor/`).
 
-## Ten screens
+## Screens per role
 
-| Hash | Screen | Endpoints |
+The menu is built from `GET /auth/me`, which returns the role's screens from `backend/roles.py`. A screen that is
+not in the list shows "This screen isn't part of your account". Screens load on demand (dynamic `import()`).
+
+| Role | Home | Screens |
 |---|---|---|
-| `#overview` | Objective (TSR / ΔTSR), example timeline, ΔTSR map, definitions, scenarios | `/meta`, `/simulations`, `/recovery-matrix`, `/districts` |
-| `#simulator` | District, disease, scenario and reporting-completeness (mask) selectors, guided demo, KPI cards, cases vs threshold with gaps for masked months, recovery timeline, rainfall and temperature | `/simulations` |
-| `#recovery` | 3D map with layers (recovery result, outbreak peak per 100k, flood exposure, population density) and district-profile hover cards; ΔTSR / interruptions / months-above-threshold matrix; selected series timeline and waves | `/recovery-matrix`, `/districts`, `/simulations` |
-| `#episodes` | Outbreak episodes 2015–2024: totals, bar charts by scenario, matched ΔTSR, district table, episode timeline, sensitivity, live unit tests | `/analytics/episodes` |
-| `#explorer` | Data audit and catalog, trajectories, seasonality, climate seasonality, lag-correlation table, all-scenario cases and climate with change tables | `/analytics/data-audit`, `/analytics/eda` |
-| `#models` | Forecast benchmarks: KPIs, actual vs model chart with toggles and outbreak shading, outbreak vs other MAE, random-forest importance, comparison table, every-district summary | `/analytics/forecasts`, `/analytics/forecast-summary` |
-| `#validation` | Estimated vs true TSR, missing-data tests, p10–p90 spread, recovery-rule sensitivity (analyst, admin) | `/validation` |
-| `#report` | Scenario report: Export report (PDF), print, JSON, CSV, copy summary | `/simulations`, `POST /exports` |
-| `#technology` | Technologies used; Export PDF of the whole project | all, `POST /exports` |
-| `#platform` | End users, SaaS model, security, roles, session; admin: verify files on the server, run validation scripts, re-check website files in the browser, audit log | `/integrity`, `/integrity/verify`, `/integrity/validate`, `/audit-log` |
+| Young Minds (`junior`) | Explore | `#young-explore`, `#young-lab`, `#young-quiz`, `#young-glossary` (separate shell in `js/young/`) |
+| Viewer | Overview | `#overview`, `#simulator` (simple mode), `#map`, `#compare` (simple), `#report` |
+| Analyst | Overview | `#overview`, `#simulator`, `#recovery`, `#compare`, `#episodes`, `#explorer`, `#models`, `#validation`, `#report`, `#technology`, `#platform` |
+| Admin | Admin console | `#admin` (usage, users, audit, integrity, backups, comments, view as), `#platform`, `#technology` |
+
+Every screen follows the same order: question title, answer card, chart, details. Advanced options (mask, time
+range, rule) sit in an "Advanced options" disclosure; each metric has an "i" tooltip whose wording comes from
+`js/glossary.js`, shared with the assistant and the PDFs.
 
 ## Sign-in
 
 The app opens on the sign-in screen; `/meta` and everything else are loaded only after sign-in.
-`js/auth.js` posts to `/auth/login`, keeps the JWT in `sessionStorage` (this tab only), picks up the
-renewed token from the `X-Session-Token` response header, refreshes through `/auth/me` while you are
-active but not calling the API, and signs out after 15 idle minutes or when the token expires.
-A 401 from any endpoint clears the cache and returns to sign-in. Sign-out calls `/auth/logout`.
-Demo accounts: see the repository README.
+`js/auth.js` posts to `/auth/login`, keeps the JWT, the role's screens and permissions in `sessionStorage` (this tab
+only), picks up the renewed token from `X-Session-Token`, refreshes through `/auth/me` while you are active, and signs
+out after 15 idle minutes, when the token expires, or when an admin changes the account (`session_changed`).
+An admin can preview another role read-only: the browser then sends `X-View-As` and the server refuses writes.
 
 ## Exports
 
 Every export (scenario PDF, project PDF, JSON, CSV, print) first calls `POST /exports`. The server checks the
-role and logs the request; if it answers 403 the export does not start. PDFs are built in the browser with jsPDF.
+role and logs the request; if it answers 403 the export does not start. On the Scenario report, all exports the
+role may use sit in one "Export report ▾" menu, with an option to include team comments in the PDF. PDFs are built
+in the browser with jsPDF; characters its font cannot draw (emoji, Tamil script) are replaced by a visible `[?]`.
+
+## Saved views, comments and usage
+
+Saved views, favourite districts and team comments are stored on the server (SQLite), never only in the browser.
+Comments are plain text (always inserted with `textContent` / escaping). The UI sends `POST /events` on screen opens
+and major actions (debounced, no free text) for the admin usage dashboard and the recommended insights.
 
 ## The frontend computes nothing
 
@@ -67,7 +75,10 @@ js/state.js              shared district/disease/scenario/mask selection
 js/format.js             display formatting (no recovery logic)
 js/charts.js             SVG time chart (month or Jan–Dec axes), grouped bar chart, recovery timeline, scatter
 js/ui.js                 selectors, KPI cards, composed simulation view, tables
-js/screens/*.js          the ten screens plus sign-in
+js/screens/*.js          the screens plus sign-in (admin.js, compare.js, map.js are new)
+js/components/           tooltip, menu, breadcrumbs, comments, saved views, insights, drill-down
+js/young/                Young Minds shell and original SVG art
+js/glossary.js           plain-language definitions shared by tooltips, assistant and PDFs
 js/map3d.js              3D map of Tamil Nadu's real districts (Three.js) with 2D fallback, map layers, profile cards
 js/pdf.js                project summary and scenario report PDFs (jsPDF)
 js/tech.js               technology list shared by screen 9 and the PDF

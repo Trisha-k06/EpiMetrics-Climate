@@ -1,73 +1,92 @@
-// Screen 8: exportable scenario report for the current selection.
+// Scenario report for the current selection. One primary action ("Export report ▾") holds every export the server
+// allows this role; the server checks and logs each one first (POST /exports).
 import { CONFIG } from "../config.js";
-import { can } from "../auth.js";
+import { can, canExport } from "../auth.js";
 import { api } from "../api.js";
-import { getSelection, onSelection } from "../state.js";
+import { getSelection, setSelection, onSelection } from "../state.js";
 import { esc, monthLabel, byId, tsrText, deltaText, statusPill, fmtInt, plural, STATUS, disclaimerBody } from "../format.js";
-import { selectorsHTML, scenarioSelectHTML, maskSelectHTML, bindSelects, renderSimulationView, wavesTableHTML, anomalyListHTML, loadingHTML, errorHTML, downloadFile, copyText, toast } from "../ui.js";
+import { selectorsHTML, scenarioSelectHTML, maskSelectHTML, bindSelects, renderSimulationView, wavesTableHTML, anomalyListHTML, loadingHTML, errorHTML, downloadFile, copyText, toast, screenEyebrow } from "../ui.js";
+import { menuHTML, bindMenu } from "../components/menu.js";
+import { mountComments, viewKey } from "../components/comments.js";
+import { mountSaveView } from "../components/saved.js";
+
+const EXPORTS = [
+  { id: "report_pdf", label: "PDF report", hint: "Summary, results, chart, method" },
+  { id: "print", label: "Print", hint: "Or save as PDF from the browser" },
+  { id: "csv", label: "CSV data", hint: "Monthly series for spreadsheets" },
+  { id: "json", label: "JSON data", hint: "The full API response" },
+];
 
 export async function render(view, { meta }) {
   let seq = 0;
   let current = null;
-  const allowExport = can("exports");
-  const PRINT = CONFIG.ENABLE_PRINT && allowExport, FILES = CONFIG.ENABLE_FILE_DOWNLOADS && allowExport;
+  const advanced = can("advanced");
+  const kinds = EXPORTS.filter((x) => canExport(x.id) && (x.id === "print" ? CONFIG.ENABLE_PRINT : CONFIG.ENABLE_FILE_DOWNLOADS));
+  const withComments = can("comments.read");
+  const sel = getSelection();
   view.innerHTML = `
     <div class="page-head no-print">
       <div>
-        <p class="eyebrow">Screen 8 · Scenario report</p>
+        <p class="eyebrow">${screenEyebrow("report", "Scenario report")}</p>
         <h1>Scenario report</h1>
-        <p class="lede">A one-page summary of the selected scenario for the project report or viva. Every figure comes from the API response, which can also be downloaded.</p>
+        <p class="lede">A one-page summary of the selected scenario. Every figure comes from the API.</p>
+      </div>
+      <div class="report-actions">
+        <div id="rep-save"></div>
+        <button class="btn icon-btn" type="button" id="rep-copy" aria-label="Copy summary" title="Copy summary"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button>
+        ${kinds.length ? menuHTML({ id: "rep-export", label: "Export report", items: kinds,
+          options: withComments ? '<label class="check"><input type="checkbox" id="rep-with-comments" checked> Include team comments (PDF)</label>' : "",
+          icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>' }) : ""}
       </div>
     </div>
     <section class="panel no-print">
-      <div class="row" style="align-items:flex-end;justify-content:space-between">
-        <div class="row" style="align-items:flex-end">${selectorsHTML(meta, getSelection(), { idPrefix: "rep" })}${scenarioSelectHTML(meta, getSelection(), "rep")}${maskSelectHTML(meta, getSelection(), "rep")}</div>
-        <div class="report-actions">
-          ${FILES ? '<button class="btn btn-primary" type="button" id="rep-pdf"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>Export report (PDF)</button>' : ""}
-          ${PRINT ? '<button class="btn" type="button" id="rep-print"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v7H6z"/></svg>Print or save as PDF</button>' : ""}
-          ${FILES ? '<button class="btn" type="button" id="rep-json">Download JSON</button><button class="btn" type="button" id="rep-csv">Download CSV</button>' : ""}
-          <button class="btn" type="button" id="rep-copy">Copy summary</button>
-        </div>
-      </div>
-      ${!allowExport ? '<p class="small" style="margin-top:8px">Exporting needs an Analyst or Admin account. You can still read the report and copy its summary.</p>' : CONFIG.ENABLE_FILE_DOWNLOADS ? '<p class="small" style="margin-top:8px">Each export is checked and logged by the server first.</p>' : '<p class="small" style="margin-top:8px">File downloads and printing are turned off in this hosted preview. Run the app locally to export PDF, JSON and CSV.</p>'}
+      ${selectorsHTML(meta, sel, { idPrefix: "rep", extra: scenarioSelectHTML(meta, sel, "rep") })}
+      ${advanced ? `<details class="advanced"><summary>Advanced options</summary><div class="controls" style="margin-top:10px">${maskSelectHTML(meta, sel, "rep")}</div></details>` : ""}
+      ${!kinds.length ? '<p class="small" style="margin-top:8px">Exports are not part of this account. You can read the report and copy its summary.</p>' : '<p class="small" style="margin-top:8px">Each export is checked and logged by the server first.</p>'}
       <p class="small" id="rep-status" role="status" aria-live="polite" style="margin-top:6px"></p>
     </section>
-    <article class="report" id="report">${loadingHTML("Building report…")}</article>`;
+    <article class="report" id="report">${loadingHTML("Building report…")}</article>
+    ${withComments ? '<section class="panel no-print" id="rep-comments"></section>' : ""}`;
   bindSelects(view);
+  if (!advanced && sel.mask !== "none") setSelection({ mask: "none" });
+  const comments = withComments ? mountComments(view.querySelector("#rep-comments"), { id: "rep", view: viewKey(sel), months: [] }) : null;
+  mountSaveView(view.querySelector("#rep-save"), () => { const x = getSelection(); return { screen: "report", district: x.district, disease: x.disease, scenario: x.scenario, mask: advanced ? x.mask : "none" }; }, meta);
 
-  // Every export asks the server first: it checks the role (403 for viewers) and writes the audit log.
+  // Every export asks the server first: it checks the role (403 if not allowed) and writes the audit log.
   const status = view.querySelector("#rep-status");
-  async function guarded(kind, btn, run) {
+  async function guarded(kind, run) {
     if (!current) return;
     const sim = current;
-    btn.disabled = true;
+    const includeComments = !!view.querySelector("#rep-with-comments")?.checked && kind === "report_pdf";
     status.textContent = "Checking with the server…";
     try {
-      await api.logExport(kind, { district: sim.request.district, disease: sim.request.disease, scenario: sim.request.scenario, mask: sim.request.mask });
+      await api.logExport(kind, { district: sim.request.district, disease: sim.request.disease, scenario: sim.request.scenario, mask: sim.request.mask, with_comments: includeComments });
     } catch (err) {
-      btn.disabled = false;
-      status.textContent = err.status === 403 ? "The server refused this export: your account is not allowed to export. Ask an admin for an Analyst account." : `The export was not started: ${err.message}`;
+      status.textContent = err.status === 403 ? "The server refused this export: your account is not allowed to create it." : `The export was not started: ${err.message}`;
       if (err.status === 403) toast("Export not allowed for this account");
       return;
     }
     try {
-      const msg = await run(sim);
-      status.textContent = msg || "";
+      status.textContent = (await run(sim, includeComments)) || "";
     } catch (err) {
       console.error(err);
       status.textContent = `The export could not be created: ${err.message}`;
-    } finally { btn.disabled = false; }
+    }
   }
-  view.querySelector("#rep-pdf")?.addEventListener("click", (e) => guarded("report_pdf", e.currentTarget, async (sim) => {
-    status.textContent = "Creating PDF…";
-    const { exportReportPDF } = await import("../pdf.js");
-    const pages = await exportReportPDF(sim, meta, summaryText(sim, meta));
-    toast("PDF downloaded");
-    return `Report PDF saved (${pages} ${pages === 1 ? "page" : "pages"}).`;
-  }));
-  view.querySelector("#rep-print")?.addEventListener("click", (e) => guarded("print", e.currentTarget, async () => { window.print(); return ""; }));
-  view.querySelector("#rep-json")?.addEventListener("click", (e) => guarded("json", e.currentTarget, async (sim) => { downloadFile(fileBase(sim) + ".json", JSON.stringify(sim, null, 2), "application/json"); return "JSON downloaded."; }));
-  view.querySelector("#rep-csv")?.addEventListener("click", (e) => guarded("csv", e.currentTarget, async (sim) => { downloadFile(fileBase(sim) + ".csv", toCSV(sim), "text/csv"); return "CSV downloaded."; }));
+  const RUN = {
+    report_pdf: async (sim, includeComments) => {
+      status.textContent = "Creating PDF…";
+      const { exportReportPDF } = await import("../pdf.js");
+      const notes = includeComments ? (await api.comments(viewKey(sim.request))).comments : null;
+      const pages = await exportReportPDF(sim, meta, summaryText(sim, meta), notes);
+      toast("PDF downloaded");
+      return `Report PDF saved (${pages} ${pages === 1 ? "page" : "pages"}${notes ? `, ${notes.length} team ${notes.length === 1 ? "comment" : "comments"}` : ""}).`;
+    },
+    print: async () => { window.print(); return ""; },
+    json: async (sim) => { downloadFile(fileBase(sim) + ".json", JSON.stringify(sim, null, 2), "application/json"); return "JSON downloaded."; },
+    csv: async (sim) => { downloadFile(fileBase(sim) + ".csv", toCSV(sim), "text/csv"); return "CSV downloaded."; },
+  };
+  if (kinds.length) bindMenu(view, "rep-export", (kind) => guarded(kind, RUN[kind]));
   view.querySelector("#rep-copy").addEventListener("click", () => current && copyText(summaryText(current, meta), view.querySelector("#rep-summary")));
 
   async function update() {
@@ -76,9 +95,10 @@ export async function render(view, { meta }) {
     view.querySelectorAll("select[data-key]").forEach((el) => (el.value = s[el.dataset.key]));
     const host = view.querySelector("#report");
     try {
-      const sim = await api.simulation(s);
+      const sim = await api.simulation({ ...s, mask: advanced ? s.mask : "none" });
       if (my !== seq) return;
       current = sim;
+      comments?.setView(viewKey(s));
       const scen = byId(meta.scenarios, s.scenario), dist = byId(meta.districts, s.district), dis = byId(meta.diseases, s.disease);
       const rec = sim.recovery, end = meta.horizon.end_month;
       const b = tsrText(rec.baseline, end), t = tsrText(rec.scenario, end), d = deltaText(rec);
