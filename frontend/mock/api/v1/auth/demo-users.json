@@ -1,0 +1,31 @@
+{
+ "synthetic": true,
+ "algorithm": "PBKDF2-SHA256",
+ "users": [
+  {
+   "username": "viewer",
+   "display_name": "Demo viewer",
+   "role": "viewer",
+   "salt": "9b8f3391bdcbb2a97e3063c7ada7835b",
+   "iterations": 100000,
+   "hash": "9cc902ea276e8631b549d000713508646d4277b3bbfa75769fbe8cc6630ee993"
+  },
+  {
+   "username": "analyst",
+   "display_name": "Demo analyst",
+   "role": "analyst",
+   "salt": "ebd59389542661cdcee5482309af5108",
+   "iterations": 100000,
+   "hash": "ecb01293054cf59c54e26994fa45ea4c4b007ff1349df96b6bbeaf6aefacf558"
+  },
+  {
+   "username": "admin",
+   "display_name": "Demo admin",
+   "role": "admin",
+   "salt": "64c54d1b0349dc57f906252e3e1b3830",
+   "iterations": 100000,
+   "hash": "a4e6ba5da669ed7faf5d6d4210f5e2ffd190d2cd1ab9d9a85790fbc76d617335"
+  }
+ ],
+ "note": "Mock mode only. The live server verifies passwords and never sends hashes to the browser."
+}

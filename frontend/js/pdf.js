@@ -4,6 +4,7 @@ import { CONFIG } from "./config.js";
 import { api } from "./api.js";
 import { byId, monthLabel, tsrText, deltaText, rangeIdx, STATUS, disclaimerBody } from "./format.js";
 import { TECH_GROUPS, PIPELINE } from "./tech.js";
+import { END_USERS, ROLES, PERMISSIONS, SECURITY, SAAS } from "./platform-data.js";
 
 const C = {
   ink: [16, 34, 43], ink2: [68, 85, 94], muted: [95, 111, 119], line: [211, 221, 218], soft: [234, 240, 238],
@@ -248,6 +249,28 @@ export async function exportProjectPDF(meta, onStep = () => {}) {
   // ---------- 9 limitations ----------
   heading("Limitations");
   bullets(meta.limitations, { size: 9.5 });
+
+  // ---------- users, delivery, security, assistant ----------
+  heading("Who will use it", "The simulator is for planning and research, not for diagnosing patients or forecasting real cases.");
+  table(["End user", "What they would use it for"], END_USERS.map((u) => [u.name, u.task]), { columnStyles: { 0: { cellWidth: 62, fontStyle: "bold" } } });
+
+  heading("Delivery as a service (SaaS)", SAAS.summary);
+  table(["Layer", "What it does"], SAAS.layers.map((l) => [l.name, l.detail]), { columnStyles: { 0: { cellWidth: 45, fontStyle: "bold" } } });
+  table(["Tier", "For", "Includes", "Price"], SAAS.tiers.map((t) => [t.name, t.who, t.includes, t.price]), { fontSize: 8.5, columnStyles: { 0: { cellWidth: 34, fontStyle: "bold" } } });
+  bullets(SAAS.delivery, { size: 9.5 });
+
+  heading("Security", "Accounts, data, model and code are protected as follows. \"Working now\" means it runs in this version; \"Planned\" needs the live backend.");
+  table(["Area", "Measure", "Status"], SECURITY.map((m) => [m.area, m.measure, m.status === "app" ? "Working now" : "Planned"]), { fontSize: 8.5, columnStyles: { 0: { cellWidth: 32, fontStyle: "bold" }, 2: { cellWidth: 24 } } });
+  sub("What each role can do");
+  table(["Action", ...Object.values(ROLES).map((r) => r.label)], PERMISSIONS.map((p) => [p.what, ...Object.keys(ROLES).map((k) => (p[k] ? "Yes" : "No"))]), { fontSize: 8.5, columnStyles: { 0: { cellWidth: 90 } } });
+
+  heading("Assistant", "A basic chat assistant answers questions inside the app.");
+  bullets([
+    "Answers what the measures mean (TSR, Delta TSR, threshold, secondary wave, censored) from the project's own definitions.",
+    "Explains results for a district, disease and scenario by reading the API, for example why recovery takes longer under a delayed monsoon.",
+    "Uses no AI service and no internet, so it is fast and cannot invent numbers. It refuses medical questions.",
+    "Possible upgrade: an AI assistant called from the backend, with the key kept on the server and answers limited to this project.",
+  ], { size: 9.5 });
 
   // ---------- 10 technology ----------
   heading("Technology used", "What each part of the project is built with, and why.");

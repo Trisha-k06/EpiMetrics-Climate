@@ -48,7 +48,7 @@ export async function render(view, { meta }) {
     <section class="panel">
       <div class="panel-head"><h2 id="rec-map-title">District map</h2><span class="small" id="rec-map-sub"></span></div>
       <div id="rec-map"></div>
-      <p class="small" style="margin-top:8px">Pillar height and colour show the measure chosen below for the selected scenario: red is slower than baseline, teal is faster, grey is no change. A pulsing amber tip marks a series that never recovered. Select a pillar or a name to choose a district.</p>
+      <p class="small" style="margin-top:8px">The five study districts are raised and coloured by the measure chosen below for the selected scenario; pole height shows the same value. Teal means faster than baseline. A pulsing amber tip marks a series that never recovered. Select a pole, a district or a name to choose a district.</p>
     </section>
     <section class="panel stack">
       <div class="row" style="justify-content:space-between;align-items:flex-end">
@@ -147,7 +147,8 @@ export async function render(view, { meta }) {
     if (!map || !matrix) return;
     const s = getSelection();
     const scen = byId(meta.scenarios, s.scenario), dis = byId(meta.diseases, s.disease);
-    map.update(mapValuesFromCells(matrix.cells, s.scenario, metric), s.district);
+    const mv = mapValuesFromCells(matrix.cells, s.scenario, metric);
+    map.update(mv.values, s.district, mv.legend);
     view.querySelector("#rec-map-title").textContent = `District map · ${scen?.label}`;
     view.querySelector("#rec-map-sub").textContent = `${dis?.name} · ${METRICS[metric].label}${s.scenario === "baseline" && metric === "delta" ? " (baseline shows TSR)" : ""}`;
   }

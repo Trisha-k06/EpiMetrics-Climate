@@ -16,4 +16,6 @@ export const CONFIG = {
   DEMO_SEQUENCE: ["baseline", "delayed_monsoon", "heavy_rain_decline"],
   // Months shown by default on time charts (the outbreak and recovery period).
   FOCUS_RANGE: { start: "2021-07", end: "2024-12" },
+  // Sign-in and roles. Set REQUIRED to false to skip the sign-in screen during development.
+  AUTH: { REQUIRED: true, SESSION_IDLE_MINUTES: 15 },
 };

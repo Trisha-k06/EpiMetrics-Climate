@@ -1,5 +1,6 @@
 // Screen 5: exportable scenario report for the current selection.
 import { CONFIG } from "../config.js";
+import { can } from "../auth.js";
 import { api } from "../api.js";
 import { getSelection, onSelection } from "../state.js";
 import { esc, monthLabel, byId, tsrText, deltaText, statusPill, fmtInt, plural, STATUS, disclaimerBody } from "../format.js";
@@ -8,6 +9,8 @@ import { selectorsHTML, scenarioSelectHTML, bindSelects, renderSimulationView, w
 export async function render(view, { meta }) {
   let seq = 0;
   let current = null;
+  const allowExport = can("exports");
+  const PRINT = CONFIG.ENABLE_PRINT && allowExport, FILES = CONFIG.ENABLE_FILE_DOWNLOADS && allowExport;
   view.innerHTML = `
     <div class="page-head no-print">
       <div>
@@ -20,12 +23,12 @@ export async function render(view, { meta }) {
       <div class="row" style="align-items:flex-end;justify-content:space-between">
         <div class="row" style="align-items:flex-end">${selectorsHTML(meta, getSelection(), { idPrefix: "rep" })}${scenarioSelectHTML(meta, getSelection(), "rep")}</div>
         <div class="report-actions">
-          ${CONFIG.ENABLE_PRINT ? '<button class="btn btn-primary" type="button" id="rep-print"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v7H6z"/></svg>Print or save as PDF</button>' : ""}
-          ${CONFIG.ENABLE_FILE_DOWNLOADS ? '<button class="btn" type="button" id="rep-json">Download JSON</button><button class="btn" type="button" id="rep-csv">Download CSV</button>' : ""}
+          ${PRINT ? '<button class="btn btn-primary" type="button" id="rep-print"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v7H6z"/></svg>Print or save as PDF</button>' : ""}
+          ${FILES ? '<button class="btn" type="button" id="rep-json">Download JSON</button><button class="btn" type="button" id="rep-csv">Download CSV</button>' : ""}
           <button class="btn" type="button" id="rep-copy">Copy summary</button>
         </div>
       </div>
-      ${CONFIG.ENABLE_FILE_DOWNLOADS ? "" : '<p class="small" style="margin-top:8px">File downloads and printing are turned off in this hosted preview. Run the app locally to export PDF, JSON and CSV.</p>'}
+      ${!allowExport ? '<p class="small" style="margin-top:8px">Exporting needs an Analyst or Admin account. You can still read the report and copy its summary.</p>' : CONFIG.ENABLE_FILE_DOWNLOADS ? "" : '<p class="small" style="margin-top:8px">File downloads and printing are turned off in this hosted preview. Run the app locally to export PDF, JSON and CSV.</p>'}
     </section>
     <article class="report" id="report">${loadingHTML("Building report…")}</article>`;
   bindSelects(view);

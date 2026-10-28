@@ -138,6 +138,40 @@ Ground truth appears ONLY here (evaluation of the estimator, never a model input
   "notes": ["…"] }
 ```
 
+## `POST /auth/login` (security)
+
+Request `{ "username": "analyst", "password": "…" }` over HTTPS only.
+Response `200`:
+```jsonc
+{ "token": "<signed JWT, e.g. 15-minute expiry>", "expires_in": 900,
+  "user": { "username": "analyst", "display_name": "Demo analyst", "role": "viewer | analyst | admin" } }
+```
+Wrong credentials → `401 { "error": { "code": "bad_credentials", "message": "Username or password is incorrect." } }`.
+The server must store passwords only as slow salted hashes (bcrypt, argon2 or PBKDF2), rate-limit attempts,
+and never send hashes to the browser. Every other endpoint then requires `Authorization: Bearer <token>`;
+an expired or invalid token → `401`, and the UI returns to the sign-in screen.
+
+Role rules the backend must enforce (the UI hides what a role can't use, but the server is the real gate):
+
+| Endpoint | viewer | analyst | admin |
+|---|---|---|---|
+| `/meta`, `/simulations`, `/recovery-matrix` | yes | yes | yes |
+| `/validation` | no | yes | yes |
+| `/integrity` | summary | summary | yes |
+
+Mock mode instead reads `mock/api/v1/auth/demo-users.json` (salted PBKDF2-SHA256 hashes) and checks the
+password in the browser. That is for the demo only.
+
+## `GET /integrity` (security)
+
+SHA-256 checksum manifest (mock file: `integrity.json`, built by `tools/build_security_files.py`):
+```jsonc
+{ "synthetic": true, "algorithm": "SHA-256", "dataset_version": "0.1.1", "generated_at": "2026-10-28T04:53:28Z",
+  "files": [{ "kind": "api | frontend", "url": "mock/api/v1/meta.json", "label": "…", "bytes": 4123, "sha256": "…" }],
+  "dataset_files": [{ "kind": "dataset", "path": "data/synthetic/disease_cases.csv", "bytes": 512000, "sha256": "…" }] }
+```
+Admins can re-fetch every `files[].url` in the browser and compare fingerprints.
+
 ## Errors
 
 Non-2xx responses return `{ "error": { "code": "unknown_district", "message": "…" } }`.

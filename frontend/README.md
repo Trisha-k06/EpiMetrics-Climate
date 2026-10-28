@@ -16,7 +16,7 @@ python -m http.server 8000
 
 It must be served over HTTP. Opening `index.html` directly from disk blocks the module and JSON loads.
 
-## Six screens
+## Seven screens
 
 | Hash | Screen | Main endpoint |
 |---|---|---|
@@ -25,7 +25,28 @@ It must be served over HTTP. Opening `index.html` directly from disk blocks the 
 | `#recovery` | ΔTSR / interruptions / months-above-threshold matrix for all scenarios × districts; click a cell for its timeline and wave table | `/recovery-matrix`, `/simulations` |
 | `#validation` | Estimated vs true TSR, missing-data tests, p10–p90 spread, recovery-rule sensitivity, limitations | `/validation` |
 | `#report` | One-page scenario report: print or save as PDF, download JSON and CSV, copy summary | `/simulations` |
-| `#technology` | Technologies used and what each is for; **Export PDF** builds a plain-language summary of the whole project | all four |
+| `#technology` | Technologies used and what each is for; **Export PDF** builds a plain-language summary of the whole project | all |
+| `#platform` | End users, SaaS delivery model, security measures, role permissions, your session, data-integrity check (admin) | `/integrity` |
+
+## Sign-in (demo accounts)
+
+The app opens on a sign-in screen. In mock mode use:
+
+| Role | Username | Password | Can |
+|---|---|---|---|
+| Viewer | `viewer` | `viewer-demo-2026` | Read results; no Validation screen, no exports |
+| Analyst | `analyst` | `analyst-demo-2026` | Everything except the integrity check |
+| Admin | `admin` | `admin-demo-2026` | Everything, including Verify files |
+
+Passwords exist only as salted PBKDF2-SHA256 hashes. Sessions end after 15 idle minutes or when the tab closes.
+In mock mode the check runs in the browser (demo only); the live backend must verify passwords and issue JWTs
+(see `API_CONTRACT.md`). To skip sign-in during development set `AUTH.REQUIRED: false` in `js/config.js`.
+
+## Assistant
+
+The **Ask** button (bottom right) opens a basic, rule-based assistant. It answers definitions and explains results
+for a district, disease and scenario by reading the API. It uses no AI service, cannot invent numbers and refuses
+medical questions.
 
 ## Connecting the backend
 
@@ -63,18 +84,24 @@ js/ui.js                selectors, KPI cards, composed simulation view, tables
 js/screens/*.js         the six screens
 js/tech.js              technology list shared by screen 6 and the PDF
 js/pdf.js               whole-project PDF export (jsPDF)
-js/map3d.js, js/geo.js  3D district map (Three.js) with 2D fallback; schematic outline
+js/map3d.js             3D map of Tamil Nadu's real districts (Three.js) with 2D fallback
+js/auth.js              sign-in, roles, session timeout
+js/assistant.js         basic chat assistant
+js/platform-data.js     end users, roles, permissions, security measures, SaaS model
+data/geo/tamil_nadu.json Census 2011 district boundaries, DataMeet (CC BY 4.0), simplified
 js/theme.js             Day / Night mode
 vendor/                 Three.js r149, jsPDF 2.5.1, jsPDF-AutoTable 3.8.2 (MIT licences included)
 mock/api/v1/            mock responses (75 files)
 tools/build_mock_api.py builds the mock responses from the dataset
+tools/build_geo.py      builds data/geo/tamil_nadu.json from DataMeet GeoJSON
+tools/build_security_files.py  hashed demo accounts + SHA-256 integrity manifest (run last)
 API_CONTRACT.md         the agreed API schema
 ```
 
 ## Look and feel
 
 - Futuristic glass interface with a Day / Night switch in the top bar (follows the device until you choose).
-- 3D district map on the Overview and Recovery screens: drag to rotate, select a pillar or a name. It is a schematic, labelled as such.
+- 3D map of Tamil Nadu's 32 districts (Census 2011 boundaries) on the Overview and Recovery screens. The five study districts are raised and coloured by the result, with a pole showing the value; legend, compass, scale bar and India locator included. Drag to rotate; select a district or name.
 - Motion (screen entrance, line drawing, count-up, card tilt, map rotation) stops when the device asks for reduced motion.
 
 ## Accessibility and responsiveness
@@ -84,3 +111,17 @@ API_CONTRACT.md         the agreed API schema
 - Baseline is blue and scenario orange everywhere (colour-blind-safe pair); every chart also has a legend,
   hover tooltips and a "Show the data" table.
 - Keyboard navigable with visible focus; scenario choice uses real radio buttons.
+
+## Rebuilding data files
+
+```bash
+python tools/build_mock_api.py ../            # mock API from the dataset (repo root)
+python tools/build_geo.py dists11.geojson india-composite.geojson   # only if boundaries change
+python tools/build_security_files.py ../      # ALWAYS last: refreshes the checksum manifest
+```
+If you change any data file without re-running the last step, the admin integrity check will report it as changed.
+
+## Credits
+
+District and state boundaries: Census 2011, [DataMeet India community](https://github.com/datameet/maps), CC BY 4.0, simplified.
+Three.js, jsPDF and jsPDF-AutoTable under the MIT licence (see `vendor/`).

@@ -1,0 +1,686 @@
+{
+ "synthetic": true,
+ "api_version": "1.0",
+ "dataset_version": "0.1.1",
+ "algorithm": "SHA-256",
+ "generated_at": "2026-10-28T05:05:14Z",
+ "files": [
+  {
+   "kind": "api",
+   "url": "mock/api/v1/auth/demo-users.json",
+   "label": "/api/v1/ auth/demo-users.json",
+   "bytes": 887,
+   "sha256": "5b80f49bfc0784ee503382495ccd8814960fa9ce4869fc0b8eb66cc5713ca0c5"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/meta.json",
+   "label": "/api/v1/ meta.json",
+   "bytes": 6369,
+   "sha256": "f64139e260b33d0efb15971a766ed44fc96b7343940d964c5d00368f932515d7"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/recovery-matrix/dengue.json",
+   "label": "/api/v1/ recovery-matrix/dengue.json",
+   "bytes": 11319,
+   "sha256": "1f27911ffdee0c9fc51bc4a1b7a8ec65fb80d56a1650a0d8e65df4fcd8d2b481"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/recovery-matrix/malaria.json",
+   "label": "/api/v1/ recovery-matrix/malaria.json",
+   "bytes": 11303,
+   "sha256": "d10b34ded0aa9899b65273a40a91695c43f169291d576e9d799e13a014be4bac"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/cbe__dengue__baseline.json",
+   "label": "/api/v1/ simulations/cbe__dengue__baseline.json",
+   "bytes": 7849,
+   "sha256": "4b55ae195980e9c0133d8422c8e627cb8452b541af801c04fd4ac1eddfa7c926"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/cbe__dengue__delayed_monsoon.json",
+   "label": "/api/v1/ simulations/cbe__dengue__delayed_monsoon.json",
+   "bytes": 8083,
+   "sha256": "12110298a1840cd5132af4a3927ec9548bf462c2e21d0f19977c173926ca264f"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/cbe__dengue__heavy_rain_decline.json",
+   "label": "/api/v1/ simulations/cbe__dengue__heavy_rain_decline.json",
+   "bytes": 8088,
+   "sha256": "190006023524a98f9262fa547e015c808c143a4f6a38286d5dfa47b7afc53fc5"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/cbe__dengue__irregular_rain.json",
+   "label": "/api/v1/ simulations/cbe__dengue__irregular_rain.json",
+   "bytes": 8102,
+   "sha256": "1ecd9734e626f791da73080da250e1b2cc8e19dda8a8046b2b3f37192b81d6eb"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/cbe__dengue__prolonged_wet.json",
+   "label": "/api/v1/ simulations/cbe__dengue__prolonged_wet.json",
+   "bytes": 8004,
+   "sha256": "239c4e663c1e263b9b818f6e6536981445b0fc78be34989b4636f46f1f9f9c5a"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/cbe__dengue__warm_wet.json",
+   "label": "/api/v1/ simulations/cbe__dengue__warm_wet.json",
+   "bytes": 8215,
+   "sha256": "bcd06a6bfb7ed0b2bc5ea770d617b9f5780e2184b6fd47495cd389e7506d3523"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/cbe__dengue__warmer.json",
+   "label": "/api/v1/ simulations/cbe__dengue__warmer.json",
+   "bytes": 8072,
+   "sha256": "356b98227823c57ac4ab253ec6cf466c9f95f0ffd9b2df132e34a767a0c70719"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/cbe__malaria__baseline.json",
+   "label": "/api/v1/ simulations/cbe__malaria__baseline.json",
+   "bytes": 7680,
+   "sha256": "4d53e9e514c3019c4cb8ae77b2b68b90312497d77cad5b3ea41200c4cc6d9865"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/cbe__malaria__delayed_monsoon.json",
+   "label": "/api/v1/ simulations/cbe__malaria__delayed_monsoon.json",
+   "bytes": 7921,
+   "sha256": "0852cd399b51ece5b19cce6be747396c8589717039ae6d2813000ee13dcf825d"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/cbe__malaria__heavy_rain_decline.json",
+   "label": "/api/v1/ simulations/cbe__malaria__heavy_rain_decline.json",
+   "bytes": 7926,
+   "sha256": "762f3570eab01fd0da301e5c79327eba7e75cd5b28a0d481414b3b592d92929d"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/cbe__malaria__irregular_rain.json",
+   "label": "/api/v1/ simulations/cbe__malaria__irregular_rain.json",
+   "bytes": 8120,
+   "sha256": "92ba5166046d5d420a9a4b4c2817c61c7acb5040fc7ac27004953f75026a58fc"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/cbe__malaria__prolonged_wet.json",
+   "label": "/api/v1/ simulations/cbe__malaria__prolonged_wet.json",
+   "bytes": 7932,
+   "sha256": "361ae8f4e74e14dff2f27043a3b02f1c81c285eebebeab96f0cdd9934f559cac"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/cbe__malaria__warm_wet.json",
+   "label": "/api/v1/ simulations/cbe__malaria__warm_wet.json",
+   "bytes": 7960,
+   "sha256": "0f7e589a80ec3dd977477711f94184d84ccaf04c04f0dafb8a454589a85a3a6c"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/cbe__malaria__warmer.json",
+   "label": "/api/v1/ simulations/cbe__malaria__warmer.json",
+   "bytes": 7818,
+   "sha256": "adcb90f033ce50fc3b2518589334e004627cc3bfb6acc6e280970c6f4b20961a"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/chn__dengue__baseline.json",
+   "label": "/api/v1/ simulations/chn__dengue__baseline.json",
+   "bytes": 8044,
+   "sha256": "8d3c51c608b864b66867cd89ea74c7898e14ebfd610df5714dadef87105c4261"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/chn__dengue__delayed_monsoon.json",
+   "label": "/api/v1/ simulations/chn__dengue__delayed_monsoon.json",
+   "bytes": 8288,
+   "sha256": "d974eed63266e61b2b848dbff13905317bdea0d844d83dcc339442142f0b9906"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/chn__dengue__heavy_rain_decline.json",
+   "label": "/api/v1/ simulations/chn__dengue__heavy_rain_decline.json",
+   "bytes": 8198,
+   "sha256": "a2262d477bea0a8c79835ed1843496d6fe16149fa1c8f1e8e3655260d41108b1"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/chn__dengue__irregular_rain.json",
+   "label": "/api/v1/ simulations/chn__dengue__irregular_rain.json",
+   "bytes": 8581,
+   "sha256": "3651f6d4cca2853f4710445db4bd57568d1c09c9cdd14b764526546a9ed7db9a"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/chn__dengue__prolonged_wet.json",
+   "label": "/api/v1/ simulations/chn__dengue__prolonged_wet.json",
+   "bytes": 8294,
+   "sha256": "ae2fa524c81ffb6deeb352b56b8b90b0832fdcf2fdecdcf88b632da49176e2e8"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/chn__dengue__warm_wet.json",
+   "label": "/api/v1/ simulations/chn__dengue__warm_wet.json",
+   "bytes": 8319,
+   "sha256": "2fff203988eb78a4eedac37d641ab350e6da495cce689b7ee868c17814d53f69"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/chn__dengue__warmer.json",
+   "label": "/api/v1/ simulations/chn__dengue__warmer.json",
+   "bytes": 8174,
+   "sha256": "2d143f69f001b74f0166884dfab667d2b7d2a900b90d433a29ce8d0ac659125f"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/chn__malaria__baseline.json",
+   "label": "/api/v1/ simulations/chn__malaria__baseline.json",
+   "bytes": 7950,
+   "sha256": "657a269f851fe9eec5c1905a62bbab484aa5e358533a54797672cd00f8df8792"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/chn__malaria__delayed_monsoon.json",
+   "label": "/api/v1/ simulations/chn__malaria__delayed_monsoon.json",
+   "bytes": 8196,
+   "sha256": "6c0ce57f78036fb5cd94f230f3b4ace55e4cc484f04366d040d1e1a9e97a193e"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/chn__malaria__heavy_rain_decline.json",
+   "label": "/api/v1/ simulations/chn__malaria__heavy_rain_decline.json",
+   "bytes": 8197,
+   "sha256": "e4f0df92f7adedd602ff2b77ba99767248c3ae719aa7a16ff562e5467e37f3d1"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/chn__malaria__irregular_rain.json",
+   "label": "/api/v1/ simulations/chn__malaria__irregular_rain.json",
+   "bytes": 8216,
+   "sha256": "498f3da657a289fc48eff1a92cd5a9b1e63b033c069c6e342c54c348ef37ba5e"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/chn__malaria__prolonged_wet.json",
+   "label": "/api/v1/ simulations/chn__malaria__prolonged_wet.json",
+   "bytes": 8205,
+   "sha256": "f5080ba1f95122bb8929ed7f5fb07dba3b3a79c9253ab9d6bb5f89a8dfd41c24"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/chn__malaria__warm_wet.json",
+   "label": "/api/v1/ simulations/chn__malaria__warm_wet.json",
+   "bytes": 8137,
+   "sha256": "96c8840f6e83da5569dc840d1e2dc1aaf342a9e784e7b1962db05057946ed577"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/chn__malaria__warmer.json",
+   "label": "/api/v1/ simulations/chn__malaria__warmer.json",
+   "bytes": 7995,
+   "sha256": "4bf3ddb9be00deb08247ea6ab8e64383ce271cce8cf85b20738d0dfac99cffc5"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/mdu__dengue__baseline.json",
+   "label": "/api/v1/ simulations/mdu__dengue__baseline.json",
+   "bytes": 7967,
+   "sha256": "074eab3cab179aecb0529270f43ba59c875f8c47f7d2b1c1edd2a47a56f0ec3c"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/mdu__dengue__delayed_monsoon.json",
+   "label": "/api/v1/ simulations/mdu__dengue__delayed_monsoon.json",
+   "bytes": 8117,
+   "sha256": "c7ce56309aeb53f4e84d839da58052d96789e9c14f29c4d5be01ddd47172f0a9"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/mdu__dengue__heavy_rain_decline.json",
+   "label": "/api/v1/ simulations/mdu__dengue__heavy_rain_decline.json",
+   "bytes": 8123,
+   "sha256": "6499dfd167f53fcb1056caf4d7c399b2f6e5e45ec0bf5e999e701a5c0bc93791"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/mdu__dengue__irregular_rain.json",
+   "label": "/api/v1/ simulations/mdu__dengue__irregular_rain.json",
+   "bytes": 8229,
+   "sha256": "102d4961ec63d42292208a472dd6c0ce2c01dbd4a4f93eb13d0f500a4cce5f4b"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/mdu__dengue__prolonged_wet.json",
+   "label": "/api/v1/ simulations/mdu__dengue__prolonged_wet.json",
+   "bytes": 8129,
+   "sha256": "24ba38fddd97a71e7996df1048a13b2977e5c09bc1ce046de1476a4679e31bce"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/mdu__dengue__warm_wet.json",
+   "label": "/api/v1/ simulations/mdu__dengue__warm_wet.json",
+   "bytes": 8152,
+   "sha256": "dcb6fa70eaaa904d6ee7b84e10ba3dee926f5b5deb6771780f639366a1250029"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/mdu__dengue__warmer.json",
+   "label": "/api/v1/ simulations/mdu__dengue__warmer.json",
+   "bytes": 8023,
+   "sha256": "e469ca24d78547ad0e947dab8a9a5d6c955dc457c298ab434040619b35cdee34"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/mdu__malaria__baseline.json",
+   "label": "/api/v1/ simulations/mdu__malaria__baseline.json",
+   "bytes": 7714,
+   "sha256": "7f32fef971a5d56605e554d4234ed90faadad75e073130b8382d2db75ea8e34c"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/mdu__malaria__delayed_monsoon.json",
+   "label": "/api/v1/ simulations/mdu__malaria__delayed_monsoon.json",
+   "bytes": 7955,
+   "sha256": "9f39a1e7d2c9f477764cdf802c728a5a3a48691a69104ee6ba3c87a0ad709985"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/mdu__malaria__heavy_rain_decline.json",
+   "label": "/api/v1/ simulations/mdu__malaria__heavy_rain_decline.json",
+   "bytes": 7959,
+   "sha256": "06f89c381a9e4fde7b6b6da042d718cee0c3b68a3bdb97ffc4245cbee90893ec"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/mdu__malaria__irregular_rain.json",
+   "label": "/api/v1/ simulations/mdu__malaria__irregular_rain.json",
+   "bytes": 8255,
+   "sha256": "965b36cd528906fc294166aae19272d86245ed8f53453cc9c859e4db871378a5"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/mdu__malaria__prolonged_wet.json",
+   "label": "/api/v1/ simulations/mdu__malaria__prolonged_wet.json",
+   "bytes": 7964,
+   "sha256": "4cd6c3ff5e02518a0358861a0b7d9fbc2ae66f399673a698d90e90fdb2ab393b"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/mdu__malaria__warm_wet.json",
+   "label": "/api/v1/ simulations/mdu__malaria__warm_wet.json",
+   "bytes": 8085,
+   "sha256": "84bee3a5fb425c856d070c87505416466ad027a8728b26a7e9e1368c9959a1a1"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/mdu__malaria__warmer.json",
+   "label": "/api/v1/ simulations/mdu__malaria__warmer.json",
+   "bytes": 7943,
+   "sha256": "e2fde8dc17515b9369819a3cf4d6f731723306947624287b0e26991252ca7e64"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/tnj__dengue__baseline.json",
+   "label": "/api/v1/ simulations/tnj__dengue__baseline.json",
+   "bytes": 7771,
+   "sha256": "5baf3ce2d07650739cdb38c0660f3d1cd9459bb963c9e26ef4dd81e0cd3c7bda"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/tnj__dengue__delayed_monsoon.json",
+   "label": "/api/v1/ simulations/tnj__dengue__delayed_monsoon.json",
+   "bytes": 7908,
+   "sha256": "f341f10fdd937e4d6ab16b7bd2b08eaa44bda2cd89bc3defcb4a27e8d20e7589"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/tnj__dengue__heavy_rain_decline.json",
+   "label": "/api/v1/ simulations/tnj__dengue__heavy_rain_decline.json",
+   "bytes": 7911,
+   "sha256": "98d53ab1e2576170dd75c0ff38985ad9e8f1608635ecbf0d9ceb9105088eb3c3"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/tnj__dengue__irregular_rain.json",
+   "label": "/api/v1/ simulations/tnj__dengue__irregular_rain.json",
+   "bytes": 8106,
+   "sha256": "f80bc34ec8b712ca326b3f25fb219933826080a44f7c7d23256caa1af481ed92"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/tnj__dengue__prolonged_wet.json",
+   "label": "/api/v1/ simulations/tnj__dengue__prolonged_wet.json",
+   "bytes": 7915,
+   "sha256": "b8d18c61d9a3b63e96e821beac843fbe9c84c656c95e7f0c714797189d64b4af"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/tnj__dengue__warm_wet.json",
+   "label": "/api/v1/ simulations/tnj__dengue__warm_wet.json",
+   "bytes": 8037,
+   "sha256": "27a04e2de29b0406a175d36fda209ea2a87ae86dde019a181a8a131989541cb7"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/tnj__dengue__warmer.json",
+   "label": "/api/v1/ simulations/tnj__dengue__warmer.json",
+   "bytes": 7895,
+   "sha256": "93ea01b210f67efcdbbc28d91790d52134ea6442282e0cadacfa2a6bf2f9098d"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/tnj__malaria__baseline.json",
+   "label": "/api/v1/ simulations/tnj__malaria__baseline.json",
+   "bytes": 7699,
+   "sha256": "5605ec5f639be5c655d346bc77485c392d9b48905405be9069656999cf9cc4fd"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/tnj__malaria__delayed_monsoon.json",
+   "label": "/api/v1/ simulations/tnj__malaria__delayed_monsoon.json",
+   "bytes": 7940,
+   "sha256": "e283ebed5b8acef94cc029460204912432a9a573f59c2e20d3f141529b32aeb4"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/tnj__malaria__heavy_rain_decline.json",
+   "label": "/api/v1/ simulations/tnj__malaria__heavy_rain_decline.json",
+   "bytes": 7944,
+   "sha256": "fcc5efbcfe49b8b029e627043a8fb626560ab07ce967795f4f6743070dc81620"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/tnj__malaria__irregular_rain.json",
+   "label": "/api/v1/ simulations/tnj__malaria__irregular_rain.json",
+   "bytes": 8231,
+   "sha256": "0fc945e469f29693d61e7c9418682874e9f5500fa7e6c76113e1fc16042e5f78"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/tnj__malaria__prolonged_wet.json",
+   "label": "/api/v1/ simulations/tnj__malaria__prolonged_wet.json",
+   "bytes": 7961,
+   "sha256": "e0c6eea919746f930cd3f1f8d6095b10299a4f0ad7c56527b7de8e461ceb3499"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/tnj__malaria__warm_wet.json",
+   "label": "/api/v1/ simulations/tnj__malaria__warm_wet.json",
+   "bytes": 7975,
+   "sha256": "1ab93739c4ecffe2b2cfbea2ebc71214755110237c64134821800b38d58a0ee1"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/tnj__malaria__warmer.json",
+   "label": "/api/v1/ simulations/tnj__malaria__warmer.json",
+   "bytes": 7847,
+   "sha256": "9599fe342cf658641b7254719e8470929af0b4686cfb6f349f1dab8a31af83c4"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/try__dengue__baseline.json",
+   "label": "/api/v1/ simulations/try__dengue__baseline.json",
+   "bytes": 7723,
+   "sha256": "b18323b974d6576153aa9c304599773a40c34af29c609e7ce97041233f31f162"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/try__dengue__delayed_monsoon.json",
+   "label": "/api/v1/ simulations/try__dengue__delayed_monsoon.json",
+   "bytes": 7880,
+   "sha256": "ba80d5d0e277754f65f08a9b8bd001e87efcf48a5e8f9e29a9f100539567c37a"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/try__dengue__heavy_rain_decline.json",
+   "label": "/api/v1/ simulations/try__dengue__heavy_rain_decline.json",
+   "bytes": 7891,
+   "sha256": "dcbfaafc82140c3b10ba5fa450099e4ce58929a26ec8b823e694073cb50074a5"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/try__dengue__irregular_rain.json",
+   "label": "/api/v1/ simulations/try__dengue__irregular_rain.json",
+   "bytes": 8170,
+   "sha256": "06cbd58fc1d073aa1e7d4246944fc00b227385e49f67153408cc52ef55b6f0f8"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/try__dengue__prolonged_wet.json",
+   "label": "/api/v1/ simulations/try__dengue__prolonged_wet.json",
+   "bytes": 7979,
+   "sha256": "1e4f9c600122f347b716977ea9c1755c16979eacb7513b83c8c64a18928537a6"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/try__dengue__warm_wet.json",
+   "label": "/api/v1/ simulations/try__dengue__warm_wet.json",
+   "bytes": 8005,
+   "sha256": "40e6b34db19f343a2bb18d3ee710871b5623208acb2bc704ad9cd6c407b20236"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/try__dengue__warmer.json",
+   "label": "/api/v1/ simulations/try__dengue__warmer.json",
+   "bytes": 7863,
+   "sha256": "d3811637150de1c8eed79ab0b27788ac5217df23172e8dc589090f9deca72f6c"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/try__malaria__baseline.json",
+   "label": "/api/v1/ simulations/try__malaria__baseline.json",
+   "bytes": 7866,
+   "sha256": "fd76da3872f4b9d1de623245459a1e7a06179ed045a4c516e45191b55c589518"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/try__malaria__delayed_monsoon.json",
+   "label": "/api/v1/ simulations/try__malaria__delayed_monsoon.json",
+   "bytes": 8111,
+   "sha256": "6ecf27651ff793b965b5b69ff4955cf4a157a67552125d907982e6f8836b006d"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/try__malaria__heavy_rain_decline.json",
+   "label": "/api/v1/ simulations/try__malaria__heavy_rain_decline.json",
+   "bytes": 8113,
+   "sha256": "eb3970cc4e2857f11f8ee05d1d94de246d5d036e58d93bf77d3b208067307d13"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/try__malaria__irregular_rain.json",
+   "label": "/api/v1/ simulations/try__malaria__irregular_rain.json",
+   "bytes": 8121,
+   "sha256": "5ff57b59018cb43e7f6b4e669b934870291eda4c177db682bc3a21760c2eb0e4"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/try__malaria__prolonged_wet.json",
+   "label": "/api/v1/ simulations/try__malaria__prolonged_wet.json",
+   "bytes": 8117,
+   "sha256": "7ee64a09e7096287b6f1a99da778450b56c62c41c93f21ee1d5298ca387c7d20"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/try__malaria__warm_wet.json",
+   "label": "/api/v1/ simulations/try__malaria__warm_wet.json",
+   "bytes": 8154,
+   "sha256": "2d7f9dedc3e1d55938fc9aac21f343d9a1bc38152ca6bce782531fc870c1fdbd"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/simulations/try__malaria__warmer.json",
+   "label": "/api/v1/ simulations/try__malaria__warmer.json",
+   "bytes": 8013,
+   "sha256": "a5d6eef51f8adcbb6098f3be13b0ee058d1f39432a8c9569042bc28e5803a6a9"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/validation/dengue.json",
+   "label": "/api/v1/ validation/dengue.json",
+   "bytes": 59710,
+   "sha256": "44cc36b3a598f913af95058303940a26a16f46922f95388f657460af476ca2dc"
+  },
+  {
+   "kind": "api",
+   "url": "mock/api/v1/validation/malaria.json",
+   "label": "/api/v1/ validation/malaria.json",
+   "bytes": 60081,
+   "sha256": "f4e006033b05db34dbee67c33ee0ea3f775a8c4ee309476558c27d04eaa00a34"
+  },
+  {
+   "kind": "frontend",
+   "url": "data/geo/tamil_nadu.json",
+   "label": "District boundaries",
+   "bytes": 77874,
+   "sha256": "0e0fcf29c6dcae3caf85507d6c02985711aba2d86ff28e59613e6c1ad2e56d47"
+  },
+  {
+   "kind": "frontend",
+   "url": "vendor/jspdf.plugin.autotable.min.js",
+   "label": "Library jspdf.plugin.autotable.min.js",
+   "bytes": 38976,
+   "sha256": "27a9c3b61843c6312b87f142d40fe77c0f0f054c9f3cdeccc4bfd5f3322859c8"
+  },
+  {
+   "kind": "frontend",
+   "url": "vendor/jspdf.umd.min.js",
+   "label": "Library jspdf.umd.min.js",
+   "bytes": 364463,
+   "sha256": "98ccf17aa10c20bb1301762618fcc9b6ab3a4e7f26b6071d64d0b41154df3875"
+  },
+  {
+   "kind": "frontend",
+   "url": "vendor/three.min.js",
+   "label": "Library three.min.js",
+   "bytes": 608081,
+   "sha256": "8a5f7249903b54d30f79f708699d2fed2d6a1d0741a4cd41377d1f01bb5a2271"
+  }
+ ],
+ "dataset_files": [
+  {
+   "kind": "dataset",
+   "path": "data/derived/model_ready_dataset.csv",
+   "bytes": 451317,
+   "sha256": "ee3fc0aecc3771fce7a5036579d5aa5ebbd4387aa341715fe6bbe0bf0c42b8b0"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/derived/seasonal_baseline_thresholds.csv",
+   "bytes": 6015,
+   "sha256": "9c77eb172663561468cae0bc55368a2518b3396064c20a8a9683a984fb493b24"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/ground_truth/ground_truth_trajectories.csv",
+   "bytes": 653433,
+   "sha256": "6a2ca2a887c289b0e93c87c9737be5cb4b76c7a072b5cecd7ac10aef0fa4895d"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/ground_truth/outbreak_events.csv",
+   "bytes": 14986,
+   "sha256": "9df47ab2c9e1e2019b6eddbb80022e16f2f5378414253e7038f2484e82e9420d"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/ground_truth/recovery_truth.csv",
+   "bytes": 6412,
+   "sha256": "2ec9ad411e05afe1de055e8a123324de7965bab883f31290c15ea5728a8fc28a"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/outputs/sensitivity_grid.csv",
+   "bytes": 61606,
+   "sha256": "e070d88f91101c7f38f7c0ce63562bb46221aad1d047fc833495d572ac655128"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/outputs/simulation_results_template.csv",
+   "bytes": 388,
+   "sha256": "81edbf519bc20db5127f282711d3c575e376b984c201cc1f383d05ba0e9cc158"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/outputs/simulation_runs.csv",
+   "bytes": 49549,
+   "sha256": "a8157037fcb4e5fdbfa646f4d871dcdff89faa5a9f997a1c103cd53c0676b960"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/synthetic/climate_anomalies.csv",
+   "bytes": 525,
+   "sha256": "1ea6b5c1554d0a9b58f01bd941ff0c973066e86606c570c7d2ba5768044fbd49"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/synthetic/climate_history.csv",
+   "bytes": 211871,
+   "sha256": "e9c8d0204fac520f630dcdfe68c5acd390089a9cd80dfadec2d6d3c560cd2efc"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/synthetic/climate_normals.csv",
+   "bytes": 2516,
+   "sha256": "44b2eb7057c3855a436210945645a118fe7f79821168e31248aa5cb0c064c2cb"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/synthetic/disease_cases.csv",
+   "bytes": 432348,
+   "sha256": "b74ecb326c895237516eef1258578ae9485b561d20b0f13cadd4fd788fd787a3"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/synthetic/disease_profiles.csv",
+   "bytes": 1017,
+   "sha256": "53c4e673f0cc900e294df28534e4405ebf74179cbf4ad72a556c1e4ffcdc4c0e"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/synthetic/district_metadata.csv",
+   "bytes": 280,
+   "sha256": "709bbc98dac971cec0ecd7f38ffec8fa03504f463a1cc9b4f5cae2fb8f6f0dbd"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/synthetic/environmental_vulnerability.csv",
+   "bytes": 156,
+   "sha256": "df49309fd1395a579dc739e60f102d84cb528805aa38bc456060deeff8fcbc19"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/synthetic/intervention_profiles.csv",
+   "bytes": 267,
+   "sha256": "53022e86b18dfe0bb9222365f3dfed19de09a3ba1faed4c385297254bc380f83"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/synthetic/missing_data_masks.csv",
+   "bytes": 21366,
+   "sha256": "5b1d13b358ef603747de4858680f986e6b0cb7e2bf20a6fd2de03b7af2dacc8e"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/synthetic/recovery_rules.csv",
+   "bytes": 190,
+   "sha256": "39ffd3f7ca95866f0a733f32cf4e9f0fc385d53648e798a3aa12f106fbbaeceb"
+  },
+  {
+   "kind": "dataset",
+   "path": "data/synthetic/scenarios.csv",
+   "bytes": 551,
+   "sha256": "fcee4bfbe592b7f27434845b8b458d951558a23da7dfafa4c059f75ae368f83b"
+  }
+ ],
+ "note": "The browser can re-check every file with a URL. Dataset CSVs are checked by the backend (validate_data.py, verify_semantics.py)."
+}

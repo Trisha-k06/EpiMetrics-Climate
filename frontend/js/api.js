@@ -1,6 +1,7 @@
 // API client. The only module that knows whether data comes from mock files or the live backend.
 // It returns responses unchanged: the UI never computes recovery, thresholds or ΔTSR.
 import { CONFIG } from "./config.js";
+import { authHeader, logout } from "./auth.js";
 
 export class ApiError extends Error {
   constructor(message, code = "api_error", detail = null) {
@@ -19,6 +20,7 @@ function mockPath(endpoint, params) {
     case "simulations": return `simulations/${params.district}__${params.disease}__${params.scenario}.json`;
     case "recovery-matrix": return `recovery-matrix/${params.disease}.json`;
     case "validation": return `validation/${params.disease}.json`;
+    case "integrity": return "integrity.json";
     default: throw new ApiError(`Unknown endpoint "${endpoint}".`, "unknown_endpoint");
   }
 }
@@ -34,6 +36,7 @@ const REQUIRED = {
   simulations: ["synthetic", "months", "threshold_cases", "reference", "series", "recovery", "waves", "anomaly_windows"],
   "recovery-matrix": ["synthetic", "cells"],
   validation: ["synthetic", "rows", "summary_by_mask", "sensitivity"],
+  integrity: ["synthetic", "algorithm", "files"],
 };
 
 function checkContract(endpoint, body) {
@@ -61,7 +64,7 @@ async function request(endpoint, params = {}) {
     const timer = setTimeout(() => ctrl.abort(), CONFIG.REQUEST_TIMEOUT_MS);
     let res;
     try {
-      res = await fetch(url, { signal: ctrl.signal, headers: { Accept: "application/json" } });
+      res = await fetch(url, { signal: ctrl.signal, headers: { Accept: "application/json", ...authHeader() } });
     } catch (e) {
       throw new ApiError(
         e.name === "AbortError" ? "The data service took too long to respond. Try again." :
@@ -73,6 +76,7 @@ async function request(endpoint, params = {}) {
     }
     let body;
     try { body = await res.json(); } catch { body = null; }
+    if (res.status === 401 && CONFIG.API_MODE === "live") { logout("expired"); throw new ApiError("Your session has expired. Sign in again.", "unauthorized"); }
     if (!res.ok) {
       const msg = body?.error?.message || (res.status === 404 ? "No data exists for this selection." : `The data service returned an error (${res.status}).`);
       throw new ApiError(msg, body?.error?.code || `http_${res.status}`);
@@ -92,4 +96,5 @@ export const api = {
   simulation: ({ district, disease, scenario }) => request("simulations", { district, disease, scenario }),
   recoveryMatrix: ({ disease }) => request("recovery-matrix", { disease }),
   validation: ({ disease }) => request("validation", { disease }),
+  integrity: () => request("integrity"),
 };

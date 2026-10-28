@@ -3,6 +3,7 @@ import { CONFIG } from "../config.js";
 import { esc } from "../format.js";
 import { TECH_GROUPS, PIPELINE } from "../tech.js";
 import { toast } from "../ui.js";
+import { can } from "../auth.js";
 
 const PDF_SECTIONS = [
   "What the project does, in plain language",
@@ -14,10 +15,14 @@ const PDF_SECTIONS = [
   "Recovery delay for every scenario and district",
   "How reliable the estimates are",
   "Limitations",
+  "Who will use it",
+  "Delivery as a service (SaaS) and security",
+  "The assistant",
   "Technology used",
 ];
 
 export async function render(view, { meta }) {
+  const allow = CONFIG.ENABLE_FILE_DOWNLOADS && can("exports");
   view.innerHTML = `
     <div class="page-head">
       <div>
@@ -32,10 +37,10 @@ export async function render(view, { meta }) {
         <h2>Project summary PDF</h2>
         <p>One document that explains the project from start to finish for readers who have not seen the app: the objective, the data, the method, the results across all districts, how reliable they are, the limitations and the technology. Figures come from the API, exactly as the screens show them.</p>
         <div class="row">
-          <button class="btn btn-primary" type="button" id="pdf-export" ${CONFIG.ENABLE_FILE_DOWNLOADS ? "" : "disabled"}>
+          <button class="btn btn-primary" type="button" id="pdf-export" ${allow ? "" : "disabled"}>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>Export PDF
           </button>
-          <span class="small" id="pdf-status" role="status" aria-live="polite">${CONFIG.ENABLE_FILE_DOWNLOADS ? "A4, about 7 pages. Created on your computer; nothing is uploaded." : "PDF export is turned off in this hosted preview. Run the app locally to download the PDF."}</span>
+          <span class="small" id="pdf-status" role="status" aria-live="polite">${!can("exports") ? "Exporting needs an Analyst or Admin account." : CONFIG.ENABLE_FILE_DOWNLOADS ? "A4, about 9 pages. Created on your computer; nothing is uploaded." : "PDF export is turned off in this hosted preview. Run the app locally to download the PDF."}</span>
         </div>
       </div>
       <div class="export-list">

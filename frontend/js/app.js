@@ -5,6 +5,12 @@ import { reconcileSelection } from "./state.js";
 import { esc, monthLabel, disclaimerBody } from "./format.js";
 import { errorHTML, loadingHTML } from "./ui.js";
 import { initTheme } from "./theme.js";
+import { initAuth, onAuth, currentSession, canOpen, authRequired, logout, minutesLeft } from "./auth.js";
+import { ROLES } from "./platform-data.js";
+import { mountAssistant, unmountAssistant } from "./assistant.js";
+import { toast } from "./ui.js";
+import * as login from "./screens/login.js";
+import * as platform from "./screens/platform.js";
 import * as overview from "./screens/overview.js";
 import * as simulator from "./screens/simulator.js";
 import * as recovery from "./screens/recovery.js";
@@ -19,6 +25,7 @@ const ROUTES = {
   validation: { mod: validation, title: "Validation & limits" },
   report: { mod: report, title: "Scenario report" },
   technology: { mod: technology, title: "Technology & project summary" },
+  platform: { mod: platform, title: "Users & security" },
 };
 const DEFAULT_ROUTE = "overview";
 
@@ -38,9 +45,41 @@ function currentRoute() {
   return ROUTES[h] ? h : DEFAULT_ROUTE;
 }
 
+let lastAuthReason = null;
+function updateShell() {
+  const sess = currentSession();
+  const signedOut = authRequired() && !sess;
+  document.body.classList.toggle("signed-out", signedOut);
+  const chip = document.getElementById("user-chip");
+  if (sess && authRequired()) {
+    chip.hidden = false;
+    chip.innerHTML = `<span class="uc-name" title="Signed in as ${esc(sess.username)}">${esc(sess.display_name)}</span><span class="uc-role">${esc(ROLES[sess.role].label)}</span><button type="button" class="uc-out" id="uc-out">Sign out</button>`;
+    chip.querySelector("#uc-out").addEventListener("click", () => logout("logout"));
+  } else { chip.hidden = true; chip.innerHTML = ""; }
+  document.querySelectorAll(".sidenav a").forEach((a) => { a.hidden = !!(sess || !authRequired()) && !canOpen(a.dataset.route); });
+  if (meta && (sess || !authRequired())) mountAssistant(meta); else unmountAssistant();
+  measureTopbar();
+}
+
 async function go() {
   const name = currentRoute();
   const my = ++routeSeq;
+  updateShell();
+  if (authRequired() && !currentSession()) {
+    if (typeof cleanup === "function") cleanup();
+    cleanup = null;
+    document.title = "Sign in · EpiMetrics-Climate Simulator";
+    document.querySelectorAll(".sidenav a").forEach((a) => a.removeAttribute("aria-current"));
+    await login.render(view, { reason: lastAuthReason });
+    return;
+  }
+  if (!canOpen(name)) {
+    if (typeof cleanup === "function") cleanup();
+    cleanup = null;
+    const r = ROLES[currentSession().role];
+    view.innerHTML = `<div class="state" role="alert"><b>${esc(r.label)} accounts can't open this screen</b><span>Ask an admin for an Analyst account, or go back to the <a href="#overview">Overview</a>.</span></div>`;
+    return;
+  }
   document.querySelectorAll(".sidenav a").forEach((a) => {
     if (a.dataset.route === name) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
   });
@@ -82,6 +121,7 @@ function initTilt() {
 
 async function boot() {
   initTheme();
+  initAuth();
   initTilt();
   measureTopbar();
   window.addEventListener("resize", measureTopbar);
@@ -106,6 +146,16 @@ async function boot() {
   ].map((t) => `<span>${t}</span>`).join("");
   reconcileSelection(meta);
   window.addEventListener("hashchange", go);
+  onAuth((sess, reason) => {
+    if (reason === "tick") {
+      if (sess && minutesLeft() === 1) toast("You will be signed out in about a minute unless you keep working.");
+      return;
+    }
+    lastAuthReason = reason;
+    if (reason === "timeout") toast("Signed out after 15 minutes without activity");
+    if (reason === "logout") toast("Signed out");
+    go();
+  });
   go();
 }
 
