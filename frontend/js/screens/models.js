@@ -5,6 +5,7 @@ import { getSelection, onSelection } from "../state.js";
 import { esc, byId, fmtNum, fmtSigned } from "../format.js";
 import { timeChart, barChart, seriesLegendHTML } from "../charts.js";
 import { selectorsHTML, bindSelects, loadingHTML, errorHTML, CAT, passPill, screenEyebrow } from "../ui.js";
+import { infoTip } from "../components/tooltip.js";
 
 export async function render(view, { meta }) {
   let seq = 0;
@@ -30,10 +31,10 @@ export async function render(view, { meta }) {
       <div id="md-chart"></div>
     </section>
     <section class="grid cols-2">
-      <div class="panel"><div class="panel-head"><h2>Error in outbreak months vs other months</h2><span class="small">Mean absolute error</span></div><div id="md-ob"></div></div>
+      <div class="panel"><div class="panel-head"><h2>Error in outbreak months vs other months ${infoTip("outbreak_month")}</h2><span class="small">Mean absolute error ${infoTip("mae")}</span></div><div id="md-ob"></div></div>
       <div class="panel"><div class="panel-head"><h2>What the random forest relies on</h2><span class="small">Feature importance (share of total), trained per disease on all districts</span></div><div id="md-imp"></div></div>
     </section>
-    <section class="panel"><div class="panel-head"><h2>Model comparison</h2><span class="small" id="md-table-sub"></span></div><div id="md-table"></div></section>
+    <section class="panel"><div class="panel-head"><h2>Model comparison ${infoTip("mae")} ${infoTip("rmse")} ${infoTip("bias")}</h2><span class="small" id="md-table-sub"></span></div><div id="md-table"></div></section>
     <section class="panel"><div class="panel-head"><h2 id="md-sum-title">Every district</h2><span class="small">MAE per model; the lowest in each row is marked</span></div><div id="md-summary">${loadingHTML()}</div></section>`;
   bindSelects(view);
 

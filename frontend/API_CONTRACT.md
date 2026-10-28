@@ -12,25 +12,32 @@ the UI shows "not provided by the API" rather than deriving it.
   Results come from the CSVs in `data/` and `src/recovery_engine.py`; analyses reproduce notebooks 01–07.
 - Every endpoint except `GET /health` and `POST /auth/login` needs `Authorization: Bearer <JWT>`.
 
-| Endpoint | Roles | Used by |
-|---|---|---|
-| `GET /meta` | all | every screen |
-| `GET /districts` | all | Overview and Recovery maps |
-| `GET /simulations?district=&disease=&scenario=[&mask=]` | all | Simulator, Recovery, Report |
-| `GET /recovery-matrix?disease=[&mask=]` | all | Overview, Recovery |
-| `GET /validation?disease=` | analyst, admin | Validation |
-| `GET /analytics/data-audit` | all | Data explorer |
-| `GET /analytics/eda?district=&disease=` | all | Data explorer |
-| `GET /analytics/forecasts?district=&disease=` | all | Forecast models, assistant |
-| `GET /analytics/forecast-summary?disease=` | all | Forecast models, project PDF |
-| `GET /analytics/episodes?disease=` | all | Outbreak episodes, assistant, project PDF |
-| `POST /exports` | analyst, admin | every export, before it starts |
-| `GET /integrity` | all (summary) · admin (full) | Users & security |
-| `POST /integrity/verify`, `POST /integrity/validate`, `GET /audit-log` | admin | Users & security |
+Who may call what is defined once, in `backend/roles.py`, and returned by `GET /auth/me` (so the menu is never
+hard-coded). Roles: `junior` (Young Minds), `viewer`, `analyst`, `admin`. The full role × endpoint matrix is tested in
+`backend/tests/test_roles.py` (allowed → 200, not allowed → 403).
+
+| Endpoint | junior | viewer | analyst | admin |
+|---|---|---|---|---|
+| `GET /meta`, `/districts`, `/simulations`, `/recovery-matrix` | yes | yes | yes | yes |
+| `POST /events`, `GET /auth/me`, `POST /auth/logout` | yes | yes | yes | yes |
+| `GET /analytics/*`, `GET /validation` | no | no | yes | yes |
+| `POST /exports` kind `report_pdf`, `print` | no | yes | yes | yes |
+| `POST /exports` kind `csv`, `json`, `project_pdf` | no | no | yes | yes |
+| `GET /comments` | no | yes | yes | yes |
+| `POST /comments`, `PATCH`/`DELETE /comments/{id}` (own only) | no | no | yes | yes |
+| `/me/saved`, `/me/favorites` (own only) | no | yes | yes | no |
+| `GET /insights` | no | yes | yes | yes |
+| `GET /integrity` | no | summary | summary | full |
+| `POST /integrity/verify`, `/integrity/validate`, `/audit-log`, `/audit-log.csv`, `/admin/*` | no | no | no | yes |
+
+**Admin preview.** After `POST /admin/view-as {"role": "viewer"}` (audited) the browser sends `X-View-As: viewer`.
+The server then answers GET requests with that role's permissions and refuses every write with
+`403 preview_read_only`. Only admins may send the header.
 
 IDs must match `^[a-z0-9_]+$` (else 400) and exist (else 404): districts `chn cbe mdu try tnj`; diseases
 `dengue malaria`; scenarios `baseline delayed_monsoon heavy_rain_decline prolonged_wet irregular_rain warmer warm_wet`;
 masks `none mar_10pct cases_gap_3m cases_outage_9m` (`none` is the default and need not be sent).
+Comment views are `district.disease.scenario` (e.g. `cbe.dengue.delayed_monsoon`); months are `YYYY-MM`.
 
 ---
 
@@ -171,9 +178,42 @@ Ground truth appears ONLY here (evaluation of the estimator, never a model input
 
 ## `POST /exports`
 
-Request `{ "kind": "report_pdf | project_pdf | json | csv | print", "district"?, "disease"?, "scenario"?, "mask"? }`.
-Response `{ "synthetic": true, "ok": true, "export_id": "…", "kind": "…", "logged_at": "…" }`; viewers get 403.
-The browser builds the file only after this succeeds.
+Request `{ "kind": "report_pdf | project_pdf | json | csv | print", "district"?, "disease"?, "scenario"?, "mask"?, "with_comments"? }`.
+Response `{ "synthetic": true, "ok": true, "export_id": "…", "kind": "…", "logged_at": "…" }`; a kind the role may not
+create → 403. The browser builds the file only after this succeeds. With `with_comments`, the report PDF adds a
+"Team comments" section (labelled team discussion, not results).
+
+## Personal state
+
+- `GET /me/saved` → `{ saved: [{ id, name, screen, district, disease, scenario, mask, scenario_b, district_b, created_at }] }`
+- `POST /me/saved` `{ name (1–80), screen, district, disease, scenario, mask?, scenario_b?, district_b? }` → `{ saved }` (max 50)
+- `DELETE /me/saved/{id}` → 404 for another user's id. `GET|POST /me/favorites`, `DELETE /me/favorites/{district}` → `{ favorites: ["cbe", …] }`
+- `GET /insights?district&disease[&scenario]` → `{ insights: [{ kind: "coview" | "rule", text, link: { screen, district, disease, scenario? } }] }`
+  (at most 3; co-views need at least 3 distinct users; rules use `/recovery-matrix` values)
+- `POST /events` `{ event: "screen_open | simulation_view | compare | drilldown | young_activity", screen?, district?, disease?, scenario? }`
+  (no free text; the server adds user, role, session and time)
+
+## Comments
+
+- `GET /comments?view=cbe.dengue.delayed_monsoon` → `{ comments: [{ id, view_key, month, author, author_name, author_role, text,
+  created_at, edited_at, mine }], note: "Team discussion, not results." }` (hidden and deleted comments are left out)
+- `POST /comments` `{ view, text (1–1000, plain text), month? }`; 10 per minute per user, else `429 too_many_comments`
+- `PATCH /comments/{id}` `{ text }`, `DELETE /comments/{id}`: own comments only (404 otherwise)
+- Text is stored as written and must always be rendered as text, never as HTML.
+
+## Admin
+
+- `GET /admin/usage?from=YYYY-MM-DD&to=YYYY-MM-DD` (default last 7 days) → `{ active_users_today, active_users_7d, active_users_range,
+  per_day: [{ day, active_users, logins, failed_logins, screen_opens }], sessions_by_role, top_screens, top_scenarios,
+  top_districts, exports_by_kind, avg_session_minutes, sessions, comments_posted }` (counts only)
+- `GET /admin/users` → `{ users: [{ username, display_name, role, disabled, last_login, created_at }], roles }`;
+  `POST /admin/users` `{ username, password (10+), role, display_name? }`; `PATCH /admin/users/{u}` `{ role?, disabled?, display_name? }`;
+  `POST /admin/users/{u}/password` `{ password }`. A role change, disable or reset ends that user's sessions
+  (their next call → `401 session_changed` or `account_disabled`).
+- `GET /audit-log?user&event&from&to&limit` → `{ entries, actions }`; `GET /audit-log.csv` (same filters, formula-safe CSV)
+- `GET /admin/comments`; `PATCH /admin/comments/{id}` `{ hidden }`; `DELETE /admin/comments/{id}`
+- `GET /admin/backups` → `{ backups: [{ name, bytes, created_at, sha256 }] }`; `POST /admin/backups` writes one. Restore is CLI only.
+- `POST /admin/view-as` `{ role | null }` → `{ preview, access }`
 
 ## `POST /auth/login` (security)
 
@@ -181,23 +221,20 @@ Request `{ "username": "analyst", "password": "…" }` (HTTPS when deployed).
 Response `200`:
 ```jsonc
 { "token": "<HS256 JWT, 15-minute sliding expiry>", "expires_in": 900,
-  "user": { "username": "analyst", "display_name": "Demo analyst", "role": "viewer | analyst | admin" } }
+  "user": { "username": "analyst", "display_name": "Demo analyst", "role": "junior | viewer | analyst | admin" },
+  "access": { "role": "analyst", "label": "Public health analyst", "home": "overview",
+              "screens": [{ "id": "overview", "label": "Overview" }, "…"], "permissions": ["data.read", "…"] },
+  "roles": [ /* the same description for every role, for the Users & security table */ ] }
 ```
 Wrong credentials → `401 { "error": { "code": "bad_credentials", "message": "Username or password is incorrect." } }`.
 Five failures for one username (or 20 from one IP) → `429 too_many_attempts` for 30 s, with `Retry-After`.
 Passwords are stored only as salted PBKDF2-SHA256 hashes in `backend/users.json` and never sent to the browser.
 When a token is older than 60 s, any response carries a fresh one in the `X-Session-Token` header.
-`POST /auth/logout` revokes the session; `GET /auth/me` returns the user and keeps an active session alive.
+Disabled accounts get `403 account_disabled` at sign-in.
+`POST /auth/logout` revokes the session; `GET /auth/me` returns `{ user, access, preview, roles }` and keeps an active session alive.
 An expired, revoked or invalid token → `401`, and the UI returns to the sign-in screen.
 
-Role rules the backend must enforce (the UI hides what a role can't use, but the server is the real gate):
-
-| Endpoint | viewer | analyst | admin |
-|---|---|---|---|
-| `/meta`, `/districts`, `/simulations`, `/recovery-matrix`, `/analytics/*` | yes | yes | yes |
-| `/validation`, `POST /exports` | no | yes | yes |
-| `/integrity` | summary | summary | full |
-| `POST /integrity/verify`, `POST /integrity/validate`, `/audit-log` | no | no | yes |
+Role rules: see the matrix at the top of this file.
 
 ## `GET /integrity` (security)
 
@@ -215,8 +252,9 @@ Admins can also re-fetch every `files[].url` in the browser and compare fingerpr
 ## Errors
 
 Non-2xx responses return `{ "error": { "code": "unknown_district", "message": "…" } }`:
-400 `bad_request` (id format, missing parameter), 401 `unauthorized`, 403 `forbidden`, 404 `unknown_<id>` or
-`unknown_endpoint`, 429 `too_many_attempts`. The UI shows the message in an error panel.
+400 `bad_request` (id format, missing parameter), 401 `unauthorized` / `session_changed` / `account_disabled`,
+403 `forbidden` / `preview_read_only` / `account_disabled`, 404 `unknown_<id>` or `unknown_endpoint`,
+429 `too_many_attempts` / `too_many_comments`. The UI shows the message in an error panel.
 
 ## Security headers
 

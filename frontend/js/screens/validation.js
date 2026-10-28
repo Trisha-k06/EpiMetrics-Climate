@@ -4,6 +4,7 @@ import { getSelection, setSelection, onSelection } from "../state.js";
 import { esc, byId, monthLabel, fmtInt } from "../format.js";
 import { scatterChart } from "../charts.js";
 import { loadingHTML, errorHTML, screenEyebrow } from "../ui.js";
+import { infoTip } from "../components/tooltip.js";
 
 const pct = (v) => (v == null ? "—" : `${Math.round(v * 100)}%`);
 const maskKey = (m) => (m == null ? "none" : m);
@@ -23,14 +24,14 @@ export async function render(view, { meta }) {
     <section class="panel stack">
       <div class="row" style="justify-content:space-between;align-items:flex-end">
         <div class="field"><label for="val-disease">Disease</label><select id="val-disease">${meta.diseases.map((d) => `<option value="${esc(d.id)}">${esc(d.name)}</option>`).join("")}</select></div>
-        <div class="field" style="min-width:0"><span class="label" id="val-mask-label">Missing-data test</span>
+        <div class="field" style="min-width:0"><span class="label" id="val-mask-label">Missing-data test ${infoTip("mask")}</span>
           <div class="seg" role="group" aria-labelledby="val-mask-label" style="flex-wrap:wrap">${meta.masks.map((m) => `<button type="button" data-mask="${esc(maskKey(m.id))}" aria-pressed="${maskKey(m.id) === mask}" title="${esc(m.description)}">${esc(m.label)}</button>`).join("")}</div></div>
       </div>
       <p class="small" id="val-mask-desc"></p>
       <div id="val-kpis">${loadingHTML()}</div>
     </section>
     <section class="grid cols-2">
-      <div class="panel"><div class="panel-head"><h2>Estimated vs true recovery time</h2><span class="small">One dot per series · bars show p10–p90 across noise replicates</span></div>
+      <div class="panel"><div class="panel-head"><h2>Estimated vs true recovery time</h2><span class="small">One dot per series · bars show p10–p90 ${infoTip("spread")} across noise replicates</span></div>
         <div id="val-scatter"></div><div id="val-excluded" style="margin-top:10px"></div></div>
       <div class="panel"><div class="panel-head"><h2>Sensitivity to the recovery rule</h2><span class="small">Complete data</span></div>
         <div id="val-sens"></div>

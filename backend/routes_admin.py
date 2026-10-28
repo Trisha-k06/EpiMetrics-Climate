@@ -73,9 +73,14 @@ def _user_rows():
              "role_label": ROLE_INFO[u["role"]]["label"]} for u in users.list()]
 
 
+def _users_payload(**extra):
+    """Same shape from list, create and update, so the console can redraw from any reply."""
+    return {"synthetic": True, "users": _user_rows(), "roles": [{"id": r, **ROLE_INFO[r]} for r in ROLE_IDS], **extra}
+
+
 @router.get("/admin/users")
 def list_users(user: dict = G):
-    return JSON({"synthetic": True, "users": _user_rows(), "roles": [{"id": r, **ROLE_INFO[r]} for r in ROLE_IDS]})
+    return JSON(_users_payload())
 
 
 @router.post("/admin/users")
@@ -85,7 +90,7 @@ def create_user(body: NewUser, request: Request, user: dict = G):
     except UserError as e:
         raise ApiError(400, "bad_request", str(e))
     _admin_action(request, user, "user_create", {"username": rec["username"], "role": rec["role"]})
-    return JSON({"synthetic": True, "users": _user_rows()})
+    return JSON(_users_payload())
 
 
 @router.patch("/admin/users/{username}")
@@ -103,7 +108,7 @@ def update_user(username: str, body: UserPatch, request: Request, user: dict = G
         _admin_action(request, user, "user_disable" if body.disabled else "user_enable", {"username": username})
     if body.display_name is not None:
         _admin_action(request, user, "user_rename", {"username": username})
-    return JSON({"synthetic": True, "user": {k: rec.get(k) for k in ("username", "display_name", "role", "disabled")}, "users": _user_rows()})
+    return JSON(_users_payload(user={k: rec.get(k) for k in ("username", "display_name", "role", "disabled")}))
 
 
 @router.post("/admin/users/{username}/password")

@@ -58,13 +58,11 @@ export async function render(view, { meta }) {
     </section>
     <section class="panel stack">
       <div class="row" style="justify-content:space-between;align-items:flex-end">
-        <div class="row" style="align-items:flex-end">
-          <div class="field"><label for="rec-disease">Disease</label><select id="rec-disease">${meta.diseases.map((d) => `<option value="${esc(d.id)}">${esc(d.name)}</option>`).join("")}</select></div>
-          ${maskSelectHTML(meta, getSelection(), "rec")}
-        </div>
+        <div class="field"><label for="rec-disease">Disease</label><select id="rec-disease">${meta.diseases.map((d) => `<option value="${esc(d.id)}">${esc(d.name)}</option>`).join("")}</select></div>
         <div class="field"><span class="label" id="rec-metric-label">Show</span>
           <div class="seg" role="group" aria-labelledby="rec-metric-label">${Object.entries(METRICS).map(([k, m]) => `<button type="button" data-metric="${k}" aria-pressed="${k === metric}">${esc(m.label)}</button>`).join("")}</div></div>
       </div>
+      <details class="advanced" ${getSelection().mask && getSelection().mask !== "none" ? "open" : ""}><summary>Advanced options</summary><div class="controls" style="margin-top:10px">${maskSelectHTML(meta, getSelection(), "rec")}</div></details>
       <div id="rec-matrix">${loadingHTML()}</div>
     </section>
     <section class="panel" id="rec-drill-panel" aria-live="polite">

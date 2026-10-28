@@ -5,6 +5,7 @@ import { getSelection, setSelection, onSelection } from "../state.js";
 import { esc, monthLabel, byId, fmtInt, fmtNum, fmtSigned } from "../format.js";
 import { barChart, seriesLegendHTML } from "../charts.js";
 import { loadingHTML, errorHTML, DISEASE_COLORS, passPill, screenEyebrow } from "../ui.js";
+import { infoTip } from "../components/tooltip.js";
 
 const BARS = [
   { key: "mean_recovery_months", title: "Mean recovery time", unit: "months", fmt: (v) => fmtNum(v, 1), note: "Recovered episodes only" },
@@ -21,7 +22,7 @@ export async function render(view, { meta }) {
     <div class="page-head">
       <div>
         <p class="eyebrow">${screenEyebrow("episodes", "Outbreak episodes")}</p>
-        <h1>How long do outbreaks take to recover, across the whole decade?</h1>
+        <h1>How long do outbreaks take to recover, across the whole decade? ${infoTip("episode")}</h1>
         <p class="lede">Every month above the endemic threshold starts an outbreak episode; it recovers once cases stay at or below the threshold for 3 months in a row. This repeats the analysis of notebooks 06 and 07 for all districts, diseases and scenarios.</p>
       </div>
     </div>
@@ -34,7 +35,7 @@ export async function render(view, { meta }) {
       <details class="data-table" style="margin-top:10px"><summary>Show the table behind these charts</summary><div id="ep-bars-table" style="margin-top:8px"></div></details>
     </section>
     <section class="panel">
-      <div class="panel-head"><h2>Matched recovery delay (ΔTSR)</h2><span class="small">Scenario episode minus the baseline episode that starts in the same month; both must recover</span></div>
+      <div class="panel-head"><h2>Matched recovery delay (ΔTSR) ${infoTip("matched_delta")}</h2><span class="small">Scenario episode minus the baseline episode that starts in the same month; both must recover</span></div>
       <div id="ep-matched"></div>
     </section>
     <section class="panel stack">

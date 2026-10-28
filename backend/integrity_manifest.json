@@ -2,27 +2,27 @@
  "synthetic": true,
  "algorithm": "SHA-256",
  "dataset_version": "0.1.1",
- "generated_at": "2026-10-28T07:14:06Z",
+ "generated_at": "2026-10-28T15:51:24Z",
  "files": [
   {
    "kind": "frontend",
    "path": "frontend/API_CONTRACT.md",
-   "bytes": 14018,
-   "sha256": "e79ee6c96769a93549afeb9c76ebbe1d4e14bb1eb879bac279a88ed5d16dad7e",
+   "bytes": 17480,
+   "sha256": "23ef28b53f97a4649f381ade1c41d248f0813dc7f0edaf04bf2bdb64d420a367",
    "url": "API_CONTRACT.md"
   },
   {
    "kind": "frontend",
    "path": "frontend/README.md",
-   "bytes": 6432,
-   "sha256": "d2bf68dec44f22804d9f51047ca3bda2d920362fe57e98305c8d003fe64fba70",
+   "bytes": 6471,
+   "sha256": "275348d55240c50b3e602a2edced5fa501e6355fc868d04f220393f0dfff0db9",
    "url": "README.md"
   },
   {
    "kind": "frontend",
    "path": "frontend/css/app.css",
-   "bytes": 52227,
-   "sha256": "8179bbfa2755a56d12f12aa9b515f8728145cba6129418f268c023d2a716bb83",
+   "bytes": 75100,
+   "sha256": "126c23605b02251eb5cda32179719b8650c7f7a109be4c5854afd0b156274221",
    "url": "css/app.css"
   },
   {
@@ -35,50 +35,99 @@
   {
    "kind": "frontend",
    "path": "frontend/index.html",
-   "bytes": 4771,
-   "sha256": "12bb96fa60eea0b926985f101e782f80c18cd3488fc7b4c812fdf8600e0efc0a",
+   "bytes": 3540,
+   "sha256": "65ad8a1385b94fc0f1462a895a1ef690fe6fb958da75accd946350e39530f6ab",
    "url": "index.html"
   },
   {
    "kind": "frontend",
    "path": "frontend/js/api.js",
-   "bytes": 6139,
-   "sha256": "8e025c82a28d3703c9b00c99738ee46763300f85719a576b90e59f0f54db25e6",
+   "bytes": 11101,
+   "sha256": "e48dad681fa492fb11bf1334a428f8aca11beec7323fc7078892556b6c10db22",
    "url": "js/api.js"
   },
   {
    "kind": "frontend",
    "path": "frontend/js/app.js",
-   "bytes": 7963,
-   "sha256": "1d18d7d79e8aab67c6777017ca9b0deeb4d2609846dbe0cc451daed207f3c011",
+   "bytes": 10331,
+   "sha256": "e91e7337ebcbd8385730246d2ff2eba81647bd4efbaf8ff5fce4eef4627455ed",
    "url": "js/app.js"
   },
   {
    "kind": "frontend",
    "path": "frontend/js/assistant.js",
-   "bytes": 18053,
-   "sha256": "ca15a9b1129621d4867fcb63e7bfde88c5c17d90785c8d511064a95d9279b006",
+   "bytes": 18405,
+   "sha256": "e2d85e1e4f6e6ec6317837f32d936f6228392dcb203133ea3246e4f6f0f77359",
    "url": "js/assistant.js"
   },
   {
    "kind": "frontend",
    "path": "frontend/js/auth.js",
-   "bytes": 5939,
-   "sha256": "f0894e30a7a8fe2ae58cbb5c85107fad0aa445f846b403f49351d85033e29d3f",
+   "bytes": 8677,
+   "sha256": "87d289dc7434de98274360c471ef0177adafbf5e02842f23989b9f033ace7d3c",
    "url": "js/auth.js"
   },
   {
    "kind": "frontend",
    "path": "frontend/js/charts.js",
-   "bytes": 21939,
-   "sha256": "22e8b813c90012aaf38497e61293474e1145e2636cf81ee84f12d5b521e6349b",
+   "bytes": 22987,
+   "sha256": "133ba4bdfe2b863cc8c5457cfc516e27050f86574d1fc0e6eb733f458a76d823",
    "url": "js/charts.js"
   },
   {
    "kind": "frontend",
+   "path": "frontend/js/components/breadcrumbs.js",
+   "bytes": 647,
+   "sha256": "90e0c5c23e0ee9331d7bb33fade3feef04929debd4815da51c294043d9597e3f",
+   "url": "js/components/breadcrumbs.js"
+  },
+  {
+   "kind": "frontend",
+   "path": "frontend/js/components/comments.js",
+   "bytes": 6066,
+   "sha256": "515a7c4ca77a4e3c27b691c2ff83c9b2df03ff726de1f3e2171d68cc9da4b14d",
+   "url": "js/components/comments.js"
+  },
+  {
+   "kind": "frontend",
+   "path": "frontend/js/components/drill.js",
+   "bytes": 7253,
+   "sha256": "e84aaaa6cbf3563ac2e6a68197f518e8919a120dff834d800027e317057ad64d",
+   "url": "js/components/drill.js"
+  },
+  {
+   "kind": "frontend",
+   "path": "frontend/js/components/insights.js",
+   "bytes": 1500,
+   "sha256": "125d298d452f61199576b1d2adb8dcb6efa9bcfa531f5949fe4f583100cbf1d0",
+   "url": "js/components/insights.js"
+  },
+  {
+   "kind": "frontend",
+   "path": "frontend/js/components/menu.js",
+   "bytes": 2948,
+   "sha256": "06c18ab43eea90064145515f1b81a0df0e9c5862ed2ca40d89a0a137b052c746",
+   "url": "js/components/menu.js"
+  },
+  {
+   "kind": "frontend",
+   "path": "frontend/js/components/saved.js",
+   "bytes": 5740,
+   "sha256": "751d0f4854f79ddc8556b81f2ccefafe3e91e08e9aac184bfb6943d7833c960b",
+   "url": "js/components/saved.js"
+  },
+  {
+   "kind": "frontend",
+   "path": "frontend/js/components/tooltip.js",
+   "bytes": 2800,
+   "sha256": "841e6b32edf6b72c77c5c932a182efd3d403a985b5745bb826aff34b941e56e2",
+   "url": "js/components/tooltip.js"
+  },
+  {
+   "kind": "frontend",
    "path": "frontend/js/config.js",
-   "bytes": 1093,
-   "sha256": "7b42f0b1976b466e15ab0ecb3913ddffe64e82b9ff12ab26235220a729187202",
+   "bytes": 1242,
+   "sha256": "9e5da9e20f44ebafd0332e9c7b212c4591fa8597cd8895ecb55e629db22e16b9",
    "url": "js/config.js"
   },
   {
@@ -90,114 +139,142 @@
   },
   {
    "kind": "frontend",
+   "path": "frontend/js/glossary.js",
+   "bytes": 4789,
+   "sha256": "9e16b626576a04a3722c8833062d07fe3bfcb2dffa2d3c9baa8dfde1fb90177b",
+   "url": "js/glossary.js"
+  },
+  {
+   "kind": "frontend",
    "path": "frontend/js/map3d.js",
-   "bytes": 32297,
-   "sha256": "a7dcb67ad3997ac4cd80b484c4e121343afc3a531d820e8ed20839923b360af2",
+   "bytes": 32924,
+   "sha256": "fda81d17f40e0549d7352db103646a80d13b0c3b73c1ace0e074cf3c1c53b39a",
    "url": "js/map3d.js"
   },
   {
    "kind": "frontend",
    "path": "frontend/js/pdf.js",
-   "bytes": 33122,
-   "sha256": "5ae0e4f11d261a111dfb86e826269114c7304b539e14c53349989b2020973dc0",
+   "bytes": 33990,
+   "sha256": "4e72181d3ac2f25826daf002ac9b033ec07baf54bbc6be6c02232268db6174b4",
    "url": "js/pdf.js"
   },
   {
    "kind": "frontend",
    "path": "frontend/js/platform-data.js",
-   "bytes": 6407,
-   "sha256": "2d39a1f700b10d73ebcc389bec48f37850bb324ba2f1f34f7b98354497a0e26d",
+   "bytes": 6964,
+   "sha256": "b88f73ab2fdfb0faa44136765792bd90a7ef54b755d0011dc2abd37641e2ef87",
    "url": "js/platform-data.js"
   },
   {
    "kind": "frontend",
+   "path": "frontend/js/screens/admin.js",
+   "bytes": 27208,
+   "sha256": "18fa72b9d1c5794449818077b3ccd337d25eb0760613183a00b3315ae8cbb170",
+   "url": "js/screens/admin.js"
+  },
+  {
+   "kind": "frontend",
+   "path": "frontend/js/screens/compare.js",
+   "bytes": 11700,
+   "sha256": "ed043e23a11d41993a977836a3eba30ce76f34fba9c6a3810640e9eafc5cf3d2",
+   "url": "js/screens/compare.js"
+  },
+  {
+   "kind": "frontend",
    "path": "frontend/js/screens/episodes.js",
-   "bytes": 14374,
-   "sha256": "38fde861338bd0922aebf3b210c50489a037242e1881816529f51cb782f7ed0c",
+   "bytes": 14511,
+   "sha256": "386f8ea4655a14e105b0a113ace92b0617f210530e3dfda41c9569eee227c49c",
    "url": "js/screens/episodes.js"
   },
   {
    "kind": "frontend",
    "path": "frontend/js/screens/explorer.js",
-   "bytes": 12764,
-   "sha256": "0978bb06553b726f11cf59d3f401326cba8526116fc7578932fa28f23a7fad58",
+   "bytes": 12877,
+   "sha256": "123bfb02c1fcde7d38a6922b974791cd9884834d5317ecdb5d06c42fc45c1111",
    "url": "js/screens/explorer.js"
   },
   {
    "kind": "frontend",
    "path": "frontend/js/screens/login.js",
-   "bytes": 4197,
-   "sha256": "1f94b837cdb87150140f7a55eb02b9cd5751901f7b021569cf92c3e9c205a13b",
+   "bytes": 4758,
+   "sha256": "92df6c115ee4ab95451b4a4ecc50e1c1777c86a5f538b09a1c6715a6129901aa",
    "url": "js/screens/login.js"
   },
   {
    "kind": "frontend",
+   "path": "frontend/js/screens/map.js",
+   "bytes": 4060,
+   "sha256": "557dba1e9488f8b4713f47d2cfebf1006ede08a262af3b2fbfd3ef79309eda5e",
+   "url": "js/screens/map.js"
+  },
+  {
+   "kind": "frontend",
    "path": "frontend/js/screens/models.js",
-   "bytes": 11705,
-   "sha256": "0159e5eef65b2d4e0ed0390f66b5b7c124c06faf3db46022d0e171858f0c5f0d",
+   "bytes": 11893,
+   "sha256": "8be7fdd682056d6002a6ccd8f43a75f28e7dd253992b95714fa3dccb00b7178a",
    "url": "js/screens/models.js"
   },
   {
    "kind": "frontend",
    "path": "frontend/js/screens/overview.js",
-   "bytes": 10336,
-   "sha256": "27b55f34106ee3bc3d0b420ec33517ad3323d43cd4337fc009900cf3df499142",
+   "bytes": 11759,
+   "sha256": "086e2d15b671ee7e92411ad1ec33d71e0b5f000874458006b112cc6cf4c0d949",
    "url": "js/screens/overview.js"
   },
   {
    "kind": "frontend",
    "path": "frontend/js/screens/platform.js",
-   "bytes": 13155,
-   "sha256": "bdcb02ce0435f36129304afaa11c5840b65eee28aed70efc66a77f876e7edd83",
+   "bytes": 6595,
+   "sha256": "3bfda312f2800eeeffd77a2bd382e007f955373af32e15276ec7833041840abe",
    "url": "js/screens/platform.js"
   },
   {
    "kind": "frontend",
    "path": "frontend/js/screens/recovery.js",
-   "bytes": 14380,
-   "sha256": "2ab6b37160ffcf422df491bebf6fb785685be296e22fe95b1d91642c1798d021",
+   "bytes": 15252,
+   "sha256": "c5039709170d5f37b6231118106e8126a85601a2f59005d7efda1c4394bbe7fa",
    "url": "js/screens/recovery.js"
   },
   {
    "kind": "frontend",
    "path": "frontend/js/screens/report.js",
-   "bytes": 12971,
-   "sha256": "6a4680f41834acd86a845a17ce43f0583d9156457c8ccb5991be44d8f0c48053",
+   "bytes": 13956,
+   "sha256": "9e7df03cf54022f0041e008d90aa18aba3b5c1f805018c89e8cb2bb4dfdbcfb2",
    "url": "js/screens/report.js"
   },
   {
    "kind": "frontend",
    "path": "frontend/js/screens/simulator.js",
-   "bytes": 7746,
-   "sha256": "f11608ba20d5c83dec0072ff1fba067c2eb2d2561c6d20bd31d92546db1eeb77",
+   "bytes": 15075,
+   "sha256": "3447c901580fb526336f35af88534943a8ea37dae176b2fdc41c59fe8853ea9a",
    "url": "js/screens/simulator.js"
   },
   {
    "kind": "frontend",
    "path": "frontend/js/screens/technology.js",
-   "bytes": 5610,
-   "sha256": "51cb0b769ff113084cf1f80ab34179c18e05b1345334eef8b201f4a5948f5d87",
+   "bytes": 5675,
+   "sha256": "e0eb775c6f29ef3cd271f29fb7fdafc083e1a291e9f4faaac2ce85acdb05f690",
    "url": "js/screens/technology.js"
   },
   {
    "kind": "frontend",
    "path": "frontend/js/screens/validation.js",
-   "bytes": 10254,
-   "sha256": "f3950e1fd2c7704a0ab8ec52d4948c99d1d53de747c61c77a72208439516ed6b",
+   "bytes": 10379,
+   "sha256": "2746aca836719e2eb908434d25cf9f48be63ebde705fc4735ad6601211bbbad5",
    "url": "js/screens/validation.js"
   },
   {
    "kind": "frontend",
    "path": "frontend/js/state.js",
-   "bytes": 1457,
-   "sha256": "8ccbf282c161eede789fbfcf8f64d1a6e29896dcb19dd3bcc941391959269e4c",
+   "bytes": 1648,
+   "sha256": "33405bd7a861fa0b1923b45e2e2c37ac3e905f272d7d22ccfc8957ee8b646929",
    "url": "js/state.js"
   },
   {
    "kind": "frontend",
    "path": "frontend/js/tech.js",
-   "bytes": 8976,
-   "sha256": "21d844f8d4463d6284885235f89087c96304971a6b74ffae037963512194e53b",
+   "bytes": 10803,
+   "sha256": "3c1df6792f17eeaa7a4c7c7516e0dd4285e2ccfa3b86c66b8f4445a48e4e1e4f",
    "url": "js/tech.js"
   },
   {
@@ -210,9 +287,23 @@
   {
    "kind": "frontend",
    "path": "frontend/js/ui.js",
-   "bytes": 19598,
-   "sha256": "2ef54dc2d2d67104daa0c4fc0904638750b2cbead5bff1133379023feb41d245",
+   "bytes": 22358,
+   "sha256": "48822df23200b049a735ec1b87c6d740e2bc51ada4142fba4450a1ec5582b746",
    "url": "js/ui.js"
+  },
+  {
+   "kind": "frontend",
+   "path": "frontend/js/young/art.js",
+   "bytes": 4110,
+   "sha256": "c5b4289de178b404ea1d5f2baf39b91d3f9604ac33fceab10fd4b0aa71627cb2",
+   "url": "js/young/art.js"
+  },
+  {
+   "kind": "frontend",
+   "path": "frontend/js/young/shell.js",
+   "bytes": 23431,
+   "sha256": "a38a2283f73709c673664bdae6be4a88426b46aeeed8f70528e24406cc05f7b4",
+   "url": "js/young/shell.js"
   },
   {
    "kind": "frontend",
@@ -284,14 +375,32 @@
   {
    "kind": "backend",
    "path": "backend/app.py",
-   "bytes": 14736,
-   "sha256": "8808a54fc86e5739b94f05426f1640896a2c8c67c492d29ca2ca5689a1a88ab5"
+   "bytes": 5319,
+   "sha256": "9d3aa17df91e6998db6286c851846a1ddd7023e7b5849e672d6c49ca0474efbf"
+  },
+  {
+   "kind": "backend",
+   "path": "backend/backup.py",
+   "bytes": 5121,
+   "sha256": "b4cac8807113e55142931db63ff89a1dbc409bbfbaff3409ca8862f855a6631a"
+  },
+  {
+   "kind": "backend",
+   "path": "backend/common.py",
+   "bytes": 4047,
+   "sha256": "892256d4cf69a002a60626486b78ca2ee689fdf20247b7570bf98f49f9cead22"
   },
   {
    "kind": "backend",
    "path": "backend/data.py",
    "bytes": 27196,
    "sha256": "8a307d94175c4ff6cdaa2ab9e21f389fb8e18f80b6297ff4822d9a39e64f1112"
+  },
+  {
+   "kind": "backend",
+   "path": "backend/db.py",
+   "bytes": 14121,
+   "sha256": "c39b353b9c9f145d9f1710c436fd3d3f43254e24579de92a0760cdb716a3226e"
   },
   {
    "kind": "backend",
@@ -308,14 +417,44 @@
   {
    "kind": "backend",
    "path": "backend/manage.py",
-   "bytes": 3258,
-   "sha256": "c4edf237d000362b01136bd3989c363d409d5ab186ef7a6cc95cf4240638be70"
+   "bytes": 4830,
+   "sha256": "324dfe37d7333fbf88e1a46abedfac2e1688cf9f71c1612499f6295f9bb97902"
+  },
+  {
+   "kind": "backend",
+   "path": "backend/roles.py",
+   "bytes": 5742,
+   "sha256": "6fb40e6655fb2613220b96d7b280adaff38805c33cffab54c89cbe5d2e399482"
+  },
+  {
+   "kind": "backend",
+   "path": "backend/routes_admin.py",
+   "bytes": 8907,
+   "sha256": "e7c186eb4acafbf026033c374a9a636e9987c673ef363004e30467f648514df4"
+  },
+  {
+   "kind": "backend",
+   "path": "backend/routes_core.py",
+   "bytes": 11157,
+   "sha256": "514237aacd866987e6979e399cfe284eb976bf31270c6eb92655d046b4d2ec59"
+  },
+  {
+   "kind": "backend",
+   "path": "backend/routes_me.py",
+   "bytes": 10429,
+   "sha256": "3d5446245d1f809d97101c8124d07c9d073b2027b942eeefacc4aa7fcb977bf6"
   },
   {
    "kind": "backend",
    "path": "backend/security.py",
-   "bytes": 8469,
-   "sha256": "e1fde0a193ed38cd450ef919d4c78330fdea87fb3709833775f8fa82ba007dc6"
+   "bytes": 13712,
+   "sha256": "a6b74af7eb8f690d25ec1957634621c9ce09b3b6daaa0820d2e5b7b4c01eec9b"
+  },
+  {
+   "kind": "backend",
+   "path": "backend/services.py",
+   "bytes": 559,
+   "sha256": "ae7d0551bd317231ae922f165c70832a45d1a282abf748312ae69be015ff3dbf"
   },
   {
    "kind": "backend",
@@ -326,14 +465,26 @@
   {
    "kind": "backend",
    "path": "backend/tests/conftest.py",
-   "bytes": 1435,
-   "sha256": "b379d2ac317c1c8fb7895118341949744d2b7d6c42f3b12b19fdb5ceb03277e9"
+   "bytes": 1640,
+   "sha256": "75b3f0cdb55199b1f5f8c210e65ec04b8d0d73a87f1457f0f211151484c469d6"
   },
   {
    "kind": "backend",
    "path": "backend/tests/test_api.py",
-   "bytes": 14298,
-   "sha256": "cc2863d575de9bec1e2ce2e148c6582118cac5771d60b0a45dac091027838fb3"
+   "bytes": 14467,
+   "sha256": "d2aabdb5120acc1222e0902022c0090929f776f804837d118fdfa721cad70f16"
+  },
+  {
+   "kind": "backend",
+   "path": "backend/tests/test_features.py",
+   "bytes": 11766,
+   "sha256": "98b777cdb3adbbc34f58ffd0e2a005c012be603023dc7aab848b6f4d0fc3d3bc"
+  },
+  {
+   "kind": "backend",
+   "path": "backend/tests/test_roles.py",
+   "bytes": 9068,
+   "sha256": "efe9cee3a3fedd4ad27bea6471dffe0fffad2622019a572fcfdd74cab940e7c1"
   },
   {
    "kind": "science",

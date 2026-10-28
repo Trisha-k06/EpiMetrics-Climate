@@ -173,3 +173,10 @@ def test_backups_keep_the_newest_14(client, H):
     for _ in range(16):
         services.backups.create()
     assert len(services.backups.list()) == 14
+
+
+def test_user_management_replies_have_the_same_shape(client, H):
+    r = client.post("/api/v1/admin/users", headers=H["admin"], json={"username": "shape_check", "password": "shape-password-1", "role": "viewer"})
+    assert r.status_code == 200 and {"users", "roles"} <= set(r.json())
+    r = client.patch("/api/v1/admin/users/shape_check", headers=H["admin"], json={"role": "analyst"})
+    assert r.status_code == 200 and {"users", "roles", "user"} <= set(r.json())
