@@ -12,6 +12,11 @@ backend/logs/
 backend/cache/
 backend/users.json
 backend/users.tmp
+# User-generated state and backups (never commit: accounts, comments, usage)
+backend/app.db
+backend/app.db-wal
+backend/app.db-shm
+backups/
 # End-to-end test output
 tests/screenshots/
 tests/downloads/

@@ -6,7 +6,10 @@
     python -m backend.manage warm                fit and cache all forecast models
     python -m backend.manage users               list accounts
     python -m backend.manage set-user NAME ROLE  create/replace an account (password is prompted)
-    python -m backend.manage seed-demo           reset users.json to the three demo accounts
+    python -m backend.manage seed-demo           reset users.json to the four demo accounts
+    python -m backend.manage backup              write a verified archive to backups/ (keeps the newest 14)
+    python -m backend.manage restore FILE        verify the SHA-256, then restore (stop the server first)
+    python -m backend.manage purge-events [DAYS] delete usage events older than DAYS (default 180)
 """
 from __future__ import annotations
 
@@ -24,9 +27,14 @@ def main(argv=None):
     sub.add_parser("warm")
     sub.add_parser("users")
     sub.add_parser("seed-demo")
+    sub.add_parser("backup")
+    rs = sub.add_parser("restore")
+    rs.add_argument("file")
+    pe = sub.add_parser("purge-events")
+    pe.add_argument("days", nargs="?", type=int, default=None)
     su = sub.add_parser("set-user")
     su.add_argument("username")
-    su.add_argument("role", choices=["viewer", "analyst", "admin"])
+    su.add_argument("role", choices=["junior", "viewer", "analyst", "admin"])
     su.add_argument("--display-name")
     a = ap.parse_args(argv)
 
@@ -57,6 +65,26 @@ def main(argv=None):
         an = Analytics(Store())
         an.warm()
         print("models cached:", an.models_ready(), an.warm_state)
+    elif a.cmd == "backup":
+        from .services import audit, backups
+        b = backups.create()
+        audit.write("backup", "cli", None, None, "ok", {"name": b["name"]})
+        print(f"wrote {backups.dir / b['name']}\nsha256 {b['sha256']}  ({b['bytes']} bytes; keeping the newest 14)")
+    elif a.cmd == "restore":
+        from pathlib import Path
+        from .backup import BackupError
+        from .services import audit, backups
+        try:
+            restored = backups.restore(Path(a.file))
+        except BackupError as e:
+            print(f"Refused: {e}", file=sys.stderr)
+            return 1
+        audit.write("restore", "cli", None, None, "ok", {"file": Path(a.file).name, "restored": ",".join(restored)})
+        print("Checksum verified. Restored: " + ", ".join(restored) + ". Restart the server.")
+    elif a.cmd == "purge-events":
+        from .db import RETENTION_DAYS
+        from .services import db
+        print(f"deleted {db.purge(a.days or RETENTION_DAYS)} usage events")
     elif a.cmd in ("users", "seed-demo", "set-user"):
         from .security import UserStore
         us = UserStore()
@@ -69,7 +97,7 @@ def main(argv=None):
                 return 2
             us.set_user(a.username.lower(), pw, a.role, a.display_name)
         for u in us.list():
-            print(f"{u['username']:<12} {u['role']:<8} {u['display_name']}")
+            print(f"{u['username']:<12} {u['role']:<8} {'disabled' if u['disabled'] else 'active':<9} {u['display_name']}")
     return 0
 
 
