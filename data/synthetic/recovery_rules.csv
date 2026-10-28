@@ -1,0 +1,4 @@
+recovery_rule_id,threshold_factor,window_months,interruption_rise_factor,interruption_rise_months,max_missing_frac
+r3m_f1.2,1.2,3,1.2,2,0.3
+r2m_f1.2,1.2,2,1.2,2,0.3
+r4m_f1.2,1.2,4,1.2,2,0.3

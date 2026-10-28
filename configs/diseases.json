@@ -1,0 +1,103 @@
+{
+  "_note": "HYPOTHETICAL disease profiles. Response shapes, lags and weights are modelling assumptions programmed into the generator, not empirical findings. Rows marked to_be_sourced need a peer-reviewed citation before the report states them as fact.",
+  "diseases": [
+    {
+      "disease_id": "dengue",
+      "display_name": "Dengue",
+      "recovery_rule_id": "r3m_f1.2",
+      "baseline_rate_per_100k": 2.0,
+      "seasonality_params": {
+        "amplitude": 0.5,
+        "peak_month": 11
+      },
+      "persistence_rho": 0.6,
+      "nb_dispersion_k": 50,
+      "urban_effect": 0.6,
+      "water_storage_effect": 0.4,
+      "climate_drivers": {
+        "rainfall_mm": {
+          "lag_months": 2,
+          "weight": 0.5,
+          "shape": "hump",
+          "optimum_mm": 250,
+          "basis": "hypothetical; flushing effect to_be_sourced"
+        },
+        "mean_temperature_c": {
+          "lag_months": 1,
+          "weight": 0.6,
+          "shape": "gaussian",
+          "optimum": 28.0,
+          "width": 4.0,
+          "basis": "to_be_sourced"
+        },
+        "relative_humidity_pct": {
+          "lag_months": 1,
+          "weight": 0.3,
+          "shape": "logistic",
+          "midpoint": 60.0,
+          "scale": 5.0,
+          "basis": "hypothetical"
+        }
+      },
+      "random_outbreaks": {
+        "prob_per_month": 0.015,
+        "log_amplitude_range": [
+          0.7,
+          1.2
+        ]
+      },
+      "demo_outbreak": {
+        "start_month": "2022-10",
+        "log_amplitudes": [
+          1.0,
+          0.9
+        ]
+      }
+    },
+    {
+      "disease_id": "malaria",
+      "display_name": "Malaria",
+      "recovery_rule_id": "r3m_f1.2",
+      "baseline_rate_per_100k": 0.8,
+      "seasonality_params": {
+        "amplitude": 0.4,
+        "peak_month": 9
+      },
+      "persistence_rho": 0.55,
+      "nb_dispersion_k": 50,
+      "urban_effect": 0.4,
+      "water_storage_effect": 0.3,
+      "climate_drivers": {
+        "rainfall_mm": {
+          "lag_months": 2,
+          "weight": 0.5,
+          "shape": "saturating",
+          "half_saturation_mm": 150,
+          "basis": "hypothetical"
+        },
+        "mean_temperature_c": {
+          "lag_months": 2,
+          "weight": 0.6,
+          "shape": "gaussian",
+          "optimum": 25.0,
+          "width": 5.0,
+          "basis": "to_be_sourced"
+        }
+      },
+      "random_outbreaks": {
+        "prob_per_month": 0.015,
+        "log_amplitude_range": [
+          0.7,
+          1.2
+        ]
+      },
+      "demo_outbreak": {
+        "start_month": "2022-09",
+        "log_amplitudes": [
+          0.9,
+          0.8
+        ]
+      }
+    }
+  ]
+}

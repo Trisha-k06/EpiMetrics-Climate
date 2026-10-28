@@ -1,0 +1,6 @@
+district_id,district_name,population,population_density_per_km2,urbanisation_pct,climate_zone
+chn,Chennai,7000000,16000,100,coastal
+cbe,Coimbatore,3500000,750,75,inland
+mdu,Madurai,3000000,820,60,inland
+try,Tiruchirappalli,2700000,610,50,inland
+tnj,Thanjavur,2400000,700,35,delta

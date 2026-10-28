@@ -1,0 +1,20 @@
+table,path,role,rows,columns,purpose
+disease_cases,data/synthetic/disease_cases.csv,input,8400,7,"Synthetic monthly dengue and malaria cases, all scenarios"
+climate_history,data/synthetic/climate_history.csv,input,4200,7,"Monthly rainfall, temperature and humidity, all scenarios"
+disease_profiles,data/synthetic/disease_profiles.csv,parameter,2,10,"Disease-specific seasonality, drivers, lags and response shapes"
+district_metadata,data/synthetic/district_metadata.csv,parameter,5,6,Illustrative population and district characteristics
+environmental_vulnerability,data/synthetic/environmental_vulnerability.csv,parameter,5,4,"Illustrative drainage, water storage and flood exposure"
+scenarios,data/synthetic/scenarios.csv,parameter,7,2,Climate scenario list
+climate_anomalies,data/synthetic/climate_anomalies.csv,parameter,7,9,How each scenario alters the baseline climate
+intervention_profiles,data/synthetic/intervention_profiles.csv,parameter,3,6,"Hypothetical interventions (Phase 4, unused in v0.1.0)"
+missing_data_masks,data/synthetic/missing_data_masks.csv,robustness,435,6,Masks for missing-data experiments
+recovery_rules,data/synthetic/recovery_rules.csv,parameter,3,6,Recovery rule definitions (default + sensitivity variants)
+ground_truth_trajectories,data/ground_truth/ground_truth_trajectories.csv,truth (evaluation only),8400,9,"Noise-free expected cases, endemic level and true threshold"
+outbreak_events,data/ground_truth/outbreak_events.csv,truth (evaluation only),131,11,True primary outbreaks and recurrent waves
+recovery_truth,data/ground_truth/recovery_truth.csv,truth (evaluation only),70,11,"True recovery time per scenario, disease and district"
+simulation_runs,data/outputs/simulation_runs.csv,output,280,21,"Recovery estimated from observed cases, incl. missing-data masks and replicate spread"
+climate_normals,data/synthetic/climate_normals.csv,parameter,60,6,District climatology the climate generator starts from
+seasonal_baseline_thresholds,data/derived/seasonal_baseline_thresholds.csv,derived,120,8,Endemic thresholds estimated from observed baseline cases
+model_ready_dataset,data/derived/model_ready_dataset.csv,derived,2800,27,"Cases + climate + lag features + y_log/y_next targets + train/test/scenario split, de-duplicated (scenario rows only from their first anomaly month)"
+sensitivity_grid,data/outputs/sensitivity_grid.csv,output,840,13,True vs estimated recovery under 2/3/4-month windows and 4 threshold factors
+simulation_results_template,data/outputs/simulation_results_template.csv,template,0,21,Empty schema for results written by the simulator

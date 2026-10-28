@@ -1,0 +1,25 @@
+{
+  "_note": "ILLUSTRATIVE values only. Populations, densities and rainfall climatologies are rounded synthetic inputs and do not describe the real districts.",
+  "districts": [
+    {"district_id": "chn", "district_name": "Chennai", "climate_zone": "coastal", "population": 7000000, "population_density_per_km2": 16000, "urbanisation_pct": 100,
+     "drainage_index": 0.45, "water_storage_index": 0.75, "flood_exposure_index": 0.80,
+     "rain_climatology_mm": [25, 10, 8, 15, 45, 55, 90, 120, 125, 270, 350, 140],
+     "temp_base_c": 29.0, "temp_amplitude_c": 3.0, "humidity_base_pct": 66},
+    {"district_id": "cbe", "district_name": "Coimbatore", "climate_zone": "inland", "population": 3500000, "population_density_per_km2": 750, "urbanisation_pct": 75,
+     "drainage_index": 0.65, "water_storage_index": 0.55, "flood_exposure_index": 0.30,
+     "rain_climatology_mm": [15, 15, 25, 60, 70, 45, 45, 40, 60, 170, 160, 50],
+     "temp_base_c": 26.5, "temp_amplitude_c": 2.5, "humidity_base_pct": 58},
+    {"district_id": "mdu", "district_name": "Madurai", "climate_zone": "inland", "population": 3000000, "population_density_per_km2": 820, "urbanisation_pct": 60,
+     "drainage_index": 0.55, "water_storage_index": 0.65, "flood_exposure_index": 0.35,
+     "rain_climatology_mm": [20, 15, 25, 70, 80, 40, 50, 100, 120, 180, 170, 70],
+     "temp_base_c": 29.5, "temp_amplitude_c": 3.0, "humidity_base_pct": 56},
+    {"district_id": "try", "district_name": "Tiruchirappalli", "climate_zone": "inland", "population": 2700000, "population_density_per_km2": 610, "urbanisation_pct": 50,
+     "drainage_index": 0.55, "water_storage_index": 0.60, "flood_exposure_index": 0.40,
+     "rain_climatology_mm": [15, 10, 15, 40, 60, 40, 60, 100, 140, 180, 150, 60],
+     "temp_base_c": 29.5, "temp_amplitude_c": 3.5, "humidity_base_pct": 56},
+    {"district_id": "tnj", "district_name": "Thanjavur", "climate_zone": "delta", "population": 2400000, "population_density_per_km2": 700, "urbanisation_pct": 35,
+     "drainage_index": 0.40, "water_storage_index": 0.50, "flood_exposure_index": 0.70,
+     "rain_climatology_mm": [25, 15, 20, 35, 50, 40, 60, 100, 120, 230, 270, 140],
+     "temp_base_c": 28.5, "temp_amplitude_c": 3.0, "humidity_base_pct": 64}
+  ]
+}

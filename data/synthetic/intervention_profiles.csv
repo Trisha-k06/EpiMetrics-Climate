@@ -1,0 +1,4 @@
+intervention_id,disease_id,name,assumed_effect,cost,implementation_lag_months
+I01,dengue,Intensified source reduction (hypothetical),0.2,100,1
+I02,dengue,Drainage improvement (hypothetical),0.1,400,6
+I03,malaria,Overhead-tank covering drive (hypothetical),0.25,150,2

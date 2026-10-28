@@ -1,0 +1,8 @@
+scenario_id,description
+baseline,Generated climate with no anomaly applied
+delayed_monsoon,Rainfall pattern shifted 2 months later from Oct 2022 for 6 months
+heavy_rain_decline,"Extra 250 mm of rain in Jan 2023, while cases are declining"
+prolonged_wet,Rainfall held at 150 mm or more for 4 months from Dec 2022
+warmer,+1.5 degC from Jul 2022 to the end of the horizon
+warm_wet,+1.5 degC from Jul 2022 plus +40% rainfall Oct 2022 to Mar 2023
+irregular_rain,Irregular wet spells: an extra 220 mm every 2nd month from Jan 2023 to the end of the horizon

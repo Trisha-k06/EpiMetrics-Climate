@@ -1,0 +1,191 @@
+table,folder,field,type,unit_or_allowed_values,key,description
+disease_cases,synthetic,year_month,string,string YYYY-MM,PK,Calendar month
+disease_cases,synthetic,district_id,string,FK district_metadata,PK,District code
+disease_cases,synthetic,disease_id,string,FK disease_profiles,PK,Disease code
+disease_cases,synthetic,scenario_id,string,FK scenarios,PK,Climate scenario that produced the row
+disease_cases,synthetic,cases,integer,>= 0,,Synthetic reported cases in the month (expected value + negative-binomial observation noise). Missingness is applied separately from missing_data_masks
+disease_cases,synthetic,cases_per_100k,float,>= 0,,cases / population x 100000
+disease_cases,synthetic,data_type,string,synthetic_observed | scenario,,synthetic_observed = baseline climate; scenario = altered climate
+climate_history,synthetic,year_month,string,string YYYY-MM,PK,Calendar month
+climate_history,synthetic,district_id,string,FK district_metadata,PK,District code
+climate_history,synthetic,scenario_id,string,FK scenarios,PK,Climate scenario
+climate_history,synthetic,rainfall_mm,float,"mm per month, 0-1500",,Monthly rainfall total
+climate_history,synthetic,mean_temperature_c,float,"degC, 15-40",,Monthly mean air temperature
+climate_history,synthetic,relative_humidity_pct,float,"%, 20-100",,Monthly mean relative humidity
+climate_history,synthetic,data_type,string,synthetic_observed | scenario,,Provenance flag
+disease_profiles,synthetic,disease_id,string,dengue | malaria,PK,Disease code
+disease_profiles,synthetic,display_name,string,,,Label shown in the simulator
+disease_profiles,synthetic,baseline_rate_per_100k,float,cases per 100k per month,,"Endemic rate before seasonality, climate and outbreaks (hypothetical)"
+disease_profiles,synthetic,seasonality_params,JSON,"{amplitude, peak_month}",,Seasonal curve of the endemic baseline: 1 + amplitude x cos(2pi(month - peak_month)/12)
+disease_profiles,synthetic,climate_drivers,string,semicolon list,,Climate variables the disease responds to in the model
+disease_profiles,synthetic,lag_months,JSON,"per driver, months",,Delay between climate signal and case response
+disease_profiles,synthetic,response_params,JSON,per driver,,"Response curve: hump (rain optimum), saturating (half-saturation), gaussian (optimum, width), logistic (midpoint, scale); plus weight"
+disease_profiles,synthetic,persistence_rho,float,0-1,,Month-to-month carry-over of excess transmission; higher = waves last longer
+disease_profiles,synthetic,nb_dispersion_k,float,> 0,,Negative-binomial dispersion for observation noise; lower = noisier
+disease_profiles,synthetic,recovery_rule_id,string,FK recovery_rules,,Default recovery rule for this disease
+district_metadata,synthetic,district_id,string,chn | cbe | mdu | try | tnj,PK,District code
+district_metadata,synthetic,district_name,string,,,"Display name (values for the district are illustrative, not real)"
+district_metadata,synthetic,population,integer,persons,,Illustrative population; denominator for rates
+district_metadata,synthetic,population_density_per_km2,float,persons per km2,,Illustrative
+district_metadata,synthetic,urbanisation_pct,float,%,,Illustrative; raises the endemic baseline
+district_metadata,synthetic,climate_zone,string,coastal | inland | delta,,Selects the rainfall climatology shape
+environmental_vulnerability,synthetic,district_id,string,FK district_metadata,PK,District code
+environmental_vulnerability,synthetic,drainage_index,float,"0-1, higher = better",,Damps the rainfall effect: weight x (1.3 - 0.6 x drainage_index)
+environmental_vulnerability,synthetic,water_storage_index,float,0-1,,Household water storage; raises the endemic baseline
+environmental_vulnerability,synthetic,flood_exposure_index,float,0-1,,Recorded for future use; not used by generator v0.1.0
+scenarios,synthetic,scenario_id,string,,PK,Scenario code
+scenarios,synthetic,description,string,,,"Plain-language description (hypothetical input, not a projection)"
+climate_anomalies,synthetic,anomaly_id,string,,PK,Anomaly code
+climate_anomalies,synthetic,scenario_id,string,FK scenarios,,Scenario the anomaly belongs to
+climate_anomalies,synthetic,district_id,string,FK or 'all',,Where it applies
+climate_anomalies,synthetic,anomaly_type,string,monsoon_shift | heavy_rain | prolonged_wet | rainfall_pct | irregular_rain | temperature_shift,,Kind of change applied to the baseline climate
+climate_anomalies,synthetic,start_month,string,string YYYY-MM,,First affected month
+climate_anomalies,synthetic,duration_months,integer,months,,Number of months affected
+climate_anomalies,synthetic,magnitude,float,see magnitude_unit,,Size of the change
+climate_anomalies,synthetic,magnitude_unit,string,months | mm_added | mm_minimum | pct | c,,months = rainfall shifted later; mm_added = extra rain; mm_minimum = rain floor; pct = % change; c = degC added
+climate_anomalies,synthetic,period_months,integer,nullable,,irregular_rain only: a wet spell every N months
+intervention_profiles,synthetic,intervention_id,string,,PK,"Intervention code (Phase 4, not used by generator v0.1.0)"
+intervention_profiles,synthetic,disease_id,string,FK disease_profiles,,Disease targeted
+intervention_profiles,synthetic,name,string,,,Hypothetical intervention
+intervention_profiles,synthetic,assumed_effect,float,0-1 relative reduction,,Hypothetical effect size; must be labelled as such
+intervention_profiles,synthetic,cost,float,illustrative units,,Not a real budget figure
+intervention_profiles,synthetic,implementation_lag_months,integer,months,,Delay before effect starts
+missing_data_masks,synthetic,mask_id,string,mar_10pct | cases_gap_3m | cases_outage_9m | rain_outage_3m,PK,Mask set; apply by setting matching values to missing
+missing_data_masks,synthetic,year_month,string,string YYYY-MM,PK,Masked month
+missing_data_masks,synthetic,district_id,string,FK district_metadata,PK,District
+missing_data_masks,synthetic,disease_id,string,FK disease_profiles; empty for climate variables,PK,Disease whose cases are masked
+missing_data_masks,synthetic,variable,string,cases | rainfall_mm | mean_temperature_c | relative_humidity_pct,PK,Field set to missing
+missing_data_masks,synthetic,missing_reason,string,random | reporting_delay | sensor_outage,,Missing at random vs structured gap
+recovery_rules,synthetic,recovery_rule_id,string,,PK,Rule code
+recovery_rules,synthetic,threshold_factor,float,,,Endemic threshold = same-calendar-month median of training years x factor
+recovery_rules,synthetic,window_months,integer,months,,Consecutive months at or below threshold needed for sustained recovery
+recovery_rules,synthetic,interruption_rise_factor,float,,,A new wave must reach this multiple of the latest low point
+recovery_rules,synthetic,interruption_rise_months,integer,months,,...and stay above threshold for this many consecutive months
+recovery_rules,synthetic,max_missing_frac,float,0-1,,Above this share of missing months after t0 the result is insufficient_data
+ground_truth_trajectories,ground_truth,year_month,string,string YYYY-MM,PK,Calendar month
+ground_truth_trajectories,ground_truth,district_id,string,FK,PK,District
+ground_truth_trajectories,ground_truth,disease_id,string,FK,PK,Disease
+ground_truth_trajectories,ground_truth,scenario_id,string,FK,PK,Scenario
+ground_truth_trajectories,ground_truth,endemic_baseline_cases,float,cases,,"True seasonal endemic level E (no climate anomaly, no outbreak)"
+ground_truth_trajectories,ground_truth,true_threshold_cases,float,cases,,True endemic threshold = 1.2 x E
+ground_truth_trajectories,ground_truth,expected_cases,float,cases,,Noise-free expected cases; the synthetic ground truth
+ground_truth_trajectories,ground_truth,climate_log_effect,float,log multiplier,,Lagged climate contribution this month (0 = climatology)
+ground_truth_trajectories,ground_truth,data_type,string,synthetic_reference,,Never give these columns to a model as inputs
+outbreak_events,ground_truth,event_id,string,,PK,Event code
+outbreak_events,ground_truth,disease_id,string,FK,,Disease
+outbreak_events,ground_truth,district_id,string,FK,,District
+outbreak_events,ground_truth,scenario_id,string,FK or 'all',,"'all' = random outbreak before Jul 2022, identical in every scenario"
+outbreak_events,ground_truth,source,string,generator_truth,,Truth from the generator (detected events from models go in model outputs)
+outbreak_events,ground_truth,event_type,string,primary | recurrent_wave,,recurrent_wave = began before the previous event sustainably recovered
+outbreak_events,ground_truth,onset_month,string,string YYYY-MM,,First month above the true threshold (primary) or wave detection month
+outbreak_events,ground_truth,peak_month,string,string YYYY-MM,,Month of maximum expected cases
+outbreak_events,ground_truth,recovery_month,string,"string YYYY-MM, nullable",,First month of the qualifying 3-month window; empty if censored
+outbreak_events,ground_truth,recovery_status,string,recovered | not_recovered_within_horizon,,
+outbreak_events,ground_truth,note,string,,,How the event was created
+recovery_truth,ground_truth,scenario_id,string,FK,PK,Scenario
+recovery_truth,ground_truth,disease_id,string,FK,PK,Disease
+recovery_truth,ground_truth,district_id,string,FK,PK,District
+recovery_truth,ground_truth,reference_month,string,string YYYY-MM,,t0 = peak of the demo outbreak in the BASELINE expected trajectory; shared by all scenarios
+recovery_truth,ground_truth,recovery_rule_id,string,FK recovery_rules,,Rule applied
+recovery_truth,ground_truth,true_recovery_month,string,"string YYYY-MM, nullable",,First month of the first 3-month run with expected_cases <= true_threshold_cases
+recovery_truth,ground_truth,true_time_to_sustained_recovery_months,integer,"months, nullable",,PRIMARY KPI (truth): true_recovery_month - reference_month
+recovery_truth,ground_truth,true_recovery_status,string,recovered | not_recovered_within_horizon,,Censored if no qualifying window before Dec 2024
+recovery_truth,ground_truth,true_recovery_interruption_count,integer,>= 0,,New waves that began before sustained recovery
+recovery_truth,ground_truth,true_months_above_endemic_threshold,integer,>= 0,,Months from t0 to recovery (or horizon) above the true threshold
+recovery_truth,ground_truth,data_type,string,synthetic_reference,,Ground truth flag
+simulation_runs,outputs,run_id,string,scenario__disease__district__mask,PK,Run code
+simulation_runs,outputs,scenario_id,string,FK,,Scenario
+simulation_runs,outputs,disease_id,string,FK,,Disease
+simulation_runs,outputs,district_id,string,FK,,District
+simulation_runs,outputs,seed,integer,,,Master random seed
+simulation_runs,outputs,model_version,string,semver,,Generator / engine version
+simulation_runs,outputs,recovery_rule_id,string,FK recovery_rules,,Rule applied
+simulation_runs,outputs,mask_id,string,"FK missing_data_masks, nullable",,Case mask applied; empty = complete data
+simulation_runs,outputs,reference_month,string,string YYYY-MM,,t0 estimated from observed baseline cases (peak Aug 2022 - Feb 2023)
+simulation_runs,outputs,recovery_month,string,"string YYYY-MM, nullable",,Estimated: first month of the qualifying window
+simulation_runs,outputs,recovery_confirmed_month,string,"string YYYY-MM, nullable",,recovery_month + window - 1
+simulation_runs,outputs,time_to_sustained_recovery_months,integer,"months, nullable",,PRIMARY KPI (estimated from observed cases)
+simulation_runs,outputs,recovery_status,string,recovered | not_recovered_within_horizon | insufficient_data,,
+simulation_runs,outputs,recovery_delay_vs_baseline_months,integer,"months, nullable",,Scenario minus baseline estimate (same mask); empty if either is censored
+simulation_runs,outputs,recovery_interruption_count,integer,>= 0,,Detected new waves before sustained recovery
+simulation_runs,outputs,months_above_endemic_threshold,integer,>= 0,,From t0 to recovery (or horizon)
+simulation_runs,outputs,secondary_outbreak_count,integer,>= 0,,"All detected waves after t0, including after recovery"
+simulation_runs,outputs,recovery_months_p10,float,"months, nullable",,10th percentile across 50 observation-noise replicates (empty if <50% recovered)
+simulation_runs,outputs,recovery_months_p90,float,"months, nullable",,90th percentile across replicates
+simulation_runs,outputs,share_replicates_recovered,float,0-1,,Share of replicates that recovered within the horizon
+simulation_runs,outputs,created_at,string,ISO 8601,,Generation timestamp (fixed for reproducibility)
+climate_normals,synthetic,district_id,string,FK district_metadata,PK,District
+climate_normals,synthetic,calendar_month,integer,1-12,PK,Calendar month
+climate_normals,synthetic,rainfall_normal_mm,float,mm,,Climatological rainfall the generator starts from (illustrative)
+climate_normals,synthetic,temperature_normal_c,float,degC,,Climatological mean temperature before noise and trend
+climate_normals,synthetic,humidity_normal_pct,float,%,,Climatological relative humidity
+climate_normals,synthetic,data_type,string,synthetic_parameter,,"Generator parameter, not an observation"
+seasonal_baseline_thresholds,derived,district_id,string,FK,PK,District
+seasonal_baseline_thresholds,derived,disease_id,string,FK,PK,Disease
+seasonal_baseline_thresholds,derived,calendar_month,integer,1-12,PK,Calendar month
+seasonal_baseline_thresholds,derived,training_median_cases,float,cases,,"Median observed baseline cases in this calendar month, 2015-2021"
+seasonal_baseline_thresholds,derived,training_months,integer,count,,Months contributing to the median
+seasonal_baseline_thresholds,derived,threshold_factor,float,,,Multiplier applied (default rule)
+seasonal_baseline_thresholds,derived,threshold_cases,float,cases,,Estimated endemic threshold used by the recovery estimator (min 1)
+seasonal_baseline_thresholds,derived,training_period,string,,,Months used
+model_ready_dataset,derived,year_month,string,string YYYY-MM,PK,Calendar month
+model_ready_dataset,derived,district_id,string,FK,PK,District
+model_ready_dataset,derived,disease_id,string,FK,PK,Disease
+model_ready_dataset,derived,scenario_id,string,FK,PK,Scenario
+model_ready_dataset,derived,year,integer,,,Year
+model_ready_dataset,derived,calendar_month,integer,1-12,,Month of year (for seasonal terms)
+model_ready_dataset,derived,population,integer,persons,,Illustrative district population
+model_ready_dataset,derived,cases,integer,>= 0,,Target: observed synthetic cases
+model_ready_dataset,derived,cases_per_100k,float,>= 0,,Rate version of the target
+model_ready_dataset,derived,rainfall_mm,float,mm,,Same-month rainfall
+model_ready_dataset,derived,mean_temperature_c,float,degC,,Same-month temperature
+model_ready_dataset,derived,relative_humidity_pct,float,%,,Same-month humidity
+model_ready_dataset,derived,rainfall_mm_lag1,float,"mm, empty in first month",,Rainfall 1 month earlier
+model_ready_dataset,derived,rainfall_mm_lag2,float,mm,,Rainfall 2 months earlier (the generator's assumed lag for both diseases)
+model_ready_dataset,derived,rainfall_mm_lag3,float,mm,,Rainfall 3 months earlier
+model_ready_dataset,derived,mean_temperature_c_lag1,float,degC,,Temperature 1 month earlier
+model_ready_dataset,derived,mean_temperature_c_lag2,float,degC,,Temperature 2 months earlier
+model_ready_dataset,derived,relative_humidity_pct_lag1,float,%,,Humidity 1 month earlier
+model_ready_dataset,derived,relative_humidity_pct_lag2,float,%,,Humidity 2 months earlier
+model_ready_dataset,derived,cases_lag1,float,cases,,Cases 1 month earlier
+model_ready_dataset,derived,cases_lag12,float,cases,,Cases 12 months earlier (seasonal naive baseline)
+model_ready_dataset,derived,y_log,float,ln(cases + 1),,"Log-transformed target y_log(t) = ln(1 + cases), project plan section 3.3"
+model_ready_dataset,derived,y_next,float,"ln(cases + 1), empty in last month",,1-step lookahead target y_next(t) = y_log(t+1) of the same series; empty in Dec 2024
+model_ready_dataset,derived,scenario_window_start,string,"string YYYY-MM, empty for baseline",,First anomaly month of the scenario; scenario rows before it are exact copies of baseline rows and are omitted
+model_ready_dataset,derived,split,string,train | test | scenario,,"train = baseline <= 2021-12; test = baseline >= 2022-01; scenario = altered-climate rows from scenario_window_start (evaluation only, never training). Never shuffle"
+model_ready_dataset,derived,duplicate_of,string,"FK scenarios, nullable",,"Empty if the row is unique. Otherwise the first scenario (baseline first) with an identical row, e.g. after a short anomaly wears off. Drop these rows when you need unique observations"
+model_ready_dataset,derived,data_type,string,synthetic_observed | scenario,,Provenance flag
+sensitivity_grid,outputs,scenario_id,string,FK,PK,Scenario
+sensitivity_grid,outputs,disease_id,string,FK,PK,Disease
+sensitivity_grid,outputs,district_id,string,FK,PK,District
+sensitivity_grid,outputs,window_months,integer,2 | 3 | 4,PK,Consecutive months required
+sensitivity_grid,outputs,threshold_factor,float,1.1 | 1.2 | 1.3 | 1.5,PK,Threshold multiplier
+sensitivity_grid,outputs,true_time_to_sustained_recovery_months,integer,"months, nullable",,Truth under this rule (from ground_truth_trajectories)
+sensitivity_grid,outputs,true_recovery_status,string,recovered | not_recovered_within_horizon,,
+sensitivity_grid,outputs,true_recovery_interruption_count,integer,>= 0,,
+sensitivity_grid,outputs,estimated_time_to_sustained_recovery_months,integer,"months, nullable",,Estimate from observed cases under this rule
+sensitivity_grid,outputs,estimated_recovery_status,string,recovered | not_recovered_within_horizon | insufficient_data,,
+sensitivity_grid,outputs,estimated_recovery_interruption_count,integer,>= 0,,
+sensitivity_grid,outputs,absolute_error_months,integer,"months, nullable",,|estimate - truth|; empty if either is censored
+sensitivity_grid,outputs,status_match,boolean,,,Estimated status equals true status
+simulation_results_template,outputs,run_id,string,scenario__disease__district__mask,PK,Run code
+simulation_results_template,outputs,scenario_id,string,FK,,Scenario
+simulation_results_template,outputs,disease_id,string,FK,,Disease
+simulation_results_template,outputs,district_id,string,FK,,District
+simulation_results_template,outputs,seed,integer,,,Master random seed
+simulation_results_template,outputs,model_version,string,semver,,Generator / engine version
+simulation_results_template,outputs,recovery_rule_id,string,FK recovery_rules,,Rule applied
+simulation_results_template,outputs,mask_id,string,"FK missing_data_masks, nullable",,Case mask applied; empty = complete data
+simulation_results_template,outputs,reference_month,string,string YYYY-MM,,t0 estimated from observed baseline cases (peak Aug 2022 - Feb 2023)
+simulation_results_template,outputs,recovery_month,string,"string YYYY-MM, nullable",,Estimated: first month of the qualifying window
+simulation_results_template,outputs,recovery_confirmed_month,string,"string YYYY-MM, nullable",,recovery_month + window - 1
+simulation_results_template,outputs,time_to_sustained_recovery_months,integer,"months, nullable",,PRIMARY KPI (estimated from observed cases)
+simulation_results_template,outputs,recovery_status,string,recovered | not_recovered_within_horizon | insufficient_data,,
+simulation_results_template,outputs,recovery_delay_vs_baseline_months,integer,"months, nullable",,Scenario minus baseline estimate (same mask); empty if either is censored
+simulation_results_template,outputs,recovery_interruption_count,integer,>= 0,,Detected new waves before sustained recovery
+simulation_results_template,outputs,months_above_endemic_threshold,integer,>= 0,,From t0 to recovery (or horizon)
+simulation_results_template,outputs,secondary_outbreak_count,integer,>= 0,,"All detected waves after t0, including after recovery"
+simulation_results_template,outputs,recovery_months_p10,float,"months, nullable",,10th percentile across 50 observation-noise replicates (empty if <50% recovered)
+simulation_results_template,outputs,recovery_months_p90,float,"months, nullable",,90th percentile across replicates
+simulation_results_template,outputs,share_replicates_recovered,float,0-1,,Share of replicates that recovered within the horizon
+simulation_results_template,outputs,created_at,string,ISO 8601,,Generation timestamp (fixed for reproducibility)

@@ -1,0 +1,230 @@
+{
+  "_note": "Project conventions and HYPOTHETICAL scenario inputs. Not official climate projections for Tamil Nadu.",
+  "master_seed": 42,
+  "start_month": "2015-01",
+  "end_month": "2024-12",
+  "training_end_month": "2021-12",
+  "demo_window": {
+    "peak_search_start": "2022-08",
+    "peak_search_end": "2023-02",
+    "random_outbreak_blackout": [
+      "2022-01",
+      "2023-12"
+    ]
+  },
+  "model_version": "0.1.0",
+  "replicates_for_spread": 50,
+  "climate_noise": {
+    "rain_month_lognormal_sd": 0.3,
+    "rain_season_lognormal_sd": 0.2,
+    "temp_sd_c": 0.5,
+    "temp_trend_c_per_year": 0.02,
+    "humidity_sd_pct": 2.5
+  },
+  "recovery_rules": [
+    {
+      "recovery_rule_id": "r3m_f1.2",
+      "threshold_factor": 1.2,
+      "window_months": 3,
+      "interruption_rise_factor": 1.2,
+      "interruption_rise_months": 2,
+      "max_missing_frac": 0.3
+    },
+    {
+      "recovery_rule_id": "r2m_f1.2",
+      "threshold_factor": 1.2,
+      "window_months": 2,
+      "interruption_rise_factor": 1.2,
+      "interruption_rise_months": 2,
+      "max_missing_frac": 0.3
+    },
+    {
+      "recovery_rule_id": "r4m_f1.2",
+      "threshold_factor": 1.2,
+      "window_months": 4,
+      "interruption_rise_factor": 1.2,
+      "interruption_rise_months": 2,
+      "max_missing_frac": 0.3
+    }
+  ],
+  "scenarios": [
+    {
+      "scenario_id": "baseline",
+      "description": "Generated climate with no anomaly applied"
+    },
+    {
+      "scenario_id": "delayed_monsoon",
+      "description": "Rainfall pattern shifted 2 months later from Oct 2022 for 6 months"
+    },
+    {
+      "scenario_id": "heavy_rain_decline",
+      "description": "Extra 250 mm of rain in Jan 2023, while cases are declining"
+    },
+    {
+      "scenario_id": "prolonged_wet",
+      "description": "Rainfall held at 150 mm or more for 4 months from Dec 2022"
+    },
+    {
+      "scenario_id": "warmer",
+      "description": "+1.5 degC from Jul 2022 to the end of the horizon"
+    },
+    {
+      "scenario_id": "warm_wet",
+      "description": "+1.5 degC from Jul 2022 plus +40% rainfall Oct 2022 to Mar 2023"
+    },
+    {
+      "scenario_id": "irregular_rain",
+      "description": "Irregular wet spells: an extra 220 mm every 2nd month from Jan 2023 to the end of the horizon"
+    }
+  ],
+  "climate_anomalies": [
+    {
+      "anomaly_id": "A01",
+      "scenario_id": "delayed_monsoon",
+      "district_id": "all",
+      "anomaly_type": "monsoon_shift",
+      "start_month": "2022-10",
+      "duration_months": 6,
+      "magnitude": 2,
+      "magnitude_unit": "months",
+      "period_months": null
+    },
+    {
+      "anomaly_id": "A02",
+      "scenario_id": "heavy_rain_decline",
+      "district_id": "all",
+      "anomaly_type": "heavy_rain",
+      "start_month": "2023-01",
+      "duration_months": 1,
+      "magnitude": 250,
+      "magnitude_unit": "mm_added",
+      "period_months": null
+    },
+    {
+      "anomaly_id": "A03",
+      "scenario_id": "prolonged_wet",
+      "district_id": "all",
+      "anomaly_type": "prolonged_wet",
+      "start_month": "2022-12",
+      "duration_months": 4,
+      "magnitude": 150,
+      "magnitude_unit": "mm_minimum",
+      "period_months": null
+    },
+    {
+      "anomaly_id": "A04",
+      "scenario_id": "warmer",
+      "district_id": "all",
+      "anomaly_type": "temperature_shift",
+      "start_month": "2022-07",
+      "duration_months": 30,
+      "magnitude": 1.5,
+      "magnitude_unit": "c",
+      "period_months": null
+    },
+    {
+      "anomaly_id": "A05",
+      "scenario_id": "warm_wet",
+      "district_id": "all",
+      "anomaly_type": "temperature_shift",
+      "start_month": "2022-07",
+      "duration_months": 30,
+      "magnitude": 1.5,
+      "magnitude_unit": "c",
+      "period_months": null
+    },
+    {
+      "anomaly_id": "A06",
+      "scenario_id": "warm_wet",
+      "district_id": "all",
+      "anomaly_type": "rainfall_pct",
+      "start_month": "2022-10",
+      "duration_months": 6,
+      "magnitude": 40,
+      "magnitude_unit": "pct",
+      "period_months": null
+    },
+    {
+      "anomaly_id": "A07",
+      "scenario_id": "irregular_rain",
+      "district_id": "all",
+      "anomaly_type": "irregular_rain",
+      "start_month": "2023-01",
+      "duration_months": 24,
+      "magnitude": 220,
+      "magnitude_unit": "mm_added",
+      "period_months": 2
+    }
+  ],
+  "missing_data_masks": [
+    {
+      "mask_id": "mar_10pct",
+      "missing_reason": "random",
+      "variables": [
+        "cases",
+        "rainfall_mm",
+        "mean_temperature_c",
+        "relative_humidity_pct"
+      ],
+      "fraction": 0.1
+    },
+    {
+      "mask_id": "cases_gap_3m",
+      "missing_reason": "reporting_delay",
+      "variables": [
+        "cases"
+      ],
+      "start_month": "2023-01",
+      "duration_months": 3
+    },
+    {
+      "mask_id": "rain_outage_3m",
+      "missing_reason": "sensor_outage",
+      "variables": [
+        "rainfall_mm"
+      ],
+      "start_month": "2022-11",
+      "duration_months": 3
+    },
+    {
+      "mask_id": "cases_outage_9m",
+      "missing_reason": "reporting_delay",
+      "variables": [
+        "cases"
+      ],
+      "start_month": "2023-01",
+      "duration_months": 9
+    }
+  ],
+  "intervention_profiles": [
+    {
+      "intervention_id": "I01",
+      "disease_id": "dengue",
+      "name": "Intensified source reduction (hypothetical)",
+      "assumed_effect": 0.2,
+      "cost": 100,
+      "implementation_lag_months": 1
+    },
+    {
+      "intervention_id": "I02",
+      "disease_id": "dengue",
+      "name": "Drainage improvement (hypothetical)",
+      "assumed_effect": 0.1,
+      "cost": 400,
+      "implementation_lag_months": 6
+    },
+    {
+      "intervention_id": "I03",
+      "disease_id": "malaria",
+      "name": "Overhead-tank covering drive (hypothetical)",
+      "assumed_effect": 0.25,
+      "cost": 150,
+      "implementation_lag_months": 2
+    }
+  ],
+  "case_masks_for_runs": [
+    "mar_10pct",
+    "cases_gap_3m",
+    "cases_outage_9m"
+  ]
+}

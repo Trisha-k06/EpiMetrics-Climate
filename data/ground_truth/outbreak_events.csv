@@ -1,0 +1,132 @@
+event_id,disease_id,district_id,scenario_id,source,event_type,onset_month,peak_month,recovery_month,recovery_status,note
+E0001,dengue,chn,baseline,generator_truth,primary,2022-10,2022-11,2023-06,recovered,demo outbreak
+E0002,dengue,chn,delayed_monsoon,generator_truth,primary,2022-10,2022-11,2023-07,recovered,demo outbreak
+E0003,dengue,chn,delayed_monsoon,generator_truth,recurrent_wave,2023-03,2023-04,2023-07,recovered,detected on expected trajectory
+E0004,dengue,chn,heavy_rain_decline,generator_truth,primary,2022-10,2022-11,2023-07,recovered,demo outbreak
+E0005,dengue,chn,prolonged_wet,generator_truth,primary,2022-10,2022-11,2023-08,recovered,demo outbreak
+E0006,dengue,chn,prolonged_wet,generator_truth,recurrent_wave,2023-04,2023-05,2023-08,recovered,detected on expected trajectory
+E0007,dengue,chn,warmer,generator_truth,primary,2022-10,2022-11,2023-03,recovered,demo outbreak
+E0008,dengue,chn,warm_wet,generator_truth,primary,2022-10,2022-11,2023-03,recovered,demo outbreak
+E0009,dengue,chn,irregular_rain,generator_truth,primary,2022-10,2022-11,2023-11,recovered,demo outbreak
+E0010,dengue,chn,irregular_rain,generator_truth,recurrent_wave,2023-07,2023-10,2023-11,recovered,detected on expected trajectory
+E0011,dengue,chn,irregular_rain,generator_truth,primary,2024-05,2024-10,,not_recovered_within_horizon,detected on expected trajectory
+E0012,dengue,chn,irregular_rain,generator_truth,primary,2024-10,2024-10,,not_recovered_within_horizon,detected on expected trajectory
+E0013,malaria,chn,all,generator_truth,primary,2019-04,2019-05,2019-10,recovered,random seed
+E0014,malaria,chn,baseline,generator_truth,primary,2022-09,2022-10,2023-01,recovered,demo outbreak
+E0015,malaria,chn,delayed_monsoon,generator_truth,primary,2022-09,2022-10,2023-07,recovered,demo outbreak
+E0016,malaria,chn,delayed_monsoon,generator_truth,recurrent_wave,2023-03,2023-04,2023-07,recovered,detected on expected trajectory
+E0017,malaria,chn,heavy_rain_decline,generator_truth,primary,2022-09,2022-10,2023-06,recovered,demo outbreak
+E0018,malaria,chn,heavy_rain_decline,generator_truth,recurrent_wave,2023-03,2023-06,2023-06,recovered,detected on expected trajectory
+E0019,malaria,chn,prolonged_wet,generator_truth,primary,2022-09,2022-10,2023-07,recovered,demo outbreak
+E0020,malaria,chn,prolonged_wet,generator_truth,recurrent_wave,2023-03,2023-05,2023-07,recovered,detected on expected trajectory
+E0021,malaria,chn,warmer,generator_truth,primary,2022-09,2022-10,2022-12,recovered,demo outbreak
+E0022,malaria,chn,warm_wet,generator_truth,primary,2022-09,2022-10,2022-12,recovered,demo outbreak
+E0023,malaria,chn,irregular_rain,generator_truth,primary,2022-09,2022-10,2023-12,recovered,demo outbreak
+E0024,malaria,chn,irregular_rain,generator_truth,recurrent_wave,2023-03,2023-05,2023-12,recovered,detected on expected trajectory
+E0025,malaria,chn,irregular_rain,generator_truth,primary,2024-03,2024-07,,not_recovered_within_horizon,detected on expected trajectory
+E0026,malaria,chn,irregular_rain,generator_truth,primary,2024-07,2024-09,,not_recovered_within_horizon,detected on expected trajectory
+E0027,dengue,cbe,all,generator_truth,primary,2019-12,2020-01,2020-05,recovered,random seed
+E0028,dengue,cbe,baseline,generator_truth,primary,2022-10,2022-11,2023-02,recovered,demo outbreak
+E0029,dengue,cbe,delayed_monsoon,generator_truth,primary,2022-10,2022-11,2023-12,recovered,demo outbreak
+E0030,dengue,cbe,delayed_monsoon,generator_truth,recurrent_wave,2023-08,2023-11,2023-12,recovered,detected on expected trajectory
+E0031,dengue,cbe,heavy_rain_decline,generator_truth,primary,2022-10,2022-11,2023-12,recovered,demo outbreak
+E0032,dengue,cbe,heavy_rain_decline,generator_truth,recurrent_wave,2023-08,2023-11,2023-12,recovered,detected on expected trajectory
+E0033,dengue,cbe,prolonged_wet,generator_truth,primary,2022-10,2022-11,2023-12,recovered,demo outbreak
+E0034,dengue,cbe,prolonged_wet,generator_truth,recurrent_wave,2023-08,2023-11,2023-12,recovered,detected on expected trajectory
+E0035,dengue,cbe,warmer,generator_truth,primary,2022-10,2022-11,2023-04,recovered,demo outbreak
+E0036,dengue,cbe,warmer,generator_truth,primary,2023-10,2023-11,2024-03,recovered,detected on expected trajectory
+E0037,dengue,cbe,warm_wet,generator_truth,primary,2022-10,2022-11,2023-07,recovered,demo outbreak
+E0038,dengue,cbe,warm_wet,generator_truth,primary,2023-10,2023-11,2024-03,recovered,detected on expected trajectory
+E0039,dengue,cbe,irregular_rain,generator_truth,primary,2022-10,2022-11,,not_recovered_within_horizon,demo outbreak
+E0040,dengue,cbe,irregular_rain,generator_truth,recurrent_wave,2023-07,2023-11,,not_recovered_within_horizon,detected on expected trajectory
+E0041,malaria,cbe,baseline,generator_truth,primary,2022-09,2022-10,2023-02,recovered,demo outbreak
+E0042,malaria,cbe,delayed_monsoon,generator_truth,primary,2022-09,2022-10,2023-05,recovered,demo outbreak
+E0043,malaria,cbe,delayed_monsoon,generator_truth,recurrent_wave,2023-02,2023-04,2023-05,recovered,detected on expected trajectory
+E0044,malaria,cbe,heavy_rain_decline,generator_truth,primary,2022-09,2022-10,2023-07,recovered,demo outbreak
+E0045,malaria,cbe,heavy_rain_decline,generator_truth,recurrent_wave,2023-03,2023-08,2023-08,recovered,detected on expected trajectory
+E0046,malaria,cbe,prolonged_wet,generator_truth,primary,2022-09,2022-10,2023-09,recovered,demo outbreak
+E0047,malaria,cbe,prolonged_wet,generator_truth,recurrent_wave,2023-03,2023-05,2023-09,recovered,detected on expected trajectory
+E0048,malaria,cbe,warmer,generator_truth,primary,2022-09,2022-10,2023-02,recovered,demo outbreak
+E0049,malaria,cbe,warm_wet,generator_truth,primary,2022-09,2022-10,2023-03,recovered,demo outbreak
+E0050,malaria,cbe,irregular_rain,generator_truth,primary,2022-09,2022-10,,not_recovered_within_horizon,demo outbreak
+E0051,malaria,cbe,irregular_rain,generator_truth,recurrent_wave,2023-03,2023-07,,not_recovered_within_horizon,detected on expected trajectory
+E0052,malaria,cbe,irregular_rain,generator_truth,recurrent_wave,2023-07,2023-09,,not_recovered_within_horizon,detected on expected trajectory
+E0053,malaria,cbe,irregular_rain,generator_truth,recurrent_wave,2024-03,2024-07,,not_recovered_within_horizon,detected on expected trajectory
+E0054,dengue,mdu,all,generator_truth,primary,2017-04,2017-05,2017-09,recovered,random seed
+E0055,dengue,mdu,baseline,generator_truth,primary,2022-10,2022-11,2023-09,recovered,demo outbreak
+E0056,dengue,mdu,baseline,generator_truth,recurrent_wave,2023-06,2023-10,2023-10,recovered,detected on expected trajectory
+E0057,dengue,mdu,delayed_monsoon,generator_truth,primary,2022-10,2022-11,2023-09,recovered,demo outbreak
+E0058,dengue,mdu,delayed_monsoon,generator_truth,recurrent_wave,2023-07,2023-10,2023-10,recovered,detected on expected trajectory
+E0059,dengue,mdu,heavy_rain_decline,generator_truth,primary,2022-10,2022-11,2023-09,recovered,demo outbreak
+E0060,dengue,mdu,heavy_rain_decline,generator_truth,recurrent_wave,2023-07,2023-10,2023-10,recovered,detected on expected trajectory
+E0061,dengue,mdu,prolonged_wet,generator_truth,primary,2022-10,2022-11,2023-09,recovered,demo outbreak
+E0062,dengue,mdu,prolonged_wet,generator_truth,recurrent_wave,2023-03,2023-03,2023-09,recovered,detected on expected trajectory
+E0063,dengue,mdu,warmer,generator_truth,primary,2022-10,2022-11,2023-03,recovered,demo outbreak
+E0064,dengue,mdu,warm_wet,generator_truth,primary,2022-10,2022-11,2023-04,recovered,demo outbreak
+E0065,dengue,mdu,irregular_rain,generator_truth,primary,2022-10,2022-11,2023-12,recovered,demo outbreak
+E0066,dengue,mdu,irregular_rain,generator_truth,recurrent_wave,2023-07,2023-09,2023-12,recovered,detected on expected trajectory
+E0067,dengue,mdu,irregular_rain,generator_truth,primary,2024-05,2024-09,,not_recovered_within_horizon,detected on expected trajectory
+E0068,malaria,mdu,all,generator_truth,primary,2015-07,2015-08,2015-11,recovered,random seed
+E0069,malaria,mdu,all,generator_truth,primary,2016-07,2016-08,2016-12,recovered,random seed
+E0070,malaria,mdu,all,generator_truth,primary,2017-06,2017-07,2017-10,recovered,random seed
+E0071,malaria,mdu,all,generator_truth,primary,2019-09,2019-10,2019-12,recovered,random seed
+E0072,malaria,mdu,baseline,generator_truth,primary,2022-09,2022-10,2023-01,recovered,demo outbreak
+E0073,malaria,mdu,delayed_monsoon,generator_truth,primary,2022-09,2022-10,2023-08,recovered,demo outbreak
+E0074,malaria,mdu,delayed_monsoon,generator_truth,recurrent_wave,2023-03,2023-07,2023-08,recovered,detected on expected trajectory
+E0075,malaria,mdu,heavy_rain_decline,generator_truth,primary,2022-09,2022-10,2023-08,recovered,demo outbreak
+E0076,malaria,mdu,heavy_rain_decline,generator_truth,recurrent_wave,2023-03,2023-07,2023-08,recovered,detected on expected trajectory
+E0077,malaria,mdu,prolonged_wet,generator_truth,primary,2022-09,2022-10,2023-09,recovered,demo outbreak
+E0078,malaria,mdu,prolonged_wet,generator_truth,recurrent_wave,2023-03,2023-05,2023-09,recovered,detected on expected trajectory
+E0079,malaria,mdu,warmer,generator_truth,primary,2022-09,2022-10,2022-12,recovered,demo outbreak
+E0080,malaria,mdu,warm_wet,generator_truth,primary,2022-09,2022-10,2023-01,recovered,demo outbreak
+E0081,malaria,mdu,irregular_rain,generator_truth,primary,2022-09,2022-10,,not_recovered_within_horizon,demo outbreak
+E0082,malaria,mdu,irregular_rain,generator_truth,recurrent_wave,2023-03,2023-07,,not_recovered_within_horizon,detected on expected trajectory
+E0083,malaria,mdu,irregular_rain,generator_truth,recurrent_wave,2024-03,2024-07,,not_recovered_within_horizon,detected on expected trajectory
+E0084,dengue,try,all,generator_truth,primary,2016-11,2016-12,2017-03,recovered,random seed
+E0085,dengue,try,baseline,generator_truth,primary,2022-10,2022-11,2023-04,recovered,demo outbreak
+E0086,dengue,try,delayed_monsoon,generator_truth,primary,2022-10,2022-11,2023-06,recovered,demo outbreak
+E0087,dengue,try,heavy_rain_decline,generator_truth,primary,2022-10,2022-11,2023-06,recovered,demo outbreak
+E0088,dengue,try,prolonged_wet,generator_truth,primary,2022-10,2022-11,2023-08,recovered,demo outbreak
+E0089,dengue,try,prolonged_wet,generator_truth,recurrent_wave,2023-03,2023-03,2023-08,recovered,detected on expected trajectory
+E0090,dengue,try,warmer,generator_truth,primary,2022-10,2022-11,2023-02,recovered,demo outbreak
+E0091,dengue,try,warm_wet,generator_truth,primary,2022-10,2022-11,2023-04,recovered,demo outbreak
+E0092,dengue,try,irregular_rain,generator_truth,primary,2022-10,2022-11,2023-10,recovered,demo outbreak
+E0093,dengue,try,irregular_rain,generator_truth,recurrent_wave,2023-07,2023-09,2023-10,recovered,detected on expected trajectory
+E0094,dengue,try,irregular_rain,generator_truth,primary,2024-05,2024-09,2024-10,recovered,detected on expected trajectory
+E0095,malaria,try,baseline,generator_truth,primary,2022-09,2022-10,2023-01,recovered,demo outbreak
+E0096,malaria,try,delayed_monsoon,generator_truth,primary,2022-09,2022-10,2023-07,recovered,demo outbreak
+E0097,malaria,try,delayed_monsoon,generator_truth,recurrent_wave,2023-03,2023-04,2023-07,recovered,detected on expected trajectory
+E0098,malaria,try,heavy_rain_decline,generator_truth,primary,2022-09,2022-10,2023-05,recovered,demo outbreak
+E0099,malaria,try,heavy_rain_decline,generator_truth,recurrent_wave,2023-03,2023-03,2023-05,recovered,detected on expected trajectory
+E0100,malaria,try,prolonged_wet,generator_truth,primary,2022-09,2022-10,2023-07,recovered,demo outbreak
+E0101,malaria,try,prolonged_wet,generator_truth,recurrent_wave,2023-03,2023-05,2023-07,recovered,detected on expected trajectory
+E0102,malaria,try,warmer,generator_truth,primary,2022-09,2022-10,2022-12,recovered,demo outbreak
+E0103,malaria,try,warm_wet,generator_truth,primary,2022-09,2022-10,2022-12,recovered,demo outbreak
+E0104,malaria,try,irregular_rain,generator_truth,primary,2022-09,2022-10,,not_recovered_within_horizon,demo outbreak
+E0105,malaria,try,irregular_rain,generator_truth,recurrent_wave,2023-03,2023-05,,not_recovered_within_horizon,detected on expected trajectory
+E0106,malaria,try,irregular_rain,generator_truth,recurrent_wave,2024-03,2024-07,,not_recovered_within_horizon,detected on expected trajectory
+E0107,dengue,tnj,all,generator_truth,primary,2015-09,2015-10,2016-02,recovered,random seed
+E0108,dengue,tnj,all,generator_truth,primary,2019-10,2019-11,2020-04,recovered,random seed
+E0109,dengue,tnj,baseline,generator_truth,primary,2022-10,2022-11,2023-03,recovered,demo outbreak
+E0110,dengue,tnj,delayed_monsoon,generator_truth,primary,2022-10,2022-11,2023-08,recovered,demo outbreak
+E0111,dengue,tnj,delayed_monsoon,generator_truth,recurrent_wave,2023-03,2023-04,2023-08,recovered,detected on expected trajectory
+E0112,dengue,tnj,heavy_rain_decline,generator_truth,primary,2022-10,2022-11,2023-06,recovered,demo outbreak
+E0113,dengue,tnj,prolonged_wet,generator_truth,primary,2022-10,2022-11,2023-08,recovered,demo outbreak
+E0114,dengue,tnj,prolonged_wet,generator_truth,recurrent_wave,2023-04,2023-05,2023-08,recovered,detected on expected trajectory
+E0115,dengue,tnj,warmer,generator_truth,primary,2022-10,2022-11,2023-04,recovered,demo outbreak
+E0116,dengue,tnj,warm_wet,generator_truth,primary,2022-10,2022-11,2023-04,recovered,demo outbreak
+E0117,dengue,tnj,irregular_rain,generator_truth,primary,2022-10,2022-11,2023-11,recovered,demo outbreak
+E0118,dengue,tnj,irregular_rain,generator_truth,recurrent_wave,2023-07,2023-09,2023-11,recovered,detected on expected trajectory
+E0119,dengue,tnj,irregular_rain,generator_truth,primary,2024-05,2024-09,,not_recovered_within_horizon,detected on expected trajectory
+E0120,malaria,tnj,baseline,generator_truth,primary,2022-09,2022-10,2023-01,recovered,demo outbreak
+E0121,malaria,tnj,delayed_monsoon,generator_truth,primary,2022-09,2022-10,2022-12,recovered,demo outbreak
+E0122,malaria,tnj,delayed_monsoon,generator_truth,primary,2023-03,2023-04,2023-07,recovered,detected on expected trajectory
+E0123,malaria,tnj,heavy_rain_decline,generator_truth,primary,2022-09,2022-10,2023-07,recovered,demo outbreak
+E0124,malaria,tnj,heavy_rain_decline,generator_truth,recurrent_wave,2023-03,2023-07,2023-07,recovered,detected on expected trajectory
+E0125,malaria,tnj,prolonged_wet,generator_truth,primary,2022-09,2022-10,2023-08,recovered,demo outbreak
+E0126,malaria,tnj,prolonged_wet,generator_truth,recurrent_wave,2023-03,2023-05,2023-08,recovered,detected on expected trajectory
+E0127,malaria,tnj,warmer,generator_truth,primary,2022-09,2022-10,2022-12,recovered,demo outbreak
+E0128,malaria,tnj,warm_wet,generator_truth,primary,2022-09,2022-10,2022-12,recovered,demo outbreak
+E0129,malaria,tnj,irregular_rain,generator_truth,primary,2022-09,2022-10,,not_recovered_within_horizon,demo outbreak
+E0130,malaria,tnj,irregular_rain,generator_truth,recurrent_wave,2023-03,2023-07,,not_recovered_within_horizon,detected on expected trajectory
+E0131,malaria,tnj,irregular_rain,generator_truth,recurrent_wave,2024-05,2024-07,,not_recovered_within_horizon,detected on expected trajectory
