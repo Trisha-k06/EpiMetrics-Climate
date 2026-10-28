@@ -294,10 +294,11 @@ async function backups(host) {
   };
   try { draw(await api.backups()); } catch (err) { host.querySelector("#bk-list").innerHTML = errorHTML(err); }
   host.querySelector("#bk-now").addEventListener("click", async (e) => {
-    e.currentTarget.disabled = true;
+    const btn = e.currentTarget; // currentTarget is null again after the first await
+    btn.disabled = true;
     const st = host.querySelector("#bk-status");
     st.textContent = "Writing the archive…";
-    try { const r = await api.createBackup(); draw(r); st.innerHTML = `<span class="pill pill-good">Backup written</span> ${esc(r.backup.name)}`; } catch (err) { st.textContent = err.message; } finally { e.currentTarget.disabled = false; }
+    try { const r = await api.createBackup(); draw(r); st.innerHTML = `<span class="pill pill-good">Backup written</span> ${esc(r.backup.name)}`; } catch (err) { st.textContent = err.message; } finally { btn.disabled = false; }
   });
 }
 

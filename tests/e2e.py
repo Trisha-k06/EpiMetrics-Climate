@@ -373,7 +373,8 @@ def admin_flow(browser, before_usage):
     page.click("#preview-exit")
     page.wait_for_function("() => location.hash === '#admin' && document.querySelector('#preview-strip').hidden")
     check("exit preview returns to the admin console", True)
-    check("admin flows had no errors", not w.take())
+    errs = w.take()
+    check("admin flows had no errors", not errs, "; ".join(errs[:3]))
     page.screenshot(path=str(SHOTS / "check_admin.png"), full_page=True)
     page.close()
 

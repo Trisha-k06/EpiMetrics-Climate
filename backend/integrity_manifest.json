@@ -2,7 +2,7 @@
  "synthetic": true,
  "algorithm": "SHA-256",
  "dataset_version": "0.1.1",
- "generated_at": "2026-10-28T15:51:24Z",
+ "generated_at": "2026-10-28T15:57:04Z",
  "files": [
   {
    "kind": "frontend",
@@ -168,8 +168,8 @@
   {
    "kind": "frontend",
    "path": "frontend/js/screens/admin.js",
-   "bytes": 27208,
-   "sha256": "18fa72b9d1c5794449818077b3ccd337d25eb0760613183a00b3315ae8cbb170",
+   "bytes": 27270,
+   "sha256": "5fbcf88abe958e4a4fb0f931bafa20293a06b18cb841579589866564b6d72d0a",
    "url": "js/screens/admin.js"
   },
   {
