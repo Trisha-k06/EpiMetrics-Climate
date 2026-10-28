@@ -1,4 +1,4 @@
-// Shared selection (district, disease, scenario) across screens.
+// Shared selection (district, disease, scenario, reporting-completeness mask) across screens.
 import { CONFIG } from "./config.js";
 
 const KEY = "epimetrics.selection.v1";
@@ -30,5 +30,6 @@ export function reconcileSelection(meta) {
     district: ok(meta.districts, selection.district) ? selection.district : d.district,
     disease: ok(meta.diseases, selection.disease) ? selection.disease : d.disease,
     scenario: ok(meta.scenarios, selection.scenario) ? selection.scenario : d.scenario,
+    mask: ok(meta.masks, selection.mask) ? selection.mask : d.mask,
   });
 }

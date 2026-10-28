@@ -3,7 +3,7 @@ import { CONFIG } from "../config.js";
 import { api } from "../api.js";
 import { getSelection, setSelection, onSelection } from "../state.js";
 import { esc, monthLabel, byId, tsrText, deltaText, plural } from "../format.js";
-import { selectorsHTML, bindSelects, scenarioPickerHTML, bindScenarioPicker, kpiCardsHTML, renderSimulationView, dataTableHTML, anomalyListHTML, loadingHTML, errorHTML, animateCounts } from "../ui.js";
+import { selectorsHTML, maskSelectHTML, bindSelects, scenarioPickerHTML, bindScenarioPicker, kpiCardsHTML, renderSimulationView, dataTableHTML, anomalyListHTML, loadingHTML, errorHTML, animateCounts } from "../ui.js";
 
 export async function render(view, { meta }) {
   let range = "focus";
@@ -20,11 +20,11 @@ export async function render(view, { meta }) {
     </div>
 
     <section class="panel stack" aria-label="Simulation settings">
-      <div class="row" style="justify-content:space-between;align-items:flex-end">${selectorsHTML(meta, sel, { idPrefix: "sim" })}
+      <div class="row" style="justify-content:space-between;align-items:flex-end"><div class="row" style="align-items:flex-end">${selectorsHTML(meta, sel, { idPrefix: "sim" })}${maskSelectHTML(meta, sel, "sim")}</div>
         <p class="small" style="max-width:46ch">Recovery rule: ${esc(meta.recovery_rule.tsr_definition)}.</p>
       </div>
       <div id="sim-scenarios">${scenarioPickerHTML(meta, sel)}</div>
-      <p class="small" id="sim-custom-note">Custom rain and temperature sliders arrive with the live backend (<span class="mono">POST /simulate</span>).</p>
+      <p class="small" id="sim-custom-note">Reporting completeness removes case months the same way the published validation runs do (masked months stay empty; nothing is filled in). The recovery engine then re-estimates the threshold from the remaining baseline months.</p>
     </section>
 
     <section class="demo" aria-label="Guided demo">

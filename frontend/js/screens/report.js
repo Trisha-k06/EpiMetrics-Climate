@@ -1,10 +1,10 @@
-// Screen 5: exportable scenario report for the current selection.
+// Screen 8: exportable scenario report for the current selection.
 import { CONFIG } from "../config.js";
 import { can } from "../auth.js";
 import { api } from "../api.js";
 import { getSelection, onSelection } from "../state.js";
 import { esc, monthLabel, byId, tsrText, deltaText, statusPill, fmtInt, plural, STATUS, disclaimerBody } from "../format.js";
-import { selectorsHTML, scenarioSelectHTML, bindSelects, renderSimulationView, wavesTableHTML, anomalyListHTML, loadingHTML, errorHTML, downloadFile, copyText, toast } from "../ui.js";
+import { selectorsHTML, scenarioSelectHTML, maskSelectHTML, bindSelects, renderSimulationView, wavesTableHTML, anomalyListHTML, loadingHTML, errorHTML, downloadFile, copyText, toast } from "../ui.js";
 
 export async function render(view, { meta }) {
   let seq = 0;
@@ -14,28 +14,60 @@ export async function render(view, { meta }) {
   view.innerHTML = `
     <div class="page-head no-print">
       <div>
-        <p class="eyebrow">Screen 5 · Scenario report</p>
+        <p class="eyebrow">Screen 8 · Scenario report</p>
         <h1>Scenario report</h1>
         <p class="lede">A one-page summary of the selected scenario for the project report or viva. Every figure comes from the API response, which can also be downloaded.</p>
       </div>
     </div>
     <section class="panel no-print">
       <div class="row" style="align-items:flex-end;justify-content:space-between">
-        <div class="row" style="align-items:flex-end">${selectorsHTML(meta, getSelection(), { idPrefix: "rep" })}${scenarioSelectHTML(meta, getSelection(), "rep")}</div>
+        <div class="row" style="align-items:flex-end">${selectorsHTML(meta, getSelection(), { idPrefix: "rep" })}${scenarioSelectHTML(meta, getSelection(), "rep")}${maskSelectHTML(meta, getSelection(), "rep")}</div>
         <div class="report-actions">
-          ${PRINT ? '<button class="btn btn-primary" type="button" id="rep-print"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v7H6z"/></svg>Print or save as PDF</button>' : ""}
+          ${FILES ? '<button class="btn btn-primary" type="button" id="rep-pdf"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>Export report (PDF)</button>' : ""}
+          ${PRINT ? '<button class="btn" type="button" id="rep-print"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v7H6z"/></svg>Print or save as PDF</button>' : ""}
           ${FILES ? '<button class="btn" type="button" id="rep-json">Download JSON</button><button class="btn" type="button" id="rep-csv">Download CSV</button>' : ""}
           <button class="btn" type="button" id="rep-copy">Copy summary</button>
         </div>
       </div>
-      ${!allowExport ? '<p class="small" style="margin-top:8px">Exporting needs an Analyst or Admin account. You can still read the report and copy its summary.</p>' : CONFIG.ENABLE_FILE_DOWNLOADS ? "" : '<p class="small" style="margin-top:8px">File downloads and printing are turned off in this hosted preview. Run the app locally to export PDF, JSON and CSV.</p>'}
+      ${!allowExport ? '<p class="small" style="margin-top:8px">Exporting needs an Analyst or Admin account. You can still read the report and copy its summary.</p>' : CONFIG.ENABLE_FILE_DOWNLOADS ? '<p class="small" style="margin-top:8px">Each export is checked and logged by the server first.</p>' : '<p class="small" style="margin-top:8px">File downloads and printing are turned off in this hosted preview. Run the app locally to export PDF, JSON and CSV.</p>'}
+      <p class="small" id="rep-status" role="status" aria-live="polite" style="margin-top:6px"></p>
     </section>
     <article class="report" id="report">${loadingHTML("Building report…")}</article>`;
   bindSelects(view);
 
-  view.querySelector("#rep-print")?.addEventListener("click", () => window.print());
-  view.querySelector("#rep-json")?.addEventListener("click", () => current && downloadFile(fileBase(current) + ".json", JSON.stringify(current, null, 2), "application/json"));
-  view.querySelector("#rep-csv")?.addEventListener("click", () => current && downloadFile(fileBase(current) + ".csv", toCSV(current), "text/csv"));
+  // Every export asks the server first: it checks the role (403 for viewers) and writes the audit log.
+  const status = view.querySelector("#rep-status");
+  async function guarded(kind, btn, run) {
+    if (!current) return;
+    const sim = current;
+    btn.disabled = true;
+    status.textContent = "Checking with the server…";
+    try {
+      await api.logExport(kind, { district: sim.request.district, disease: sim.request.disease, scenario: sim.request.scenario, mask: sim.request.mask });
+    } catch (err) {
+      btn.disabled = false;
+      status.textContent = err.status === 403 ? "The server refused this export: your account is not allowed to export. Ask an admin for an Analyst account." : `The export was not started: ${err.message}`;
+      if (err.status === 403) toast("Export not allowed for this account");
+      return;
+    }
+    try {
+      const msg = await run(sim);
+      status.textContent = msg || "";
+    } catch (err) {
+      console.error(err);
+      status.textContent = `The export could not be created: ${err.message}`;
+    } finally { btn.disabled = false; }
+  }
+  view.querySelector("#rep-pdf")?.addEventListener("click", (e) => guarded("report_pdf", e.currentTarget, async (sim) => {
+    status.textContent = "Creating PDF…";
+    const { exportReportPDF } = await import("../pdf.js");
+    const pages = await exportReportPDF(sim, meta, summaryText(sim, meta));
+    toast("PDF downloaded");
+    return `Report PDF saved (${pages} ${pages === 1 ? "page" : "pages"}).`;
+  }));
+  view.querySelector("#rep-print")?.addEventListener("click", (e) => guarded("print", e.currentTarget, async () => { window.print(); return ""; }));
+  view.querySelector("#rep-json")?.addEventListener("click", (e) => guarded("json", e.currentTarget, async (sim) => { downloadFile(fileBase(sim) + ".json", JSON.stringify(sim, null, 2), "application/json"); return "JSON downloaded."; }));
+  view.querySelector("#rep-csv")?.addEventListener("click", (e) => guarded("csv", e.currentTarget, async (sim) => { downloadFile(fileBase(sim) + ".csv", toCSV(sim), "text/csv"); return "CSV downloaded."; }));
   view.querySelector("#rep-copy").addEventListener("click", () => current && copyText(summaryText(current, meta), view.querySelector("#rep-summary")));
 
   async function update() {
@@ -86,7 +118,7 @@ export async function render(view, { meta }) {
           <div><h3>Limitations</h3><ul class="plain small">${meta.limitations.map((l) => `<li>${esc(l)}</li>`).join("")}</ul></div>
         </section>
         <footer class="small" style="border-top:1px solid var(--line);padding-top:10px">
-          Source: ${esc(sim.provenance.source)} API v${esc(sim.api_version)} · dataset v${esc(sim.dataset_version)} · generator v${esc(sim.provenance.generator_version)} · seed ${esc(sim.provenance.seed)} · rule ${esc(sim.provenance.recovery_rule)} · ${esc(sim.provenance.generated_from)}
+          Source: ${esc(sim.provenance.source)} FastAPI backend, API v${esc(sim.api_version)} · mask ${esc(sim.request.mask || "none")} · dataset v${esc(sim.dataset_version)} · generator v${esc(sim.provenance.generator_version)} · seed ${esc(sim.provenance.seed)} · rule ${esc(sim.provenance.recovery_rule)} · ${esc(sim.provenance.generated_from)}
         </footer>`;
       renderSimulationView(host.querySelector("#rep-view"), sim, meta, { range: "focus", idPrefix: "rep" });
     } catch (err) {
@@ -108,7 +140,7 @@ function spread(block) {
 
 function fileBase(sim) {
   const r = sim.request;
-  return `epimetrics_${r.district}_${r.disease}_${r.scenario}_v${sim.dataset_version}`;
+  return `epimetrics_${r.district}_${r.disease}_${r.scenario}${r.mask ? `_${r.mask}` : ""}_v${sim.dataset_version}`;
 }
 
 export function summaryText(sim, meta) {
@@ -116,7 +148,8 @@ export function summaryText(sim, meta) {
   const scen = byId(meta.scenarios, r.scenario), dist = byId(meta.districts, r.district), dis = byId(meta.diseases, r.disease);
   const end = meta.horizon.end_month;
   const b = tsrText(sim.recovery.baseline, end), t = tsrText(sim.recovery.scenario, end), d = deltaText(sim.recovery);
-  const lead = `Synthetic simulation, not a forecast. ${dis.name} in ${dist.name} reaches its reference peak in ${monthLabel(sim.reference.t0_month)}.`;
+  const mk = byId(meta.masks, r.mask || "none");
+  const lead = `Synthetic simulation, not a forecast. ${dis.name} in ${dist.name} reaches its reference peak in ${monthLabel(sim.reference.t0_month)}.${mk && mk.id !== "none" ? ` Reporting completeness: ${mk.label.toLowerCase()}.` : ""}`;
   if (r.scenario === "baseline") return `${lead} Under the baseline climate, sustained recovery takes ${b.value} ${b.unit} (${STATUS[sim.recovery.baseline.status]?.label.toLowerCase() || sim.recovery.baseline.status}), with ${plural(sim.recovery.baseline.interruption_count, "secondary wave")} interrupting recovery.`;
   const n = sim.recovery.scenario.interruption_count;
   return `${lead} Under the ${scen.label.toLowerCase()} scenario, sustained recovery takes ${t.value} ${t.unit}, compared with ${b.value} ${b.unit} under the baseline climate: a recovery delay (ΔTSR) of ${d.value} ${d.unit}. ${n ? `${plural(n, "secondary wave")} ${n === 1 ? "interrupts" : "interrupt"} recovery.` : "No secondary wave interrupts recovery."} Status: ${STATUS[sim.recovery.scenario.status]?.label.toLowerCase() || sim.recovery.scenario.status}.`;
@@ -127,7 +160,7 @@ function toCSV(sim) {
   const head = ["month", "baseline_cases", "scenario_cases", "threshold_cases", "baseline_rainfall_mm", "scenario_rainfall_mm", "baseline_mean_temperature_c", "scenario_mean_temperature_c"];
   const B = sim.series.baseline, S = sim.series.scenario;
   const lines = [
-    `# EpiMetrics-Climate synthetic data, not a forecast. district=${sim.request.district} disease=${sim.request.disease} scenario=${sim.request.scenario} dataset=${sim.dataset_version} rule=${sim.request.recovery_rule}`,
+    `# EpiMetrics-Climate synthetic data, not a forecast. district=${sim.request.district} disease=${sim.request.disease} scenario=${sim.request.scenario} mask=${sim.request.mask || "none"} dataset=${sim.dataset_version} rule=${sim.request.recovery_rule}`,
     head.join(","),
   ];
   sim.months.forEach((m, i) => lines.push([m, B.observed_cases[i], S.observed_cases[i], sim.threshold_cases[i], B.rainfall_mm[i], S.rainfall_mm[i], B.mean_temperature_c[i], S.mean_temperature_c[i]].map(q).join(",")));

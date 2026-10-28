@@ -1,104 +1,96 @@
-// Sign-in, roles and session timeout.
-// Mock mode: demo accounts whose passwords exist only as salted PBKDF2-SHA256 hashes; the check runs in the
-// browser for demonstration. Live mode: POST /auth/login on the backend, which verifies the password and
-// returns a signed JWT; the browser never sees password hashes.
+// Sign-in, roles and sessions. The server checks the password (POST /auth/login) and returns a signed JWT;
+// the browser never sees password hashes. The token lives in sessionStorage, so it ends when the tab closes.
+// The server slides the session: when a token is over a minute old it returns a fresh one in X-Session-Token.
 import { CONFIG } from "./config.js";
 import { ROLES } from "./platform-data.js";
 
-const KEY = "epimetrics.session.v1";
+const KEY = "epimetrics.session.v2";
 const listeners = new Set();
 let session = null;
-let failed = 0, lockedUntil = 0;
-let idleTimer = 0;
+let watchTimer = 0;
+let lastServerContact = 0;
+let keepaliveBusy = false;
 
 const idleMs = () => (CONFIG.AUTH?.SESSION_IDLE_MINUTES ?? 15) * 60 * 1000;
+const keepaliveMs = () => (CONFIG.AUTH?.KEEPALIVE_MINUTES ?? 4) * 60 * 1000;
 
 function save() {
   try { session ? sessionStorage.setItem(KEY, JSON.stringify(session)) : sessionStorage.removeItem(KEY); } catch { /* storage unavailable */ }
 }
 function emit(reason) { listeners.forEach((fn) => fn(session, reason)); }
 
+// Expiry time (ms) from the token's own exp claim. Display/timing only; the server is the real check.
+function tokenExpiry(token) {
+  try {
+    const b64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    const exp = JSON.parse(atob(b64.padEnd(b64.length + ((4 - (b64.length % 4)) % 4), "="))).exp;
+    return Number.isFinite(exp) ? exp * 1000 : 0;
+  } catch { return 0; }
+}
+
 export function onAuth(fn) { listeners.add(fn); return () => listeners.delete(fn); }
 export function currentSession() { return session; }
 export function currentRole() { return session ? ROLES[session.role] : null; }
-export function authRequired() { return CONFIG.AUTH?.REQUIRED !== false; }
-export function can(perm) {
-  if (!authRequired()) return true;
-  const r = currentRole();
-  return !!(r && r[perm]);
-}
-export function canOpen(route) {
-  if (!authRequired()) return true;
-  const r = currentRole();
-  return !!(r && r.screens.includes(route));
-}
-export function authHeader() {
-  return session?.token && CONFIG.API_MODE === "live" ? { Authorization: `Bearer ${session.token}` } : {};
-}
+export function can(perm) { const r = currentRole(); return !!(r && r[perm]); }
+export function canOpen(route) { const r = currentRole(); return !!(r && r.screens.includes(route)); }
+export function authHeader() { return session?.token ? { Authorization: `Bearer ${session.token}` } : {}; }
 export function minutesLeft() {
   if (!session) return 0;
   return Math.max(0, Math.ceil((session.lastActive + idleMs() - Date.now()) / 60000));
 }
 
-function hex(buf) { return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join(""); }
-function fromHex(h) { return new Uint8Array(h.match(/../g).map((x) => parseInt(x, 16))); }
-function randomToken() { const a = new Uint8Array(24); crypto.getRandomValues(a); return hex(a); }
-
-async function pbkdf2(password, saltHex, iterations) {
-  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveBits"]);
-  const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt: fromHex(saltHex), iterations }, key, 256);
-  return hex(bits);
-}
-function safeEqual(a, b) {
-  if (a.length !== b.length) return false;
-  let d = 0;
-  for (let i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return d === 0;
+/** Called by the API client after every authenticated response. */
+export function noteServerResponse(res) {
+  if (!session) return;
+  lastServerContact = Date.now();
+  const fresh = res.headers.get("X-Session-Token");
+  if (fresh && fresh !== session.token) {
+    session.token = fresh;
+    session.expiresAt = tokenExpiry(fresh);
+    save();
+  }
 }
 
 export class AuthError extends Error {}
 
 export async function login(username, password) {
-  if (Date.now() < lockedUntil) {
-    throw new AuthError(`Too many wrong attempts. Try again in ${Math.ceil((lockedUntil - Date.now()) / 1000)} seconds.`);
-  }
   username = String(username || "").trim().toLowerCase();
   if (!username || !password) throw new AuthError("Enter your username and password.");
-  let user = null;
-  if (CONFIG.API_MODE === "live") {
-    const res = await fetch(`${CONFIG.API_BASE}/auth/login`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username, password }) }).catch(() => null);
-    if (!res) throw new AuthError(`Could not reach the sign-in service at ${CONFIG.API_BASE}.`);
-    if (res.ok) {
-      const b = await res.json();
-      user = { username: b.user.username, display_name: b.user.display_name || b.user.username, role: b.user.role, token: b.token };
-    }
-  } else {
-    if (!crypto?.subtle) throw new AuthError("Secure sign-in needs the app to run from http://localhost or https.");
-    const res = await fetch(`${CONFIG.MOCK_BASE}/auth/demo-users.json`);
-    const db = await res.json();
-    const u = db.users.find((x) => x.username === username);
-    // hash even for unknown users so timing does not reveal which usernames exist
-    const h = await pbkdf2(password, u?.salt || "00".repeat(16), u?.iterations || 100000);
-    if (u && safeEqual(h, u.hash)) user = { username: u.username, display_name: u.display_name, role: u.role, token: randomToken() };
+  let res;
+  try {
+    res = await fetch(`${CONFIG.API_BASE}/auth/login`, {
+      method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ username, password }),
+    });
+  } catch {
+    throw new AuthError("Could not reach the sign-in service. Check that the server is running (python -m backend).");
   }
-  if (!user || !ROLES[user.role]) {
-    failed += 1;
-    if (failed >= 5) { lockedUntil = Date.now() + 30000; failed = 0; throw new AuthError("Too many wrong attempts. Sign-in is paused for 30 seconds."); }
-    throw new AuthError("Username or password is incorrect.");
-  }
-  failed = 0;
+  let body = null;
+  try { body = await res.json(); } catch { /* not JSON */ }
+  if (!res.ok) throw new AuthError(body?.error?.message || `Sign-in failed (${res.status}).`);
+  if (!body?.token || !ROLES[body.user?.role]) throw new AuthError("The sign-in service returned an unexpected answer.");
   const now = Date.now();
-  session = { ...user, signedInAt: now, lastActive: now };
+  session = {
+    username: body.user.username, display_name: body.user.display_name || body.user.username, role: body.user.role,
+    token: body.token, expiresAt: tokenExpiry(body.token), signedInAt: now, lastActive: now,
+  };
+  lastServerContact = now;
   save();
-  startIdleWatch();
+  startWatch();
   emit("login");
   return session;
 }
 
 export function logout(reason = "logout") {
+  if (!session) return;
+  const token = session.token;
   session = null;
   save();
-  clearInterval(idleTimer);
+  clearInterval(watchTimer);
+  if (reason === "logout" && token) {
+    // Tell the server to revoke the session; the local sign-out does not wait for it.
+    fetch(`${CONFIG.API_BASE}/auth/logout`, { method: "POST", headers: { Authorization: `Bearer ${token}` }, keepalive: true }).catch(() => {});
+  }
   emit(reason);
 }
 
@@ -111,19 +103,42 @@ function touch() {
   session.lastActive = now;
   save();
 }
-function startIdleWatch() {
-  clearInterval(idleTimer);
-  idleTimer = setInterval(() => {
+
+// While the user is active but the screens make no API calls, keep the server session alive.
+async function keepalive() {
+  if (!session || keepaliveBusy) return;
+  keepaliveBusy = true;
+  try {
+    const res = await fetch(`${CONFIG.API_BASE}/auth/me`, { headers: { Accept: "application/json", ...authHeader() } });
+    if (res.status === 401) logout("expired");
+    else if (res.ok) noteServerResponse(res);
+  } catch { /* offline: the next real request will report it */ } finally { keepaliveBusy = false; }
+}
+
+function startWatch() {
+  clearInterval(watchTimer);
+  watchTimer = setInterval(() => {
     if (!session) return;
-    if (Date.now() - session.lastActive > idleMs()) logout("timeout");
-    else emit("tick");
-  }, 15000);
+    const now = Date.now();
+    if (now - session.lastActive > idleMs()) { logout("timeout"); return; }
+    if (session.expiresAt && now >= session.expiresAt) { logout("expired"); return; }
+    const ttl = session.expiresAt ? session.expiresAt - lastServerContact : keepaliveMs();
+    const due = now - lastServerContact >= Math.min(keepaliveMs(), ttl / 2);
+    const active = now - session.lastActive < keepaliveMs();
+    if (due && active) keepalive();
+    emit("tick");
+  }, 5000);
 }
 
 export function initAuth() {
   try {
     const s = JSON.parse(sessionStorage.getItem(KEY) || "null");
-    if (s && s.role && ROLES[s.role] && Date.now() - s.lastActive < idleMs()) { session = s; startIdleWatch(); }
+    const now = Date.now();
+    if (s && s.token && ROLES[s.role] && now - s.lastActive < idleMs() && (!s.expiresAt || now < s.expiresAt)) {
+      session = s;
+      lastServerContact = now;
+      startWatch();
+    }
   } catch { /* ignore */ }
   ["pointerdown", "keydown", "scroll", "touchstart"].forEach((ev) => window.addEventListener(ev, touch, { passive: true }));
 }

@@ -11,7 +11,6 @@ const DEMO = [
 ];
 
 export async function render(view, { reason } = {}) {
-  const mock = CONFIG.API_MODE === "mock";
   view.innerHTML = `
     <section class="login-wrap">
       <div class="panel login-card">
@@ -28,15 +27,15 @@ export async function render(view, { reason } = {}) {
         </form>
         <p class="small">Your session ends after ${esc(CONFIG.AUTH?.SESSION_IDLE_MINUTES ?? 15)} minutes without activity, or when you close the tab.</p>
       </div>
-      ${mock ? `<div class="panel login-demo">
+      <div class="panel login-demo">
         <h2>Demo accounts</h2>
-        <p class="small">For the project demo. Select one to fill the form, then sign in.</p>
+        <p class="small">The server creates these three accounts for the project demo. Select one to fill the form, then sign in.</p>
         <div class="table-wrap"><table>
           <thead><tr><th>Role</th><th>Can</th><th>Username</th><th>Password</th><th><span class="visually-hidden">Fill</span></th></tr></thead>
           <tbody>${DEMO.map((d) => { const r = ROLES[d.username]; return `<tr><td><b>${esc(r.label)}</b></td><td>${esc(r.summary)}</td><td class="mono">${esc(d.username)}</td><td class="mono">${esc(d.password)}</td><td><button type="button" class="btn btn-sm" data-fill="${esc(d.username)}">Use</button></td></tr>`; }).join("")}</tbody>
         </table></div>
-        <p class="small" style="margin-top:10px">Passwords are stored only as salted PBKDF2-SHA256 hashes. In this mock version the check runs in your browser; with the live backend the server checks the password and issues a signed token (JWT), and the browser never sees any hash.</p>
-      </div>` : ""}
+        <p class="small" style="margin-top:10px">The server stores passwords only as salted PBKDF2-SHA256 hashes, checks them, and issues a signed token (JWT). The browser never sees a hash. Five wrong passwords pause sign-in for 30 seconds.</p>
+      </div>
     </section>`;
 
   const form = view.querySelector("#login-form");

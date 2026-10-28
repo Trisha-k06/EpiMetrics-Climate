@@ -227,7 +227,7 @@ def simulations(request: Request, district: str = Query(...), disease: str = Que
                 mask: str | None = Query(None), user: dict = ANY):
     ids(district=district, disease=disease, scenario=scenario, mask=mask)
     audit.write("simulation", user["sub"], user["role"], client_ip(request),
-                detail={"district": district, "disease": disease, "scenario": scenario, "mask": mask})
+                detail={"district": district, "disease": disease, "scenario": scenario, "mask": mask or "none"})
     return JSON(store.simulation(district, disease, scenario, _mask(mask)))
 
 
@@ -273,7 +273,7 @@ def episodes(disease: str = Query(...), user: dict = ANY):
 
 
 # ---------------------------------------------------------------------------- exports, integrity, audit
-EXPORT_KINDS = {"report_pdf", "project_pdf", "json", "csv"}
+EXPORT_KINDS = {"report_pdf", "project_pdf", "json", "csv", "print"}
 
 
 class ExportBody(BaseModel):

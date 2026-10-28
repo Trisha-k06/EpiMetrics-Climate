@@ -4,7 +4,7 @@ import { api } from "../api.js";
 import { esc, monthLabel, byId, tsrText, deltaText, plural, disclaimerBody } from "../format.js";
 import { recoveryTrack } from "../charts.js";
 import { trackLegendHTML, COLORS, errorHTML } from "../ui.js";
-import { createDistrictMap, mapValuesFromCells } from "../map3d.js";
+import { createDistrictMap, mapValuesFromCells, districtTip } from "../map3d.js";
 import { setSelection } from "../state.js";
 import { END_USERS } from "../platform-data.js";
 
@@ -27,7 +27,7 @@ export async function render(view, { meta }) {
       <div class="panel stack" style="gap:10px">
         <div class="panel-head" style="margin:0"><h2>Recovery delay by district</h2><span class="small">${esc(exDis?.name)} · ${esc(exScen?.label)} vs baseline</span></div>
         <div id="ov-map"></div>
-        <p class="small">Each study district is coloured, and its pole raised, by the extra months to recover (ΔTSR) from the API. Select a district to open it in the simulator.</p>
+        <p class="small">Each study district is coloured, and its pole raised, by the extra months to recover (ΔTSR) from the API. Hover a district for its profile; select it to open it in the simulator. More map layers are on the Recovery screen.</p>
       </div>
     </section>
 
@@ -113,10 +113,14 @@ export async function render(view, { meta }) {
   const mapReady = (async () => {
     try {
       const host = view.querySelector("#ov-map");
-      const [m, matrix] = await Promise.all([
-        createDistrictMap(host, meta.districts, { compact: true, onSelect: (id) => { setSelection({ ...ex, district: id }); location.hash = "simulator"; } }),
+      let profiles = [];
+      const tipFor = (id) => districtTip(profiles.find((d) => d.id === id));
+      const [m, matrix, prof] = await Promise.all([
+        createDistrictMap(host, meta.districts, { compact: true, tipFor, onSelect: (id) => { setSelection({ ...ex, district: id }); location.hash = "simulator"; } }),
         api.recoveryMatrix({ disease: ex.disease }),
+        api.districts(),
       ]);
+      profiles = prof.districts;
       map = m;
       const mv = mapValuesFromCells(matrix.cells, ex.scenario, "delta");
       m.update(mv.values, ex.district, mv.legend);

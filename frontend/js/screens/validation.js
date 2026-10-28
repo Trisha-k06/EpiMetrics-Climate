@@ -1,4 +1,4 @@
-// Screen 4: validation, uncertainty and limitations.
+// Screen 7: validation, uncertainty and limitations.
 import { api } from "../api.js";
 import { getSelection, setSelection, onSelection } from "../state.js";
 import { esc, byId, monthLabel, fmtInt } from "../format.js";
@@ -14,7 +14,7 @@ export async function render(view, { meta }) {
   view.innerHTML = `
     <div class="page-head">
       <div>
-        <p class="eyebrow">Screen 4 · Validation, uncertainty &amp; limitations</p>
+        <p class="eyebrow">Screen 7 · Validation, uncertainty &amp; limitations</p>
         <h1>Can recovery be estimated from noisy case data?</h1>
         <p class="lede">Because the data is synthetic, the true recovery time of every series is known. This screen compares the recovery engine's estimates from observed cases with that ground truth, under missing data and alternative recovery rules.</p>
       </div>

@@ -143,7 +143,7 @@ class Analytics:
                 row = {"variable": v, "lag": lag}
                 for dz in s.disease_ids:
                     sub = d[d.disease_id == dz]
-                    row[dz] = _r(sub[["cases_per_100k", col]].corr().iloc[0, 1], 4)
+                    row[dz] = _r(sub[["cases_per_100k", col]].corr().iloc[0, 1], 6)
                 rows.append(row)
         return rows
 
@@ -496,7 +496,11 @@ class Analytics:
             try:
                 r = A(months[:len(flags)], flags)
                 passed = bool(ok(r))
-                detail = "; ".join(f"{e['recovery_status']}, {e['recovery_months']} mo, {e['recovery_interruptions']} interruptions" for e in r) or "no episodes"
+                detail = "; ".join(
+                    f"{e['recovery_status']}, "
+                    + (f"{e['recovery_months']} months" if e["recovery_months"] is not None else "no recovery time")
+                    + f", {e['recovery_interruptions']} interruption{'' if e['recovery_interruptions'] == 1 else 's'}"
+                    for e in r) or "no episodes"
             except Exception as e:  # pragma: no cover
                 passed, detail = False, f"{type(e).__name__}: {e}"
             out.append({"name": name, "input": ["above" if f else "below" for f in flags], "pass": passed, "detail": detail})

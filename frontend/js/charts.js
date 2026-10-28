@@ -49,8 +49,10 @@ function placeTooltip(el, t, x, y) {
 /**
  * Time chart over a month range.
  * cfg: { months, range:[i0,i1], height, unit, yFloorZero, series:[{label, values, color, width, dash}],
- *        steps:{label, values, color}, bands:[{start,end,label}], vlines:[{month,label,color,dash,row}],
- *        markers:[{month, value, color, label}], ariaLabel, valueFmt }
+ *        steps:{label, values, color}, bands:[{start,end,label,fill,stroke}], vlines:[{month,label,color,dash,row}],
+ *        markers:[{month, value, color, label}], ariaLabel, valueFmt,
+ *        categories: optional labels used instead of months (e.g. Jan–Dec); pass the same array as months }
+ * Null values leave a gap in the line (masked or missing months).
  */
 export function timeChart(el, cfg) {
   el.classList.add("chart");
@@ -66,12 +68,15 @@ export function timeChart(el, cfg) {
     const x = (i) => ml + (i - i0 + 0.5) * step;
     const vis = (arr) => arr.slice(i0, i1 + 1).filter((v) => v != null);
     const all = [...cfg.series.flatMap((s) => vis(s.values)), ...(cfg.steps ? vis(cfg.steps.values) : [])];
-    let lo = cfg.yFloorZero === false ? Math.min(...all) : 0;
-    let hi = Math.max(...all, 1);
+    let lo = cfg.yFloorZero === false ? (all.length ? Math.min(...all) : 0) : Math.min(0, ...all);
+    let hi = all.length ? Math.max(...all, cfg.yFloorZero === false ? -Infinity : 1) : 1;
+    if (hi <= lo) hi = lo + 1;
     if (cfg.yFloorZero === false) { const pad = (hi - lo) * 0.12 || 1; lo -= pad; hi += pad; }
     const T = ticks(lo, hi, W < 520 ? 4 : 5);
     const y = (v) => mt + ph - ((v - T.min) / (T.max - T.min)) * ph;
     const fmt = cfg.valueFmt || ((v) => fmtInt(v));
+    const cats = cfg.categories;
+    const labelOf = (i) => (cats ? cats[i] : monthLabel(months[i]));
     const idx = (m) => months.indexOf(m);
     const inRange = (i) => i >= i0 && i <= i1;
     const parts = [];
@@ -82,9 +87,13 @@ export function timeChart(el, cfg) {
       parts.push(`<text x="${ml - 8}" y="${y(t) + 4}" text-anchor="end" class="num">${fmt(t)}</text>`);
     }
     if (cfg.unit) parts.push(`<text x="2" y="${mt - 12}" text-anchor="start" class="axis-label">${esc(cfg.unit)}</text>`);
-    // x axis labels: Jan (and Jul when roomy)
+    // x axis labels: every category (or every other when narrow), else Jan (and Jul when roomy)
+    if (cats) {
+      const every = step >= 30 ? 1 : 2;
+      for (let i = i0; i <= i1; i++) if ((i - i0) % every === 0) parts.push(`<text x="${x(i)}" y="${mt + ph + 18}" text-anchor="middle">${esc(cats[i])}</text>`);
+    }
     const yearsOnly = n > 60 || step < 9;
-    for (let i = i0; i <= i1; i++) {
+    for (let i = i0; i <= i1 && !cats; i++) {
       const m = months[i];
       const mm = m.slice(5);
       if (mm === "01" || (!yearsOnly && mm === "07" && step > 12)) {
@@ -97,7 +106,7 @@ export function timeChart(el, cfg) {
       const s = Math.max(idx(b.start), i0), e = Math.min(idx(b.end), i1);
       if (s < 0 || e < s) continue;
       const bx = x(s) - step / 2, bw = (e - s + 1) * step;
-      parts.push(`<rect x="${bx}" y="${mt}" width="${bw}" height="${ph}" style="fill:var(--anomaly);stroke:var(--anomaly-line);stroke-width:1;stroke-dasharray:3 3" rx="2"/>`);
+      parts.push(`<rect x="${bx}" y="${mt}" width="${bw}" height="${ph}" style="fill:${b.fill || "var(--anomaly)"};stroke:${b.stroke || "var(--anomaly-line)"};stroke-width:1;stroke-dasharray:3 3" rx="2"/>`);
       if (b.label && bw > 60) parts.push(`<text x="${bx + 6}" y="${mt + 14}" class="mark-label" style="fill:var(--ink-2)">${esc(b.label)}</text>`);
     }
     parts.push(`<line class="baseline-axis" x1="${ml}" x2="${W - mr}" y1="${mt + ph}" y2="${mt + ph}"/>`);
@@ -169,9 +178,9 @@ export function timeChart(el, cfg) {
         d.setAttribute("cx", x(i)); d.setAttribute("cy", y(v)); d.style.opacity = 1;
       });
       const rows = cfg.series.map((s) => `<div class="tt-row"><span><span class="swatch" style="background:${s.color}"></span>${esc(s.label)}</span><b>${s.values[i] == null ? "—" : fmt(s.values[i])}${cfg.unitShort ? ` ${cfg.unitShort}` : ""}</b></div>`);
-      if (cfg.steps) rows.push(`<div class="tt-row"><span><span class="swatch swatch-line"></span>${esc(cfg.steps.label)}</span><b>${fmt(cfg.steps.values[i])}</b></div>`);
+      if (cfg.steps) rows.push(`<div class="tt-row"><span><span class="swatch swatch-line"></span>${esc(cfg.steps.label)}</span><b>${cfg.steps.values[i] == null ? "—" : fmt(cfg.steps.values[i])}</b></div>`);
       const notes = (cfg.notesAt?.(months[i]) || []).map((t) => `<div class="small" style="margin-top:4px">${esc(t)}</div>`).join("");
-      tt.innerHTML = `<div class="tt-title">${monthLabel(months[i])}</div>${rows.join("")}${notes}`;
+      tt.innerHTML = `<div class="tt-title">${esc(labelOf(i))}</div>${rows.join("")}${notes}`;
       placeTooltip(el, tt, x(i) * (r.width / W), (evt.clientY - r.top));
     };
     const hide = () => { tt.hidden = true; hx.style.opacity = 0; dots.forEach((d) => (d.style.opacity = 0)); };
@@ -288,6 +297,78 @@ export function scatterChart(el, { points, ariaLabel }) {
       placeTooltip(el, tt, sx(best.x) * (r.width / W), sy(best.y) * (r.height / H));
     });
     svg.querySelector(".hover-zone").addEventListener("pointerleave", () => (tt.hidden = true));
+  };
+  onResize(el, draw);
+}
+
+/** Legend for any multi-series chart: a swatch plus the series name in text colour. */
+export function seriesLegendHTML(series, extra = "") {
+  return `<div class="chart-legend" aria-hidden="true">${series.map((s) => `<span><span class="swatch${s.dash ? " swatch-dash" : ""}" style="${s.dash ? `border-top-color:${s.color}` : `background:${s.color}`}"></span>${esc(s.label)}</span>`).join("")}${extra}</div>`;
+}
+
+/**
+ * Grouped bar chart. cfg: { categories, series:[{label, values, color}], unit, valueFmt, height, ariaLabel }
+ * One group per category, one bar per series; null values draw no bar. Bars grow from zero (negatives go down).
+ */
+export function barChart(el, cfg) {
+  el.classList.add("chart");
+  const draw = (W) => {
+    const cats = cfg.categories, k = cfg.series.length, n = cats.length;
+    const fmt = cfg.valueFmt || ((v) => String(v));
+    const ml = W < 520 ? 44 : 56, mr = 12, mt = 26;
+    const pw = W - ml - mr, gw = pw / n;
+    const longest = Math.max(...cats.map((c) => String(c).length));
+    const rotate = gw < longest * 6.6 + 8;
+    const mb = rotate ? Math.min(110, 18 + longest * 5.2) : 30;
+    const H = (cfg.height || (W < 520 ? 240 : 280)) + (rotate ? mb - 30 : 0);
+    const ph = H - mt - mb;
+    const all = cfg.series.flatMap((s) => s.values.filter((v) => v != null));
+    const T = ticks(Math.min(0, ...all), Math.max(1e-9, ...all), W < 520 ? 4 : 5);
+    const y = (v) => mt + ph - ((v - T.min) / (T.max - T.min)) * ph;
+    const inner = Math.min(gw * 0.78, k * 34);
+    const bw = Math.max(3, (inner - (k - 1) * 2) / k);
+    const gx = (i) => ml + i * gw + (gw - inner) / 2;
+    const parts = [];
+    for (const t of T.ticks) {
+      parts.push(`<line class="grid-line" x1="${ml}" x2="${W - mr}" y1="${y(t)}" y2="${y(t)}"/>`);
+      parts.push(`<text x="${ml - 8}" y="${y(t) + 4}" text-anchor="end" class="num">${esc(fmt(t))}</text>`);
+    }
+    if (cfg.unit) parts.push(`<text x="2" y="${mt - 12}" text-anchor="start" class="axis-label">${esc(cfg.unit)}</text>`);
+    const y0 = y(0);
+    cats.forEach((c, i) => {
+      const cx = ml + (i + 0.5) * gw;
+      parts.push(rotate
+        ? `<text x="${cx}" y="${mt + ph + 12}" text-anchor="end" transform="rotate(-35 ${cx} ${mt + ph + 12})">${esc(c)}</text>`
+        : `<text x="${cx}" y="${mt + ph + 18}" text-anchor="middle">${esc(c)}</text>`);
+      cfg.series.forEach((s, j) => {
+        const v = s.values[i];
+        if (v == null) return;
+        const bx = gx(i) + j * (bw + 2), yv = y(v), top = Math.min(yv, y0), h = Math.max(Math.abs(y0 - yv), 1);
+        const r = Math.min(4, bw / 2, h);
+        const d = v >= 0
+          ? `M${bx} ${y0}V${top + r}Q${bx} ${top} ${bx + r} ${top}H${bx + bw - r}Q${bx + bw} ${top} ${bx + bw} ${top + r}V${y0}Z`
+          : `M${bx} ${y0}V${top + h - r}Q${bx} ${top + h} ${bx + r} ${top + h}H${bx + bw - r}Q${bx + bw} ${top + h} ${bx + bw} ${top + h - r}V${y0}Z`;
+        parts.push(`<path d="${d}" style="fill:${s.color}"/>`);
+      });
+    });
+    parts.push(`<line class="baseline-axis" x1="${ml}" x2="${W - mr}" y1="${y0}" y2="${y0}"/>`);
+    cats.forEach((c, i) => parts.push(`<rect class="hover-zone" data-i="${i}" x="${ml + i * gw}" y="${mt}" width="${gw}" height="${ph}" style="fill:transparent"/>`));
+    el.querySelector("svg")?.remove();
+    el.insertAdjacentHTML("afterbegin", `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="${esc(cfg.ariaLabel || "")}">${parts.join("")}</svg>`);
+    const svg = el.querySelector("svg");
+    const tt = tooltipEl(el);
+    svg.querySelectorAll(".hover-zone").forEach((z) => {
+      const show = (evt) => {
+        const i = Number(z.dataset.i);
+        const r = svg.getBoundingClientRect();
+        tt.innerHTML = `<div class="tt-title">${esc(cats[i])}</div>` + cfg.series.map((s) => `<div class="tt-row"><span><span class="swatch" style="background:${s.color}"></span>${esc(s.label)}</span><b>${s.values[i] == null ? "—" : esc(fmt(s.values[i]))}${cfg.unitShort ? ` ${esc(cfg.unitShort)}` : ""}</b></div>`).join("");
+        placeTooltip(el, tt, (ml + (i + 0.5) * gw) * (r.width / W), evt.clientY - r.top);
+        z.style.fill = "var(--accent-soft)";
+      };
+      z.addEventListener("pointermove", show);
+      z.addEventListener("pointerdown", show);
+      z.addEventListener("pointerleave", () => { tt.hidden = true; z.style.fill = "transparent"; });
+    });
   };
   onResize(el, draw);
 }

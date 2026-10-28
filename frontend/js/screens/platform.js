@@ -1,10 +1,10 @@
-// Screen 7: who the platform is for, how it is delivered (SaaS) and how it is protected.
+// Screen 10: who the platform is for, how it is delivered (SaaS) and how it is protected.
 import { CONFIG } from "../config.js";
 import { api } from "../api.js";
 import { esc, fmtInt } from "../format.js";
 import { END_USERS, ROLES, PERMISSIONS, SECURITY, SAAS } from "../platform-data.js";
-import { currentSession, currentRole, can, logout, minutesLeft, onAuth, authRequired } from "../auth.js";
-import { errorHTML, loadingHTML } from "../ui.js";
+import { currentSession, can, logout, minutesLeft, onAuth } from "../auth.js";
+import { errorHTML, loadingHTML, passPill } from "../ui.js";
 
 const yes = '<span class="perm yes" aria-label="Allowed">✓</span>';
 const no = '<span class="perm no" aria-label="Not allowed">—</span>';
@@ -15,7 +15,7 @@ export async function render(view) {
   view.innerHTML = `
     <div class="page-head">
       <div>
-        <p class="eyebrow">Screen 7 · Users, platform &amp; security</p>
+        <p class="eyebrow">Screen 10 · Users, platform &amp; security</p>
         <h1>Who it serves, how it's delivered, how it's protected</h1>
         <p class="lede">The intended end users and what each would use the simulator for, how it runs as an online service (SaaS), and the security measures that protect accounts and data.</p>
       </div>
@@ -34,20 +34,21 @@ export async function render(view) {
         <div><h3 class="h3">Service tiers</h3><div class="table-wrap"><table><thead><tr><th>Tier</th><th>For</th><th>Includes</th><th>Price</th></tr></thead>
           <tbody>${SAAS.tiers.map((t) => `<tr><td><b>${esc(t.name)}</b></td><td>${esc(t.who)}</td><td>${esc(t.includes)}</td><td>${esc(t.price)}</td></tr>`).join("")}</tbody></table></div></div>
         <div><h3 class="h3">How it runs</h3><ul class="plain small">${SAAS.delivery.map((d) => `<li>${esc(d)}</li>`).join("")}</ul>
-          <p class="small" style="margin-top:8px">Now: website ${CONFIG.API_MODE === "mock" ? "running on mock API files" : `connected to ${esc(CONFIG.API_BASE)}`}.</p></div>
+          <p class="small" style="margin-top:8px">Now: this website is served by the FastAPI backend and connected to <span class="mono">${esc(CONFIG.API_BASE)}</span> on the same address.</p></div>
       </div>
     </section>
 
     <section class="grid cols-2">
       <div class="panel">
         <div class="panel-head"><h2>Your session</h2></div>
-        ${authRequired() && s ? `<dl class="dl">
+        ${s ? `<dl class="dl">
           <dt>Signed in as</dt><dd>${esc(s.display_name)} (<span class="mono">${esc(s.username)}</span>)</dd>
           <dt>Role</dt><dd><span class="pill pill-good">${esc(ROLES[role].label)}</span> ${esc(ROLES[role].summary)}</dd>
           <dt>Signed in</dt><dd>${new Date(s.signedInAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</dd>
           <dt>Automatic sign-out</dt><dd id="pf-left">after ${minutesLeft()} more minutes without activity</dd>
+          <dt>Server session</dt><dd>Signed token, renewed by the server while you work; sign-out revokes it</dd>
         </dl><button class="btn" type="button" id="pf-signout" style="margin-top:12px">Sign out</button>`
-        : '<p class="small">Sign-in is turned off in this build (<span class="mono">CONFIG.AUTH.REQUIRED = false</span>).</p>'}
+        : ""}
       </div>
       <div class="panel">
         <div class="panel-head"><h2>What each role can do</h2></div>
@@ -59,13 +60,15 @@ export async function render(view) {
     <section class="panel">
       <div class="panel-head"><h2>Security measures</h2><span class="small">Protecting accounts, data, model and code</span></div>
       <div class="table-wrap"><table><thead><tr><th>Area</th><th>Measure</th><th>Status</th></tr></thead>
-        <tbody>${SECURITY.map((m) => `<tr><td><b>${esc(m.area)}</b></td><td>${esc(m.measure)}</td><td>${m.status === "app" ? '<span class="pill pill-good">Working now</span>' : '<span class="pill pill-neutral">Backend, planned</span>'}</td></tr>`).join("")}</tbody></table></div>
+        <tbody>${SECURITY.map((m) => `<tr><td><b>${esc(m.area)}</b></td><td>${esc(m.measure)}</td><td>${m.status === "app" ? '<span class="pill pill-good">Working now</span>' : '<span class="pill pill-neutral">At deployment</span>'}</td></tr>`).join("")}</tbody></table></div>
     </section>
 
     <section class="panel" id="pf-integrity">
       <div class="panel-head"><h2>Data integrity</h2><span class="small">SHA-256 checksums prove the files have not been altered</span></div>
       <div id="pf-int-body">${loadingHTML("Loading the checksum manifest…")}</div>
-    </section>`;
+    </section>
+    ${can("integrity") ? `<section class="panel" id="pf-audit"><div class="panel-head"><h2>Audit log</h2><span class="small">Newest first · sign-ins, scenario runs, exports, refused requests, integrity checks</span></div>
+      <div class="row" style="margin-bottom:10px"><button class="btn btn-sm" type="button" id="pf-audit-refresh">Refresh</button></div><div id="pf-audit-body">${loadingHTML()}</div></section>` : ""}`;
 
   view.querySelector("#pf-signout")?.addEventListener("click", () => logout("logout"));
   const off = onAuth((sess, why) => { if (why === "tick") { const el = view.querySelector("#pf-left"); if (el) el.textContent = `after ${minutesLeft()} more minutes without activity`; } });
@@ -73,24 +76,66 @@ export async function render(view) {
   const body = view.querySelector("#pf-int-body");
   try {
     const m = await api.integrity();
-    const files = m.files || [];
-    const admin = can("integrity");
-    body.innerHTML = `
-      <p>The manifest lists <b>${fmtInt(files.length)}</b> app and API files and <b>${fmtInt((m.dataset_files || []).length)}</b> dataset tables, each with its ${esc(m.algorithm)} fingerprint (dataset v${esc(m.dataset_version)}, made ${esc(m.generated_at)}). If even one byte of a file changes, its fingerprint no longer matches.</p>
-      <div class="row" style="margin-top:12px">
-        ${admin ? '<button class="btn btn-primary" type="button" id="pf-verify">Verify files now</button>' : `<span class="pill pill-neutral">Admin only</span><span class="small">Sign in as an admin to re-check the files.</span>`}
-        <span class="small" id="pf-int-status" role="status" aria-live="polite"></span>
-      </div>
-      <div id="pf-int-results" style="margin-top:12px"></div>
-      <details class="data-table" style="margin-top:8px"><summary>Dataset table fingerprints (checked by the backend)</summary>
-        <div class="table-wrap scroll-y" style="margin-top:8px"><table><thead><tr><th>Dataset file</th><th class="n">Size</th><th>SHA-256</th></tr></thead>
-        <tbody>${(m.dataset_files || []).map((f) => `<tr><td class="mono">${esc(f.path)}</td><td class="n">${fmtInt(f.bytes)} B</td><td class="mono small">${esc(f.sha256.slice(0, 16))}…</td></tr>`).join("") || '<tr><td colspan="3">Not included in this manifest.</td></tr>'}</tbody></table></div>
-        <p class="small" style="margin-top:6px">${esc(m.note || "")}</p></details>`;
-    body.querySelector("#pf-verify")?.addEventListener("click", () => verify(files, body));
+    const admin = can("integrity") && m.scope === "full";
+    const counts = admin ? m.files.reduce((a, f) => ({ ...a, [f.kind]: (a[f.kind] || 0) + 1 }), {}) : m.counts || {};
+    const total = admin ? m.files.length : m.total_files || 0;
+    body.innerHTML = m.available === false ? '<div class="state">The server has no checksum manifest yet. An admin can create it with <span class="mono">python -m backend.manage manifest</span>.</div>' : `
+      <p>The manifest lists <b>${fmtInt(total)}</b> files with their ${esc(m.algorithm)} fingerprints: ${Object.entries(counts).map(([k, n]) => `${fmtInt(n)} ${esc(k)}`).join(", ")} (dataset v${esc(m.dataset_version)}, made ${esc(m.generated_at)}). If even one byte of a file changes, its fingerprint no longer matches.</p>
+      ${admin ? `<div class="admin-actions" style="margin-top:12px">
+          <button class="btn btn-primary" type="button" id="pf-verify-server">Verify files on the server</button>
+          <button class="btn" type="button" id="pf-validate">Run validation scripts</button>
+          <button class="btn" type="button" id="pf-verify-browser">Re-check website files in this browser</button>
+        </div>
+        <p class="small" id="pf-int-status" role="status" aria-live="polite" style="margin-top:8px"></p>
+        <div id="pf-int-results" style="margin-top:12px"></div>`
+      : '<div class="row" style="margin-top:12px"><span class="pill pill-neutral">Admin only</span><span class="small">Sign in as an admin to re-check the files, run the validation scripts and read the audit log.</span></div>'}`;
+    if (admin) bindAdmin(body, m);
   } catch (err) {
     body.innerHTML = errorHTML(err);
   }
+  if (can("integrity")) {
+    const load = async () => {
+      const host = view.querySelector("#pf-audit-body");
+      if (!host) return;
+      try {
+        const log = await api.auditLog();
+        host.innerHTML = log.entries.length ? `<div class="table-wrap scroll-y"><table class="audit-table"><thead><tr><th>Time (UTC)</th><th>Action</th><th>User</th><th>Role</th><th>Result</th><th>Detail</th></tr></thead><tbody>
+          ${log.entries.map((e) => `<tr><td class="mono small">${esc(e.ts)}</td><td>${esc(e.action)}</td><td class="mono">${esc(e.user || "—")}</td><td>${esc(e.role || "—")}</td><td>${e.status === "ok" ? '<span class="pill pill-good">ok</span>' : `<span class="pill pill-warn">${esc(e.status)}</span>`}</td><td class="detail small">${esc(typeof e.detail === "object" && e.detail ? Object.entries(e.detail).map(([k, v]) => `${k}=${v}`).join(" ") : e.detail || "")}</td></tr>`).join("")}</tbody></table></div>` : '<p class="small">No entries yet.</p>';
+      } catch (err) { host.innerHTML = errorHTML(err); }
+    };
+    view.querySelector("#pf-audit-refresh")?.addEventListener("click", load);
+    load();
+  }
   return off;
+}
+
+function bindAdmin(body, manifest) {
+  const status = body.querySelector("#pf-int-status"), out = body.querySelector("#pf-int-results");
+  const buttons = [...body.querySelectorAll(".admin-actions button")];
+  const busy = (on) => buttons.forEach((b) => (b.disabled = on));
+  const run = async (label, fn) => {
+    busy(true);
+    status.textContent = label;
+    try { await fn(); } catch (err) { status.innerHTML = ""; out.innerHTML = errorHTML(err); } finally { busy(false); }
+  };
+  body.querySelector("#pf-verify-server").addEventListener("click", () => run("The server is re-computing every fingerprint…", async () => {
+    const r = await api.verifyIntegrity();
+    status.innerHTML = r.all_match ? `<span class="pill pill-good">All ${fmtInt(r.n_match)} files match</span> checked on the server ${new Date().toLocaleTimeString()}`
+      : `<span class="pill pill-crit">${fmtInt(r.n_files - r.n_match)} files changed or missing</span> ${fmtInt(r.n_match)} of ${fmtInt(r.n_files)} match`;
+    const rows = [...r.results].sort((a, b) => a.match - b.match);
+    out.innerHTML = `<div class="table-wrap scroll-y"><table><thead><tr><th>File</th><th>Kind</th><th>Result</th></tr></thead><tbody>${rows.map((f) => `<tr><td class="mono small">${esc(f.path)}</td><td>${esc(f.kind)}</td><td>${f.match ? '<span class="pill pill-good">✓ matches</span>' : f.missing ? '<span class="pill pill-warn">missing</span>' : '<span class="pill pill-crit">✗ changed</span>'}</td></tr>`).join("")}</tbody></table></div>
+      ${r.unlisted_files?.length ? `<p class="small" style="margin-top:6px">${r.unlisted_files.length} files are not in the manifest yet: ${r.unlisted_files.slice(0, 6).map(esc).join(", ")}${r.unlisted_files.length > 6 ? "…" : ""}</p>` : ""}`;
+  }));
+  body.querySelector("#pf-validate").addEventListener("click", () => run("Running src/verify_semantics.py, the engine check and the unit tests on the server…", async () => {
+    const r = await api.runValidation();
+    status.innerHTML = `${r.all_pass ? '<span class="pill pill-good">All checks pass</span>' : '<span class="pill pill-crit">Some checks failed</span>'} ${r.semantic.passed} of ${r.semantic.total} semantic checks PASS · ${r.passed} of ${r.total} in total · ${r.seconds} s`;
+    const groups = [...new Set(r.checks.map((c) => c.group))];
+    out.innerHTML = groups.map((g) => `<h3 class="h3" style="margin-top:10px">${esc(g)}</h3><ul class="check-list">${r.checks.filter((c) => c.group === g).map((c) => `<li>${passPill(c.pass, "PASS", "FLAG")}<div><b>${esc(c.name)}</b>${c.detail ? `<div class="small">${esc(c.detail)}</div>` : ""}</div></li>`).join("")}</ul>`).join("");
+  }));
+  body.querySelector("#pf-verify-browser").addEventListener("click", () => run("Fetching each website file…", async () => {
+    const files = manifest.files.filter((f) => f.kind === "frontend" && f.url);
+    await verifyInBrowser(files, status, out);
+  }));
 }
 
 async function sha256Hex(buf) {
@@ -98,9 +143,7 @@ async function sha256Hex(buf) {
   return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-async function verify(files, body) {
-  const btn = body.querySelector("#pf-verify"), status = body.querySelector("#pf-int-status"), out = body.querySelector("#pf-int-results");
-  btn.disabled = true;
+async function verifyInBrowser(files, status, out) {
   const rows = [];
   let ok = 0, bad = 0, miss = 0;
   for (let i = 0; i < files.length; i++) {
@@ -114,10 +157,9 @@ async function verify(files, body) {
     if (state === "ok") ok++; else if (state === "bad") bad++; else miss++;
     rows.push({ f, state });
   }
-  btn.disabled = false;
   status.innerHTML = bad || miss
     ? `<span class="pill pill-crit">${bad} changed, ${miss} unreachable</span> ${ok} of ${files.length} match`
-    : `<span class="pill pill-good">All ${ok} files match</span> checked ${new Date().toLocaleTimeString()}`;
+    : `<span class="pill pill-good">All ${ok} website files match</span> checked in this browser ${new Date().toLocaleTimeString()}`;
   const order = { bad: 0, miss: 1, ok: 2 };
   rows.sort((a, b) => order[a.state] - order[b.state]);
   out.innerHTML = `<div class="table-wrap scroll-y"><table><thead><tr><th>File</th><th class="n">Size</th><th>Result</th></tr></thead><tbody>${rows.map(({ f, state }) => `<tr><td class="mono small">${esc(f.url)}</td><td class="n">${fmtInt(f.bytes)} B</td><td>${state === "ok" ? '<span class="pill pill-good">✓ matches</span>' : state === "bad" ? '<span class="pill pill-crit">✗ changed</span>' : '<span class="pill pill-warn">unreachable</span>'}</td></tr>`).join("")}</tbody></table></div>`;

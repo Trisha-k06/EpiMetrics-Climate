@@ -5,6 +5,13 @@ import { timeChart, recoveryTrack } from "./charts.js";
 import { setSelection } from "./state.js";
 
 export const COLORS = { baseline: "var(--baseline)", scenario: "var(--scenario)", threshold: "var(--threshold)" };
+// Categorical series colours (validated palette, fixed order; never cycled). Diseases keep one colour everywhere.
+export const CAT = ["var(--c1)", "var(--c2)", "var(--c3)", "var(--c4)", "var(--c5)", "var(--c6)", "var(--c7)"];
+export const DISEASE_COLORS = { dengue: "var(--c3)", malaria: "var(--c7)" };
+
+export function passPill(ok, yes = "PASS", no = "FAIL") {
+  return ok ? `<span class="pill pill-good">✓ ${esc(yes)}</span>` : `<span class="pill pill-crit">✗ ${esc(no)}</span>`;
+}
 
 export function loadingHTML(label = "Loading data…") {
   return `<div class="state" aria-busy="true"><div class="skeleton" style="width:100%;height:14px"></div><div class="skeleton" style="width:70%;height:14px"></div><span class="small">${esc(label)}</span></div>`;
@@ -24,6 +31,22 @@ export function selectorsHTML(meta, sel, { idPrefix = "s" } = {}) {
 
 export function scenarioSelectHTML(meta, sel, idPrefix = "s") {
   return `<div class="field"><label for="${idPrefix}-scenario">Climate scenario</label><select id="${idPrefix}-scenario" data-key="scenario">${meta.scenarios.map((s) => `<option value="${esc(s.id)}" ${s.id === sel.scenario ? "selected" : ""}>${esc(s.label)}</option>`).join("")}</select></div>`;
+}
+
+export function maskSelectHTML(meta, sel, idPrefix = "s") {
+  return `<div class="field"><label for="${idPrefix}-mask">Reporting completeness</label><select id="${idPrefix}-mask" data-key="mask">${meta.masks.map((m) => `<option value="${esc(m.id)}" ${m.id === (sel.mask || "none") ? "selected" : ""} title="${esc(m.description)}">${esc(m.label)}</option>`).join("")}</select></div>`;
+}
+
+/** Runs of consecutive months where a series has no value (masked reporting). Display only. */
+export function gapRuns(months, ...arrays) {
+  const out = [];
+  let start = -1;
+  for (let i = 0; i <= months.length; i++) {
+    const missing = i < months.length && arrays.some((a) => a[i] == null);
+    if (missing && start < 0) start = i;
+    if (!missing && start >= 0) { out.push({ start: months[start], end: months[i - 1], n: i - start }); start = -1; }
+  }
+  return out;
 }
 
 export function bindSelects(root) {
@@ -89,13 +112,14 @@ export function kpiCardsHTML(sim, meta) {
   </div>`;
 }
 
-function legendHTML(isBase) {
+function legendHTML(isBase, hasGaps) {
   return `<div class="chart-legend" aria-hidden="true">
     <span><span class="swatch swatch-baseline"></span>Baseline climate (S0)</span>
     ${isBase ? "" : '<span><span class="swatch swatch-scenario"></span>Scenario climate</span>'}
     <span><span class="swatch swatch-line"></span>Endemic threshold</span>
     <span><span class="swatch swatch-anomaly"></span>Climate anomaly window</span>
     <span><svg width="12" height="12" aria-hidden="true"><circle cx="6" cy="6" r="5" style="fill:var(--scenario)"/></svg>Secondary-wave peak</span>
+    ${hasGaps ? '<span><span class="swatch swatch-gap"></span>Months with no reported cases (gap)</span>' : ""}
   </div>`;
 }
 
@@ -118,9 +142,14 @@ export function renderSimulationView(root, sim, meta, { range = "focus", climate
   const dis = byId(meta.diseases, sim.request.disease);
   const rec = sim.recovery;
   const bands = sim.anomaly_windows.map((a) => ({ start: a.start_month, end: a.end_month, label: "" }));
+  const gaps = gapRuns(months, sim.series.baseline.observed_cases, sim.series.scenario.observed_cases);
+  const caseBands = [...bands, ...gaps.map((g) => ({ start: g.start, end: g.end, label: g.n >= 3 ? "no data" : "", fill: "var(--gap)", stroke: "var(--ink-3)" }))];
+  const insufficient = rec.scenario.status === "insufficient_data" || rec.baseline.status === "insufficient_data";
 
   root.innerHTML = `
-    ${legendHTML(isBase)}
+    ${insufficient ? `<div class="callout callout-warn" role="note" style="margin-bottom:10px"><b>Insufficient data.</b> More than ${Math.round(meta.recovery_rule.max_missing_frac * 100)}% of the months after the reference peak have no reported cases, so the recovery engine gives no recovery time instead of guessing.</div>` : ""}
+    ${gaps.length ? `<p class="small" style="margin-bottom:6px">${gaps.reduce((a, g) => a + g.n, 0)} months have no reported cases under “${esc(byId(meta.masks, sim.request.mask || "none")?.label || "")}”. The lines break there; nothing is filled in.</p>` : ""}
+    ${legendHTML(isBase, gaps.length > 0)}
     <div id="${idPrefix}-cases"></div>
     <div class="small" style="margin:10px 0 2px">Recovery timeline from the reference peak (t0)</div>
     <div id="${idPrefix}-track"></div>
@@ -140,6 +169,7 @@ export function renderSimulationView(root, sim, meta, { range = "focus", climate
   const notesAt = (m) => {
     const out = [];
     if (m === sim.reference.t0_month) out.push("t0: reference outbreak peak (baseline)");
+    if (gaps.some((g) => m >= g.start && m <= g.end)) out.push("No reported cases this month (masked)");
     if (sim.anomaly_windows.some((a) => m >= a.start_month && m <= a.end_month)) out.push("Climate anomaly active");
     if (m === rec.baseline.recovery_month) out.push("Baseline: sustained recovery begins");
     if (!isBase && m === rec.scenario.recovery_month) out.push("Scenario: sustained recovery begins");
@@ -151,7 +181,7 @@ export function renderSimulationView(root, sim, meta, { range = "focus", climate
 
   timeChart(root.querySelector(`#${idPrefix}-cases`), {
     months, range: R, unit: "Cases / month", series, steps: { label: "Threshold", values: sim.threshold_cases, color: COLORS.threshold },
-    bands, vlines, markers, notesAt,
+    bands: caseBands, vlines, markers, notesAt,
     ariaLabel: `Monthly ${dis?.name} cases in ${dist?.name}, baseline${isBase ? "" : ` versus ${scen?.label}`}, with the endemic threshold, t0 peak, recovery months and secondary waves.`,
   });
   recoveryTrack(root.querySelector(`#${idPrefix}-track`), {

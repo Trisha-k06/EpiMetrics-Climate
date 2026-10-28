@@ -4,9 +4,11 @@ from pathlib import Path
 
 import pytest
 
-# Configure before the app is imported: no background warm-up, throwaway users file.
+# Configure before the app is imported: no background warm-up, throwaway users file and audit log.
 os.environ.setdefault("EPIMETRICS_WARM", "0")
-os.environ["EPIMETRICS_USERS_FILE"] = str(Path(tempfile.mkdtemp()) / "users.json")
+_TMP = Path(tempfile.mkdtemp())
+os.environ["EPIMETRICS_USERS_FILE"] = str(_TMP / "users.json")
+os.environ["EPIMETRICS_AUDIT_FILE"] = str(_TMP / "audit.jsonl")
 
 from fastapi.testclient import TestClient  # noqa: E402
 

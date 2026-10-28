@@ -15,7 +15,7 @@ import jwt
 BACKEND = Path(__file__).resolve().parent
 USERS_FILE = Path(os.environ.get("EPIMETRICS_USERS_FILE", BACKEND / "users.json"))
 LOG_DIR = BACKEND / "logs"
-AUDIT_FILE = LOG_DIR / "audit.jsonl"
+AUDIT_FILE = Path(os.environ.get("EPIMETRICS_AUDIT_FILE", LOG_DIR / "audit.jsonl"))
 
 ROLES = ("viewer", "analyst", "admin")
 PBKDF2_ITERATIONS = 200_000

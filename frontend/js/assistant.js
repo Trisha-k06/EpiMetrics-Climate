@@ -7,7 +7,7 @@ import { esc, monthLabel, byId, tsrText, deltaText, anomalyText, plural } from "
 import { END_USERS, ROLES, SECURITY, SAAS } from "./platform-data.js";
 import { currentSession } from "./auth.js";
 
-const SUGGESTIONS = ["What is TSR?", "Why does recovery take longer here?", "What does censored mean?", "Which scenario delays Chennai most?", "Who is this for?", "Is this real data?"];
+const SUGGESTIONS = ["What is TSR?", "Why does recovery take longer here?", "Which forecast model is best?", "How many outbreak episodes?", "Which scenario delays Chennai most?", "What does censored mean?", "Is this real data?"];
 
 const DISTRICT_ALIASES = { chennai: "chn", madras: "chn", coimbatore: "cbe", kovai: "cbe", madurai: "mdu", trichy: "try", tiruchi: "try", tiruchirappalli: "try", tiruchirapalli: "try", thanjavur: "tnj", tanjore: "tnj" };
 const SCENARIO_ALIASES = [
@@ -66,6 +66,21 @@ async function worstScenario(meta, sel) {
   return `For <b>${esc(dis.name)} in ${esc(dist.name)}</b>, the longest delay comes from <b>${esc(label(top))}</b>: ${esc(show(top))} months. All scenarios: ${cells.map((c) => `${esc(label(c))} ${esc(show(c))}`).join(" · ")}.<br>${link("recovery", "Compare on the district map", { district: sel.district, disease: sel.disease, scenario: top.scenario })}`;
 }
 
+async function bestModel(meta, sel) {
+  const f = await api.forecasts({ district: sel.district, disease: sel.disease });
+  const dist = byId(meta.districts, sel.district), dis = byId(meta.diseases, sel.disease);
+  const ranked = [...f.models].sort((a, b) => a.mae - b.mae);
+  const naive = f.models.find((m) => m.id === "seasonal_naive");
+  return `For <b>${esc(dis.name)} in ${esc(dist.name)}</b> (test months 2022–2024, from the API), the lowest error comes from <b>${esc(f.best_model.label)}</b>: mean absolute error ${f.best_model.mae.toFixed(3)} cases per 100,000, against ${naive.mae.toFixed(3)} for the seasonal-naive benchmark. Ranking: ${ranked.map((m) => `${esc(m.label)} ${m.mae.toFixed(3)}`).join(" · ")}.<br>Every model errs most in outbreak months, and these are benchmarks: the project's outcome is recovery time, not case counts.<br>${link("models", "Open Forecast models", { district: sel.district, disease: sel.disease })}`;
+}
+
+async function episodeCount(meta, sel) {
+  const e = await api.episodes({ disease: sel.disease });
+  const t = e.totals, m = e.matched;
+  const base = e.by_scenario.filter((r) => r.scenario === "baseline").map((r) => `${esc(byId(meta.diseases, r.disease)?.name)} ${r.episodes}`).join(", ");
+  return `Across all 70 series (5 districts × 2 diseases × 7 scenarios, 2015–2024) there are <b>${t.episodes} outbreak episodes</b>: ${t.recovered} recovered and ${t.unresolved} unresolved at the end of the data, with ${t.interruptions} recovery interruptions. Under the baseline climate: ${base}. ${m.matched_episodes} of ${m.climate_episodes} climate-scenario episodes match a baseline episode's start month; their mean recovery delay is ${m.mean_delta_tsr_months.toFixed(2)} months.<br>${link("episodes", "Open Outbreak episodes")}`;
+}
+
 async function answer(meta, raw) {
   const q = norm(raw);
   if (!q) return "Type a question, or choose one of the suggestions.";
@@ -77,6 +92,8 @@ async function answer(meta, raw) {
   }
   const e = entities(q);
   const sel = { ...getSelection(), ...e };
+  if (/\b(forecast|forecasting|model|models|arima|sarima|sarimax|random forest|mae|rmse|predict)\b/.test(q)) return bestModel(meta, sel);
+  if (/\bepisodes?\b|how many outbreaks/.test(q)) return episodeCount(meta, sel);
   const dataQ = /\b(why|delay|longer|tsr|recover|how long|interrupt|wave|result|months?)\b|δ|\+\d+/.test(q);
   const askingDefinition = /\b(what is|what are|what does|define|meaning|mean)\b/.test(q);
   if (/\b(most|worst|longest|biggest|highest|which scenario)\b/.test(q)) return worstScenario(meta, sel);
@@ -105,10 +122,10 @@ async function answer(meta, raw) {
     const s = currentSession();
     return `${SECURITY.filter((m) => m.status === "app").map((m) => `<b>${esc(m.area)}</b>: ${esc(m.measure)}`).join("<br>")}${s ? `<br>You are signed in as <b>${esc(ROLES[s.role].label)}</b>.` : ""}<br>${link("platform", "Open Users & security")}`;
   }
-  if (/pdf|export|download|report|print/.test(q)) return `Analysts and admins can export: the Scenario report screen saves one scenario (PDF, JSON, CSV), and the Technology screen exports a 7-page summary of the whole project. ${link("report", "Open Scenario report")}`;
+  if (/pdf|export|download|report|print/.test(q)) return `Analysts and admins can export: the Scenario report screen saves one scenario (PDF, JSON, CSV, print), and the Technology screen exports a summary PDF of the whole project. The server checks the role and logs every export first. ${link("report", "Open Scenario report")}`;
   if (/limit|weak|caveat|assumption/.test(q)) return meta.limitations.slice(0, 5).map((l) => `• ${esc(l)}`).join("<br>") + `<br>${link("validation", "All limitations")}`;
   if (/how (do|to)|use|navigate|screen|start|help/.test(q)) return `Start on the <b>Scenario simulator</b>: choose a district, disease and climate scenario, then read the KPI cards (TSR, ΔTSR, interruptions, status). The <b>Recovery & recurrence</b> screen compares every district on a map. ${link("simulator", "Open the simulator")}`;
-  return `I can answer questions about TSR, ΔTSR, thresholds, secondary waves, the scenarios, results for a district ("Why is the delay in Coimbatore dengue so long?"), validation, security and who the tool is for. I'm a basic assistant, so please rephrase or pick a suggestion.`;
+  return `I can answer questions about TSR, ΔTSR, thresholds, secondary waves, the scenarios, results for a district ("Why is the delay in Coimbatore dengue so long?"), forecast models, outbreak episodes, validation, security and who the tool is for. I'm a basic assistant, so please rephrase or pick a suggestion.`;
 }
 
 export function mountAssistant(meta) {

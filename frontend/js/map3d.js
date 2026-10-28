@@ -1,8 +1,9 @@
 // 3D map of Tamil Nadu's real districts (Three.js / WebGL) with a 2D SVG fallback.
 // Boundaries: Census 2011, DataMeet India community (CC BY 4.0), simplified. Study districts are raised,
-// coloured by the chosen result and carry a pole; every value shown comes from the API (mapValuesFromCells).
+// coloured by the chosen layer and carry a pole; every value shown comes from the API
+// (mapValuesFromCells for /recovery-matrix results, mapValuesFromProfiles for /districts profiles).
 import { token, currentTheme } from "./theme.js";
-import { esc } from "./format.js";
+import { esc, fmtInt, monthLabel } from "./format.js";
 
 const K = 1.15;
 let geoPromise = null;
@@ -61,7 +62,8 @@ function legendHTML(legend) {
   return `<p class="ml-title">${esc(legend.title)}</p>
     <div class="ml-scale"><div class="ml-bar" style="background:linear-gradient(to top, ${stops})"></div><div class="ml-ticks">${ticks}</div></div>
     ${legend.divergent ? `<p class="ml-row"><span class="ml-sw" style="background:${COOL[2]}"></span>faster than baseline</p>` : ""}
-    <p class="ml-row"><span class="ml-sw ml-hatch"></span>not recovered: value is a minimum</p>`;
+    ${legend.censoredNote === false ? "" : '<p class="ml-row"><span class="ml-sw ml-hatch"></span>not recovered: value is a minimum</p>'}
+    ${legend.note ? `<p class="ml-row">${esc(legend.note)}</p>` : ""}`;
 }
 
 function insetSVG(geo) {
@@ -99,6 +101,20 @@ export async function createDistrictMap(container, districts, opts = {}) {
     <div class="map-tip" hidden></div>`;
   const legendEl = container.querySelector(".map-legend");
   const tipEl = container.querySelector(".map-tip");
+  // Hover card: the district profile from the API (opts.tipFor), or just the district name.
+  function showTip(id, name, anchorEl, x, y) {
+    const html = id && opts.tipFor ? opts.tipFor(id) : null;
+    if (html) tipEl.innerHTML = html; else tipEl.textContent = id ? `${name} · study district, select for details` : `${name} · not in this study`;
+    tipEl.classList.toggle("map-tip-card", !!html);
+    tipEl.hidden = false;
+    const r = container.getBoundingClientRect();
+    let px = x, py = y;
+    if (anchorEl) { const a = anchorEl.getBoundingClientRect(); px = a.left - r.left + a.width / 2; py = a.bottom - r.top + 6; }
+    const w = tipEl.offsetWidth, h = tipEl.offsetHeight;
+    const left = Math.max(4, Math.min(px + 12, r.width - w - 4));
+    const top = Math.max(4, Math.min(py + 12, r.height - h - 4));
+    tipEl.style.transform = `translate(${left}px, ${top}px)`;
+  }
   const geoLabels = [];
   const addGeoLabel = (text, lonlat, cls) => {
     const el = document.createElement("span");
@@ -126,6 +142,8 @@ export async function createDistrictMap(container, districts, opts = {}) {
     b.setAttribute("aria-pressed", "false");
     b.innerHTML = `<span>${esc(d.name)}</span>`;
     b.addEventListener("click", () => opts.onSelect?.(d.id));
+    b.addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse") showTip(d.id, null, b); });
+    b.addEventListener("pointerleave", () => { tipEl.hidden = true; });
     labelsHost.appendChild(b);
     labels.set(d.id, b);
   }
@@ -138,7 +156,7 @@ export async function createDistrictMap(container, districts, opts = {}) {
 
   let THREE = null;
   if (webglAvailable()) { try { THREE = await loadThree(); } catch { THREE = null; } }
-  if (!THREE) return fallback2D(container, geo, proj, study, labels, setLabel, legendEl, opts);
+  if (!THREE) return fallback2D(container, geo, proj, study, labels, setLabel, legendEl, showTip, tipEl);
 
   // ---------- scene ----------
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -299,9 +317,7 @@ export async function createDistrictMap(container, districts, opts = {}) {
     const hit = pick(e);
     if (!hit) { tipEl.hidden = true; el.style.cursor = ""; return; }
     const r = container.getBoundingClientRect();
-    tipEl.textContent = hit.id ? `${hit.name} · study district, select for details` : `${hit.name} · not in this study`;
-    tipEl.style.transform = `translate(${e.clientX - r.left + 12}px, ${e.clientY - r.top + 12}px)`;
-    tipEl.hidden = false;
+    showTip(hit.id, hit.name, null, e.clientX - r.left, e.clientY - r.top);
     el.style.cursor = hit.id ? "pointer" : "";
   });
   el.addEventListener("pointerup", (e) => {
@@ -456,7 +472,7 @@ export async function createDistrictMap(container, districts, opts = {}) {
 }
 
 // ---------- 2D fallback (no WebGL) ----------
-function fallback2D(container, geo, proj, study, labels, setLabel, legendEl) {
+function fallback2D(container, geo, proj, study, labels, setLabel, legendEl, showTip, tipEl) {
   const [vx0, vy0, vx1, vy1] = geo.view;
   const [x0, y0] = proj(vx0 + 1.2, vy0 + 0.5), [x1, y1] = proj(vx1 - 1.2, vy1 - 0.5);
   const W = 400, H = (W * (y1 - y0)) / (x1 - x0);
@@ -470,6 +486,14 @@ function fallback2D(container, geo, proj, study, labels, setLabel, legendEl) {
   svg.innerHTML = geo.neighbours.map((n) => `<path d="${path(n.polygons)}" class="m2-nb"/>`).join("") +
     geo.districts.map((d) => `<path d="${path(d.polygons)}" class="m2-d" ${distIds.has(d) ? `data-id="${distIds.get(d)}"` : ""}><title>${esc(d.name)}</title></path>`).join("");
   container.insertBefore(svg, container.firstChild);
+  svg.setAttribute("aria-hidden", "true");
+  svg.addEventListener("pointermove", (e) => {
+    const p = e.target.closest?.("path.m2-d");
+    if (!p || e.pointerType !== "mouse") { tipEl.hidden = true; return; }
+    const r = container.getBoundingClientRect();
+    showTip(p.dataset.id || null, p.querySelector("title")?.textContent || "", null, e.clientX - r.left, e.clientY - r.top);
+  });
+  svg.addEventListener("pointerleave", () => { tipEl.hidden = true; });
   container.querySelector(".map-compass")?.remove();
   container.querySelector(".map-scale")?.remove();
   const place = () => {
@@ -537,4 +561,48 @@ export function mapValuesFromCells(cells, scenarioId, metric = "delta") {
   }
   for (const v of Object.values(values)) v.color = valueColor(v.value, legend);
   return { values, legend };
+}
+
+/** Map layers. "result" uses /recovery-matrix; the others use the district profiles from /districts. */
+export const MAP_LAYERS = [
+  { id: "result", label: "Recovery result" },
+  { id: "peak", label: "Outbreak peak per 100k" },
+  { id: "flood", label: "Flood exposure" },
+  { id: "density", label: "Population density" },
+];
+
+/** Map values for a profile layer from /districts (display only). Returns { values, legend }. */
+export function mapValuesFromProfiles(profiles, layer, disease) {
+  const pick = {
+    peak: (d) => d.outbreak_peak?.[disease]?.per_100k,
+    flood: (d) => d.flood_exposure_index,
+    density: (d) => d.population_density_per_km2,
+  }[layer];
+  const vals = profiles.map((d) => [d.id, pick(d)]).filter(([, v]) => v != null);
+  const max = Math.max(...vals.map(([, v]) => v), 1e-9);
+  const round = (v, nd) => Math.round(v * 10 ** nd) / 10 ** nd;
+  const cfg = {
+    peak: { title: `Reference outbreak peak, ${disease} cases per 100,000`, text: (v) => `${round(v, 1)}`, sub: "per 100k at t0", nd: 1 },
+    flood: { title: "Flood exposure index (0–1, synthetic profile)", text: (v) => round(v, 2).toFixed(2), sub: "flood exposure", nd: 2 },
+    density: { title: "Population density (people per km²)", text: (v) => fmtInt(v), sub: "per km²", nd: 0 },
+  }[layer];
+  const legend = { title: cfg.title, max, ticks: [0, 0.25, 0.5, 0.75, 1].map((f) => (layer === "density" ? fmtInt(Math.round(max * f)) : String(round(max * f, cfg.nd)))),
+    censoredNote: false, note: layer === "flood" ? "Recorded in the dataset but not used by generator v0.1.0" : null };
+  const values = {};
+  for (const [id, v] of vals) values[id] = { height: (v / max) * 2.2, value: v, text: cfg.text(v), sub: cfg.sub, censored: false, color: valueColor(v, legend) };
+  return { values, legend };
+}
+
+/** Hover card with the district profile from /districts (all synthetic or illustrative values). */
+export function districtTip(d, extra = "") {
+  if (!d) return "";
+  const peak = Object.entries(d.outbreak_peak || {}).map(([k, p]) => `<div class="tt-row"><span>${esc(k[0].toUpperCase() + k.slice(1))} peak (${esc(monthLabel(p.t0_month, "short"))})</span><b>${esc(p.per_100k)} /100k</b></div>`).join("");
+  return `<div class="tt-title">${esc(d.name)} <span class="small">· ${esc(d.climate_zone)}</span></div>
+    <div class="tt-row"><span>Population (illustrative)</span><b>${fmtInt(d.population_illustrative)}</b></div>
+    <div class="tt-row"><span>Density per km²</span><b>${fmtInt(d.population_density_per_km2)}</b></div>
+    <div class="tt-row"><span>Urbanisation</span><b>${esc(d.urbanisation_pct)}%</b></div>
+    <div class="tt-row"><span>Flood exposure</span><b>${esc(d.flood_exposure_index)}</b></div>
+    <div class="tt-row"><span>Drainage index</span><b>${esc(d.drainage_index)}</b></div>
+    <div class="tt-row"><span>Water storage index</span><b>${esc(d.water_storage_index)}</b></div>
+    ${peak}${extra}<div class="small" style="margin-top:4px">Synthetic profile · select to open</div>`;
 }
