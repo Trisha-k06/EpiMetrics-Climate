@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import threading
 import time
 import warnings
@@ -23,8 +24,9 @@ import pandas as pd
 
 from .data import API_VERSION, CLIMATE_VARS, DATASET_VERSION, Store
 from .jsonutil import clean, num
+from .paths import state_path
 
-CACHE_DIR = Path(__file__).resolve().parent / "cache"
+CACHE_DIR = Path(os.environ.get("EPIMETRICS_CACHE_DIR", state_path("cache", Path(__file__).resolve().parent / "cache")))
 TEST_START = "2022-01"
 LAGS = range(4)
 SCENARIO_ORDER = ["baseline", "delayed_monsoon", "heavy_rain_decline", "irregular_rain", "prolonged_wet", "warm_wet", "warmer"]

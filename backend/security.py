@@ -12,9 +12,11 @@ from pathlib import Path
 
 import jwt
 
+from .paths import state_path
+
 BACKEND = Path(__file__).resolve().parent
-USERS_FILE = Path(os.environ.get("EPIMETRICS_USERS_FILE", BACKEND / "users.json"))
-LOG_DIR = BACKEND / "logs"
+USERS_FILE = Path(os.environ.get("EPIMETRICS_USERS_FILE", state_path("users.json", BACKEND / "users.json")))
+LOG_DIR = state_path("logs", BACKEND / "logs")
 AUDIT_FILE = Path(os.environ.get("EPIMETRICS_AUDIT_FILE", LOG_DIR / "audit.jsonl"))
 
 from .roles import ROLE_IDS as ROLES  # noqa: E402  (single source: backend/roles.py)

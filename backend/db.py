@@ -14,7 +14,9 @@ from collections import Counter, defaultdict
 from contextlib import contextmanager
 from pathlib import Path
 
-DB_FILE = Path(os.environ.get("EPIMETRICS_DB_FILE", Path(__file__).resolve().parent / "app.db"))
+from .paths import state_path
+
+DB_FILE = Path(os.environ.get("EPIMETRICS_DB_FILE", state_path("app.db", Path(__file__).resolve().parent / "app.db")))
 RETENTION_DAYS = int(os.environ.get("EPIMETRICS_EVENT_RETENTION_DAYS", "180"))
 
 MIGRATIONS = [

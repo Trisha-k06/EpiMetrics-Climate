@@ -2,7 +2,7 @@
  "synthetic": true,
  "algorithm": "SHA-256",
  "dataset_version": "0.1.1",
- "generated_at": "2026-10-28T15:57:04Z",
+ "generated_at": "2026-10-29T02:44:13Z",
  "files": [
   {
    "kind": "frontend",
@@ -369,8 +369,8 @@
   {
    "kind": "backend",
    "path": "backend/analytics.py",
-   "bytes": 36482,
-   "sha256": "a9d972697979284d5298d98d5236672a31749989aba66b4c050b60a868e214da"
+   "bytes": 36589,
+   "sha256": "db6786c0afd33be4db0a405780539705148550a840ac06e41c046fb2a5345d03"
   },
   {
    "kind": "backend",
@@ -381,8 +381,8 @@
   {
    "kind": "backend",
    "path": "backend/backup.py",
-   "bytes": 5121,
-   "sha256": "b4cac8807113e55142931db63ff89a1dbc409bbfbaff3409ca8862f855a6631a"
+   "bytes": 5174,
+   "sha256": "12412a04acc627cf0beba5d25374b3caa38cf0eca4f95f4a0c647b09c88cb891"
   },
   {
    "kind": "backend",
@@ -399,8 +399,8 @@
   {
    "kind": "backend",
    "path": "backend/db.py",
-   "bytes": 14121,
-   "sha256": "c39b353b9c9f145d9f1710c436fd3d3f43254e24579de92a0760cdb716a3226e"
+   "bytes": 14174,
+   "sha256": "8b7ee4e1b6e6bf476ba14d7d540667e2654107f72b140b570ad3de8f0ac3ebfc"
   },
   {
    "kind": "backend",
@@ -419,6 +419,12 @@
    "path": "backend/manage.py",
    "bytes": 4830,
    "sha256": "324dfe37d7333fbf88e1a46abedfac2e1688cf9f71c1612499f6295f9bb97902"
+  },
+  {
+   "kind": "backend",
+   "path": "backend/paths.py",
+   "bytes": 850,
+   "sha256": "9314e49af6f3106d149466047d3a4751fc170bf06b5da2b263beeb25919a4e78"
   },
   {
    "kind": "backend",
@@ -447,8 +453,8 @@
   {
    "kind": "backend",
    "path": "backend/security.py",
-   "bytes": 13712,
-   "sha256": "a6b74af7eb8f690d25ec1957634621c9ce09b3b6daaa0820d2e5b7b4c01eec9b"
+   "bytes": 13789,
+   "sha256": "564bc943371e14b6e7ee8ba06feb3338ba0da0ce565a41f516691e4e5680c761"
   },
   {
    "kind": "backend",

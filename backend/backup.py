@@ -15,8 +15,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from .data import ROOT
+from .paths import state_path
 
-BACKUP_DIR = Path(os.environ.get("EPIMETRICS_BACKUP_DIR", ROOT / "backups"))
+BACKUP_DIR = Path(os.environ.get("EPIMETRICS_BACKUP_DIR", state_path("backups", ROOT / "backups")))
 KEEP = 14
 
 

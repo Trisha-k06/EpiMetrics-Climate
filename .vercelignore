@@ -1,0 +1,24 @@
+# Local environments and caches
+.venv/
+venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.env
+.env.*
+.claude/
+.DS_Store
+
+# Not needed at runtime (backend/tests stays: the integrity manifest covers it)
+/notebooks/
+/tests/
+
+# Local runtime state: never ship accounts, the database, logs, caches or backups
+backend/users.json
+backend/users.tmp
+backend/app.db
+backend/app.db-wal
+backend/app.db-shm
+backend/logs/
+backend/cache/
+backups/

@@ -26,6 +26,8 @@ background (cached in `backend/cache/`; `/api/v1/health` reports `models_ready`)
 | `EPIMETRICS_SESSION_MINUTES` | 15 | Sliding session length |
 | `EPIMETRICS_BACKUP_HOURS` | off | Automatic backup every N hours (also runs the usage-event purge) |
 | `EPIMETRICS_EVENT_RETENTION_DAYS` | 180 | Usage events older than this are deleted |
+| `EPIMETRICS_DB_FILE`, `EPIMETRICS_USERS_FILE`, `EPIMETRICS_AUDIT_FILE`, `EPIMETRICS_CACHE_DIR`, `EPIMETRICS_BACKUP_DIR` | under `backend/` and `backups/` | Where runtime state is written, one file or folder each |
+| `EPIMETRICS_STATE_DIR` | `/tmp/epimetrics` on Vercel, otherwise unset | One folder for all runtime state on read-only hosts. On Vercel `/tmp` is per instance and wiped on cold starts, so accounts, comments and usage events do not persist there; set `EPIMETRICS_SECRET` so sessions work across instances |
 
 ### Four experiences, one role matrix
 
@@ -77,6 +79,7 @@ response that is not marked `"synthetic": true`. The JSON shapes are in `fronten
 ### Tests and maintenance
 
 ```bash
+pip install -r requirements-dev.txt         # runtime + pytest, httpx, playwright, pypdf
 pytest -q                                   # role × endpoint matrix, notebook numbers, comments, backups, ...
 python -m playwright install chromium
 python tests/e2e.py                         # browser test: 4 roles × their screens × 2 sizes × Day/Night, plus the flows
