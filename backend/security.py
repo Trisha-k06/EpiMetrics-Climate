@@ -31,7 +31,13 @@ DEMO_USERS = [
 ]
 
 # Secret: from the environment, otherwise random per process (all sessions end when the server restarts).
-SECRET = os.environ.get("EPIMETRICS_SECRET") or secrets.token_urlsafe(48)
+# On serverless hosts every instance is its own process, so a random key would make tokens fail on every instance
+# but the one that issued them: there the variable is required.
+SECRET = os.environ.get("EPIMETRICS_SECRET", "").strip()
+if not SECRET and os.environ.get("VERCEL"):
+    raise RuntimeError("EPIMETRICS_SECRET is not set for this deployment. Add it in Vercel > Settings > Environment Variables "
+                       "(Production), then redeploy: without it each instance signs sessions with its own random key.")
+SECRET = SECRET or secrets.token_urlsafe(48)
 ALGORITHM = "HS256"
 
 

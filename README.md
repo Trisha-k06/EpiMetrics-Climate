@@ -21,7 +21,7 @@ background (cached in `backend/cache/`; `/api/v1/health` reports `models_ready`)
 
 | Setting | Default | What it does |
 |---|---|---|
-| `EPIMETRICS_SECRET` | random per start | Signing key for session tokens. Set it, or every restart signs everyone out |
+| `EPIMETRICS_SECRET` | random per start; required on Vercel | Signing key for session tokens. Set it, or every restart signs everyone out. On Vercel the app refuses to start without it, since each instance would otherwise sign with its own key |
 | `EPIMETRICS_PORT`, `EPIMETRICS_HOST` | 8000, 127.0.0.1 | Where the server listens |
 | `EPIMETRICS_SESSION_MINUTES` | 15 | Sliding session length |
 | `EPIMETRICS_BACKUP_HOURS` | off | Automatic backup every N hours (also runs the usage-event purge) |
