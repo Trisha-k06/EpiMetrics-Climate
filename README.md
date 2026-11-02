@@ -239,3 +239,8 @@ python src/validate_data.py      # writes data_dictionary.csv + dataset_catalog.
 ## Sensitivity check (from `sensitivity_grid.csv`)
 
 The mean absolute error of estimated vs true recovery time ranges from 1.5 to 3.1 months across the 12 rule combinations. The default rule (3 months, factor 1.2) gives 2.2 months, with the status (recovered or not) correct 94% of the time. A higher threshold factor gives smaller errors, but it also declares recovery at higher case levels. That trade-off is for the team to decide, and the report should state the choice.
+
+## Team
+- Trisha (@Trisha-k06)
+- Dikshitha (@Dikshitha-Rasineni)
+- Dinesh Aryan (@Din-aryan)
